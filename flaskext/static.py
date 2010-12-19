@@ -65,7 +65,7 @@ class StaticBuilder(object):
         destination_path = url + 'index.html' if url.endswith('/') else url
         
         # Most web servers guess the mime type of static files by their
-        # filename.  Check that this guess is contistent with the actual
+        # filename.  Check that this guess is consistent with the actual
         # Content-Type header we got from the app.
         guessed_type, guessed_encoding = mimetypes.guess_type(destination_path)
         if not guessed_type:
@@ -85,7 +85,10 @@ class StaticBuilder(object):
         if not os.path.isdir(dirname):
             os.makedirs(dirname)
         with open(filename, 'wb') as fd:
-            fd.write(response.data)
+            # response.response is the original iterable return by the app
+            # response is a convenience wrapper built by the test client
+            for chunk in response.response:
+                fd.write(chunk)
     
     def serve(self, **options):
         """Run an HTTP server on the result of the build."""
