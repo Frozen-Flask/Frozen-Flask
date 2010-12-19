@@ -18,6 +18,7 @@ setup(
     long_description=__doc__,
     packages=['flaskext'],
     namespace_packages=['flaskext'],
+    test_suite='test_flaskstatic',
     zip_safe=False,
     platforms='any',
     install_requires=[

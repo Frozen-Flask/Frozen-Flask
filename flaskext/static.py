@@ -40,7 +40,8 @@ class StaticBuilder(object):
     
     def build(self):
         """Clean the destination and build all URLs from generators."""
-        shutil.rmtree(self.root)
+        if os.path.exists(self.root):
+            shutil.rmtree(self.root)
         seen_urls = set()
         # A request context is required to use url_for
         with self.app.test_request_context():
@@ -54,6 +55,7 @@ class StaticBuilder(object):
                         continue
                     seen_urls.add(url)
                     self.build_one(url)
+        return seen_urls
 
     def build_one(self, url):
         """Get the given `url` from the app and write the matching file.
@@ -69,7 +71,8 @@ class StaticBuilder(object):
         # Most web servers guess the mime type of static files by their
         # filename.  Check that this guess is consistent with the actual
         # Content-Type header we got from the app.
-        guessed_type, guessed_encoding = mimetypes.guess_type(destination_path)
+        basename = destination_path.rsplit('/', 1)[-1]
+        guessed_type, guessed_encoding = mimetypes.guess_type(basename)
         if not guessed_type:
             # Used by most server when they can not determine the type
             guessed_type = 'application/octet-stream'
