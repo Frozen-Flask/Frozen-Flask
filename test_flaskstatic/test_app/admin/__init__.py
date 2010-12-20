@@ -6,6 +6,3 @@ admin_module = Module(__name__, name='admin')
 def index():
     return 'Admin index'
 
-def admin_urls():
-    yield 'admin.index', {}
-

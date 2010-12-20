@@ -24,13 +24,10 @@ def main(args):
             continue
         env = join('env' + version)
         if not os.path.isdir(env):
-            print 'Creating env' + version
             os.mkdir(env)
         cfg = os.path.join(env, 'buildout.cfg')
-        if not os.path.isfile(cfg):
-            print 'Writing env%s/buildout.cfg' % version
-            with open(cfg, 'w') as fd:
-                fd.write('''
+        with open(cfg, 'w') as fd:
+            fd.write('''
 [buildout]
 parts = python
 develop = ..
@@ -39,7 +36,7 @@ develop = ..
 recipe = zc.recipe.egg
 interpreter = python
 eggs = 
-                '''.strip() + EGG)
+            '''.strip() + EGG)
         buildout = os.path.join(env, 'bin', 'buildout')
         if not os.path.isfile(buildout):
             bootstrap = join('bootstrap.py')
@@ -50,8 +47,8 @@ eggs =
             print 'env%s/bin/buildout -N' % version
             subprocess.check_call([buildout, '-N'], cwd=env)
         setup = join('setup.py')
-        print 'python%s setup.py -q test -q' % version, ' '.join(args)
-        subprocess.check_call([python, setup, '-q', 'test', '-q'] + list(args))
+        print 'python%s setup.py -q test' % version, ' '.join(args)
+        subprocess.call([python, setup, '-q', 'test'] + list(args))
 
 if __name__ == '__main__':
     main(sys.argv[1:])

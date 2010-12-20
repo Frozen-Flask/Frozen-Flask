@@ -13,12 +13,15 @@ __all__ = ['StaticBuilder']
 
 
 class StaticBuilder(object):
-    def __init__(self, app, with_static_files=True):
+    def __init__(self, app, with_static_files=True,
+                 with_no_argument_rules=True):
         app.config.setdefault('STATIC_BUILDER_DESTINATION', 'build')
         self.app = app
         self.url_generators = []
         if with_static_files:
             self.register_generator(self.static_files_urls)
+        if with_no_argument_rules:
+            self.register_generator(self.no_argument_rules_urls)
     
     def register_generator(self, function):
         """Register a function as an URL generator.
@@ -143,6 +146,12 @@ class StaticBuilder(object):
                 continue
             for filename in walk_directory(root):
                 yield rule.endpoint, {'filename': filename}
+
+    def no_argument_rules_urls(self):
+        """URL generator for URL rules that take no arguments."""
+        for rule in self.app.url_map.iter_rules():
+            if not rule.arguments:
+                yield rule.endpoint, {}
 
 
 def walk_directory(root):

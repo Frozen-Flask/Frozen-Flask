@@ -1,7 +1,7 @@
 from flask import Flask
 from flaskext.static import StaticBuilder
 
-from .admin import admin_module, admin_urls
+from .admin import admin_module
 
 def product(product_id):
     return 'Product num %i' % product_id
@@ -25,13 +25,10 @@ def init_app():
     @builder.register_generator
     def app_urls():
         # endpoint, values
-        yield 'index', {}
-        for id in xrange(3):
+        for id in (0, 1):
             yield 'product', {'product_id': id}
         # single string: url
-        yield '/robots.txt'
-
-    builder.register_generator(admin_urls)
+        yield '/product_2/'
     
     return app, builder
 
