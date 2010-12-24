@@ -9,10 +9,31 @@ from werkzeug.exceptions import HTTPException
 from flask import Flask, Module, url_for, request, send_from_directory
 
 
+"""
+    flaskext.static
+    ~~~~~~~~~~~~~~~~~~
+
+    Flask-Static builds a static snapshot of your Flask application. The
+    result can be hosted without any server-side software other than a
+    traditional web server.
+
+    :copyright: (c) 2010 by Simon Sapin.
+    :license: BSD, see LICENSE for more details.
+"""
 __all__ = ['StaticBuilder']
 
 
 class StaticBuilder(object):
+    """
+    :param app: your application
+    :type app: Flask instance
+    :param with_static_files: Whether to automatically generate URLs
+                              for static files.
+    :type with_static_files boolean:
+    :param with_no_argument_rules: Whether to automatically generate URLs
+                                   for URL rules that take no arguments.
+    :type with_no_argument_rules boolean:
+    """
     def __init__(self, app, with_static_files=True,
                  with_no_argument_rules=True):
         app.config.setdefault('STATIC_BUILDER_DESTINATION', 'build')
@@ -27,7 +48,10 @@ class StaticBuilder(object):
         """Register a function as an URL generator.
         
         The function should return an iterable of URL paths or 
-        `(endpoint, values)` tuples to be used as `url_for(endpoint, **values)`.
+        ``(endpoint, values)`` tuples to be used as
+        ``url_for(endpoint, **values)``.
+        
+        :Returns: the function, so that it can be used as a decorator
         """
         self.url_generators.append(function)
         # Allow use as a decorator
@@ -61,7 +85,7 @@ class StaticBuilder(object):
         return seen_urls
 
     def build_one(self, url):
-        """Get the given `url` from the app and write the matching file.
+        """Get the given ``url`` from the app and write the matching file.
         """
         client = self.app.test_client()
         response = client.get(url, follow_redirects=True)
@@ -99,7 +123,10 @@ class StaticBuilder(object):
                 fd.write(chunk)
     
     def serve(self, **options):
-        """Run an HTTP server on the result of the build."""
+        """Run an HTTP server on the result of the build.
+        
+        :param options: passed to ``app.run()``.
+        """
         self.make_static_app().run(**options)
 
     def make_static_app(self):
