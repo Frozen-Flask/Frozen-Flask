@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# Create a multi-python virtualenv
+#    virtualenv env
+#    virtualenv env -p python2.5
+#    virtualenv env -p python2.6
+#    virtualenv env -p python2.7
+# Upgrade pip if < 0.8.2
+#    pip-2.5 install -U pip
+#    pip-2.6 install -U pip
+#    pip-2.7 install -U pip
+# "Install"
+#    pip-2.5 install -e .
+#    pip-2.6 install -e .
+#    pip-2.7 install -e .
+
+if [ "x$VIRTUAL_ENV" = "x" ]
+then
+    echo "Not in a virtualenv. Aborting."
+    exit 1
+fi
+
+cd $(dirname $0)
+
+for python in python2.5 python2.6 python2.7
+do
+    echo "Testing in $python"
+    $python setup.py -q test "$@"
+done
