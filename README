@@ -1,0 +1,7 @@
+Flask-Static
+------------
+
+Generates a static website from a Flask application. The result can be hosted
+without any server-side software other than a traditional web server.
+
+See documentation: http://packages.python.org/Flask-Static

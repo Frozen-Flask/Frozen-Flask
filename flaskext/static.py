@@ -1,3 +1,15 @@
+"""
+    flaskext.static
+    ~~~~~~~~~~~~~~~
+
+    Flask-Static builds a static snapshot of your Flask application. The
+    result can be hosted without any server-side software other than a
+    traditional web server.
+
+    :copyright: (c) 2010 by Simon Sapin.
+    :license: BSD, see LICENSE for more details.
+"""
+
 from __future__ import with_statement
 
 import os.path
@@ -9,17 +21,6 @@ from werkzeug.exceptions import HTTPException
 from flask import Flask, Module, url_for, request, send_from_directory
 
 
-"""
-    flaskext.static
-    ~~~~~~~~~~~~~~~~~~
-
-    Flask-Static builds a static snapshot of your Flask application. The
-    result can be hosted without any server-side software other than a
-    traditional web server.
-
-    :copyright: (c) 2010 by Simon Sapin.
-    :license: BSD, see LICENSE for more details.
-"""
 __all__ = ['StaticBuilder']
 
 
