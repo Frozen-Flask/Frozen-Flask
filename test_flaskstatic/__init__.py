@@ -7,7 +7,7 @@ import os.path
 from contextlib import contextmanager
 
 from flaskext.static import StaticBuilder, walk_directory
-from .test_app import init_app
+from . import test_app
 
 
 @contextmanager
@@ -25,7 +25,7 @@ def temp_directory():
 @contextmanager
 def built_app():
     with temp_directory() as temp:
-        app, builder = init_app()
+        app, builder = test_app.init_app()
         app.config['STATIC_BUILDER_DESTINATION'] = temp
         urls = builder.build()
         yield temp, app, builder, urls
@@ -86,6 +86,15 @@ class TestDiff(unittest.TestCase):
         self.assert_(diff(this_dir, other_dir))
 
 
+class TestWalkDirectory(unittest.TestCase):
+    def test_walk_directory(self):
+        self.assertEquals(
+            set(f for f in walk_directory(os.path.dirname(test_app.__file__))
+                if not f.endswith(('.pyc', '.pyo'))),
+            set(['__init__.py', 'static/style.css', 'admin/__init__.py',
+                 'admin/static/style.css'])
+        )
+
 class TestBuilder(unittest.TestCase):
     expected_output = {
         '/': 'Main index',
@@ -108,15 +117,6 @@ class TestBuilder(unittest.TestCase):
         '/admin/static/style.css': 'admin/static/style.css',
     }
     
-    def test_walk_directory(self):
-        app, builder = init_app()
-        self.assertEquals(
-            set(f for f in walk_directory(app.root_path)
-                if not f.endswith(('.pyc', '.pyo'))),
-            set(['__init__.py', 'static/style.css', 'admin/__init__.py',
-                 'admin/static/style.css'])
-        )
-
     def test_urls(self):
         with built_app() as (temp, app, builder, urls):
             self.assertEquals(set(urls), set(self.expected_output))
