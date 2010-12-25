@@ -68,8 +68,8 @@ class StaticBuilder(object):
     
     def build(self):
         """Clean the destination and build all URLs from generators."""
-        if os.path.exists(self.root):
-            shutil.rmtree(self.root)
+        for name in os.listdir(self.root):
+            shutil.rmtree(os.path.join(self.root, name))
         seen_urls = set()
         # A request context is required to use url_for
         with self.app.test_request_context():
