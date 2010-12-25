@@ -92,7 +92,8 @@ class StaticBuilder(object):
         response = client.get(url, follow_redirects=True)
         # The client follows redirects by itself
         # Any other status code is probably an error
-        assert response.status_code == 200
+        assert response.status_code == 200, 'Unexpected status %r on URL %s' \
+            % (response.status, url)
         
         destination_path = url + 'index.html' if url.endswith('/') else url
         
