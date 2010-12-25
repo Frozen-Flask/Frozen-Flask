@@ -15,6 +15,7 @@ from __future__ import with_statement
 import os.path
 import mimetypes
 import shutil
+import urlparse
 
 from werkzeug import Client
 from werkzeug.exceptions import HTTPException
@@ -38,6 +39,7 @@ class StaticBuilder(object):
     def __init__(self, app, with_static_files=True,
                  with_no_argument_rules=True):
         app.config.setdefault('STATIC_BUILDER_DESTINATION', 'build')
+        app.config.setdefault('STATIC_BUILDER_SCRIPT_NAME', '')
         self.app = app
         self.url_generators = []
         if with_static_files:
@@ -71,25 +73,36 @@ class StaticBuilder(object):
         for name in os.listdir(self.root):
             shutil.rmtree(os.path.join(self.root, name))
         seen_urls = set()
+        script_name = self.app.config['STATIC_BUILDER_SCRIPT_NAME']
+        script_name = urlparse.urlsplit(script_name).path.rstrip('/')
         # A request context is required to use url_for
-        with self.app.test_request_context():
+        with self.app.test_request_context(base_url=script_name):
             for generator in self.url_generators:
                 for url in generator():
                     if not isinstance(url, basestring):
                         endpoint, values = url
                         url = url_for(endpoint, **values)
+                        assert not url.startswith(('http:', 'https:')), \
+                            'External URLs not supported: ' + url
+                        assert url.startswith(script_name), (
+                            'url_for returned an URL %r not starting with '
+                            'script_name %r. Bug in Werkzeug?'
+                            % (url, script_name)
+                        )
+                        url = url[len(script_name):]
                     if url in seen_urls:
                         # Don't build the same URL more than once
                         continue
                     seen_urls.add(url)
-                    self.build_one(url)
+                    self._build_one(url, script_name)
         return seen_urls
 
-    def build_one(self, url):
+    def _build_one(self, url, script_name):
         """Get the given ``url`` from the app and write the matching file.
         """
         client = self.app.test_client()
-        response = client.get(url, follow_redirects=True)
+        response = client.get(url, follow_redirects=True,
+                              environ_overrides={'SCRIPT_NAME': script_name})
         # The client follows redirects by itself
         # Any other status code is probably an error
         assert response.status_code == 200, 'Unexpected status %r on URL %s' \

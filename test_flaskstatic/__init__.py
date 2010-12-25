@@ -22,15 +22,6 @@ def temp_directory():
         shutil.rmtree(directory)
 
 
-@contextmanager
-def built_app():
-    with temp_directory() as temp:
-        app, builder = test_app.init_app()
-        app.config['STATIC_BUILDER_DESTINATION'] = temp
-        urls = builder.build()
-        yield temp, app, builder, urls
-
-
 def read_file(filename):
     with open(filename, 'rb') as fd:
         return fd.read()
@@ -105,6 +96,7 @@ class TestBuilder(unittest.TestCase):
         '/product_2/': 'Product num 2',
         '/static/style.css': '/* Main CSS */\n',
         '/admin/static/style.css': '/* Admin CSS */\n',
+        '/where_am_i/': '/where_am_i/',
     }
     filenames = {
         '/': 'index.html',
@@ -115,24 +107,35 @@ class TestBuilder(unittest.TestCase):
         '/product_2/': 'product_2/index.html',
         '/static/style.css': 'static/style.css',
         '/admin/static/style.css': 'admin/static/style.css',
+        '/where_am_i/': 'where_am_i/index.html',
     }
+    app_extra_config = {}
+    
+    @contextmanager
+    def built_app(self):
+        with temp_directory() as temp:
+            app, builder = test_app.init_app()
+            app.config['STATIC_BUILDER_DESTINATION'] = temp
+            app.config.update(self.app_extra_config)
+            urls = builder.build()
+            yield temp, app, builder, urls
     
     def test_urls(self):
-        with built_app() as (temp, app, builder, urls):
+        with self.built_app() as (temp, app, builder, urls):
             self.assertEquals(set(urls), set(self.expected_output))
             # Make sure it was not accidently used as a destination
             default = os.path.join(os.path.dirname(__file__), 'build')
             self.assert_(not os.path.exists(default))
             
     def test_contents(self):
-        with built_app() as (temp, app, builder, urls):
+        with self.built_app() as (temp, app, builder, urls):
             for url, filename in self.filenames.iteritems():
                 filename = os.path.join(builder.root, *filename.split('/'))
                 content = read_file(filename)
                 self.assertEquals(content, self.expected_output[url])
 
     def test_nothing_else_matters(self):
-        with built_app() as (temp, app, builder, urls):
+        with self.built_app() as (temp, app, builder, urls):
             # No other files
             self.assertEquals(
                 set(walk_directory(builder.root)),
@@ -140,7 +143,7 @@ class TestBuilder(unittest.TestCase):
             )
 
     def test_transitivity(self):
-        with built_app() as (temp, app, builder, urls):
+        with self.built_app() as (temp, app, builder, urls):
             with temp_directory() as temp2:
                 # Run the builder on it's own output
                 app2 = builder.make_static_app()
@@ -149,5 +152,17 @@ class TestBuilder(unittest.TestCase):
                 builder2.register_generator(self.filenames.iterkeys)
                 builder2.build()
                 self.assert_(not diff(temp, temp2))
+
+
+class TestNonEmptyScriptName(TestBuilder):
+    app_extra_config = {'STATIC_BUILDER_SCRIPT_NAME': '/myapp'}
+    expected_output = TestBuilder.expected_output.copy()
+    expected_output['/where_am_i/'] = '/myapp/where_am_i/'
+
+class TestFunnyScriptName(TestNonEmptyScriptName):
+    app_extra_config = {'STATIC_BUILDER_SCRIPT_NAME': '/myapp/'}
+
+class TestFunnyScriptName2(TestNonEmptyScriptName):
+    app_extra_config = {'STATIC_BUILDER_SCRIPT_NAME': 'http://example/myapp/'}
 
 

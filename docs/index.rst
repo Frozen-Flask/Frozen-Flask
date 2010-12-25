@@ -34,12 +34,21 @@ after configuring the application::
     app.config.from_pyfile('mysettings.cfg')
     builder = StaticBuilder(app)
 
-Flask-Static accepts the following configuration value:
+Flask-Static accepts the following configuration values:
 
 ``STATIC_BUILDER_DESTINATION``
     Path to the directory where to put the generated static site. If relative,
     interpreted as relative to the application root, next to the ``static`` and
     ``templates`` directories. Defaults to ``build``.
+
+``STATIC_BUILDER_SCRIPT_NAME``
+    Overrides the value of ``SCRIPT_NAME`` in the WSGI environment for requests
+    made to your application. This is the URL path your application is
+    installed at. If the full URL to your application root is
+    ``http://example.net/myapp/``, this is ``/myapp``.
+    This affects eg. URLs built by :func:`flask.url_for`.
+    Defaults to the empty string, which means that your app is at the root of
+    its domain name.
 
 URL generators
 --------------
