@@ -34,7 +34,7 @@ after configuring the application::
     app.config.from_pyfile('mysettings.cfg')
     builder = StaticBuilder(app)
 
-Flask-FlatPages accepts the following configuration value:
+Flask-Static accepts the following configuration value:
 
 ``STATIC_BUILDER_DESTINATION``
     Path to the directory where to put the generated static site. If relative,
@@ -53,8 +53,8 @@ URL rules that take no arguments and static files (both of which can be
 disabled, see :ref:`api`) but you’ll need to help it for everything else.
 
 To do so, register URL generators. A generator is a callable that take no
-parameter and return an iterable of URL strings, or (endpoint, values) tuples
-as with :func:`flask.url_for`::
+parameter and return an iterable of URL strings, or ``(endpoint, values)``
+tuples as for :func:`flask.url_for`::
 
     @app.route('/')
     def products_list():
