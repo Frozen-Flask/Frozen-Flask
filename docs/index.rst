@@ -21,31 +21,6 @@ or alternatively if you have pip installed::
 or you can get the `source code from github
 <https://github.com/SimonSapin/Flask-Static>`_.
 
-Why?
-----
-
-You can skip this section if you just want to get your hands dirty.
-
-Some web hosts only serve static files and do not allow you to run code on
-their servers. Or maybe they do, but not in your favorite programming language.
-Even when you could run Flask on a server, a 5 pages website that changes
-twice a year should be fast without requiring a Python process constantly
-sitting on a server and eating precious RAM.
-
-Directly writing HTML as it will be served is possible, but tedious and
-repetitive at best. And you’ll have to go through every page when you fix a
-typo in that header tomorrow. We have better tools nowadays.
-
-Many tools exist that allow you to generate a static website from a set of
-“source” files, but most need to be run after each small change that you
-want to see in your web browser. We could have a dependency mechanism and a
-script that watches modifications times or uses `inotify` to build as needed,
-but this is getting overly complex.
-
-A better solution is to use the same tools we have for dynamic web application,
-run the development server with auto-reloading when editing, and take a
-static snapshot for uploading. This is what Flask-Static does.
-
 Configuration
 -------------
 
