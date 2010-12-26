@@ -70,8 +70,13 @@ class StaticBuilder(object):
     
     def build(self):
         """Clean the destination and build all URLs from generators."""
-        for name in os.listdir(self.root):
-            shutil.rmtree(os.path.join(self.root, name))
+        if os.path.exists(self.root):
+            for name in os.listdir(self.root):
+                name = os.path.join(self.root, name)
+                if os.path.isdir(name):
+                    shutil.rmtree(name)
+                else:
+                    os.remove(name)
         seen_urls = set()
         script_name = self.app.config['STATIC_BUILDER_SCRIPT_NAME']
         script_name = urlparse.urlsplit(script_name).path.rstrip('/')
