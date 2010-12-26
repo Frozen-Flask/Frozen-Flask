@@ -17,7 +17,8 @@ def init_app():
 
     @app.route('/where_am_i/')
     def where_am_i():
-        return url_for('where_am_i')
+        return (url_for('where_am_i') + ' ' +
+                url_for('where_am_i', _external=True))
 
     @app.route('/robots.txt')
     def robots_txt():

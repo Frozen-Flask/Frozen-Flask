@@ -96,7 +96,7 @@ class TestBuilder(unittest.TestCase):
         '/product_2/': 'Product num 2',
         '/static/style.css': '/* Main CSS */\n',
         '/admin/static/style.css': '/* Admin CSS */\n',
-        '/where_am_i/': '/where_am_i/',
+        '/where_am_i/': '/where_am_i/ http://localhost/where_am_i/',
     }
     filenames = {
         '/': 'index.html',
@@ -154,15 +154,10 @@ class TestBuilder(unittest.TestCase):
                 self.assert_(not diff(temp, temp2))
 
 
-class TestNonEmptyScriptName(TestBuilder):
-    app_extra_config = {'STATIC_BUILDER_SCRIPT_NAME': '/myapp'}
+class TestBaseURL(TestBuilder):
+    app_extra_config = {'STATIC_BUILDER_BASE_URL': 'http://example/myapp/'}
     expected_output = TestBuilder.expected_output.copy()
-    expected_output['/where_am_i/'] = '/myapp/where_am_i/'
-
-class TestFunnyScriptName(TestNonEmptyScriptName):
-    app_extra_config = {'STATIC_BUILDER_SCRIPT_NAME': '/myapp/'}
-
-class TestFunnyScriptName2(TestNonEmptyScriptName):
-    app_extra_config = {'STATIC_BUILDER_SCRIPT_NAME': 'http://example/myapp/'}
+    expected_output['/where_am_i/'] = \
+        '/myapp/where_am_i/ http://example/myapp/where_am_i/'
 
 

@@ -41,15 +41,13 @@ Flask-Static accepts the following configuration values:
     interpreted as relative to the application root, next to the ``static`` and
     ``templates`` directories. Defaults to ``build``.
 
-``STATIC_BUILDER_SCRIPT_NAME``
-    Overrides the value of ``SCRIPT_NAME`` in the WSGI environment for requests
-    made to your application. This is the URL path your application is
-    installed at. If the full URL to your application root is
-    ``http://example.net/myapp/``, this is ``/myapp``.
-    This affects eg. URLs built by :func:`flask.url_for`.
-    Defaults to the empty string, which means that your app is at the root of
-    its domain name.
-
+``STATIC_BUILDER_BASE_URL``
+    Full URL you application is supposed to be installed at. This affects
+    the output of :func:`flask.url_for` for absolute URLs (with 
+    ``_external=True``) or if your application is not at the root of its
+    domain name.
+    Defaults to ``'http://localhost/'``.
+    
 URL generators
 --------------
 

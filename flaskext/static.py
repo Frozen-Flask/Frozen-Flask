@@ -39,7 +39,7 @@ class StaticBuilder(object):
     def __init__(self, app, with_static_files=True,
                  with_no_argument_rules=True):
         app.config.setdefault('STATIC_BUILDER_DESTINATION', 'build')
-        app.config.setdefault('STATIC_BUILDER_SCRIPT_NAME', '')
+        app.config.setdefault('STATIC_BUILDER_BASE_URL', 'http://localhost/')
         self.app = app
         self.url_generators = []
         if with_static_files:
@@ -78,8 +78,8 @@ class StaticBuilder(object):
                 else:
                     os.remove(name)
         seen_urls = set()
-        script_name = self.app.config['STATIC_BUILDER_SCRIPT_NAME']
-        script_name = urlparse.urlsplit(script_name).path.rstrip('/')
+        base_url = self.app.config['STATIC_BUILDER_BASE_URL']
+        script_name = urlparse.urlsplit(base_url).path.rstrip('/')
         # A request context is required to use url_for
         with self.app.test_request_context(base_url=script_name):
             for generator in self.url_generators:
@@ -99,15 +99,14 @@ class StaticBuilder(object):
                         # Don't build the same URL more than once
                         continue
                     seen_urls.add(url)
-                    self._build_one(url, script_name)
+                    self._build_one(url, base_url)
         return seen_urls
 
-    def _build_one(self, url, script_name):
+    def _build_one(self, url, base_url):
         """Get the given ``url`` from the app and write the matching file.
         """
         client = self.app.test_client()
-        response = client.get(url, follow_redirects=True,
-                              environ_overrides={'SCRIPT_NAME': script_name})
+        response = client.get(url, follow_redirects=True, base_url=base_url)
         # The client follows redirects by itself
         # Any other status code is probably an error
         assert response.status_code == 200, 'Unexpected status %r on URL %s' \
