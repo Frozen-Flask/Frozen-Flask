@@ -70,14 +70,12 @@ class StaticBuilder(object):
     
     def build(self):
         """Clean the destination and build all URLs from generators."""
-        if os.path.exists(self.root):
-            for name in os.listdir(self.root):
-                name = os.path.join(self.root, name)
-                if os.path.isdir(name):
-                    shutil.rmtree(name)
-                else:
-                    os.remove(name)
+        previous_files = set(
+            os.path.join(self.root, *name.split('/'))
+            for name in walk_directory(self.root)
+        )
         seen_urls = set()
+        built_files = set()
         base_url = self.app.config['STATIC_BUILDER_BASE_URL']
         script_name = urlparse.urlsplit(base_url).path.rstrip('/')
         # A request context is required to use url_for
@@ -99,7 +97,13 @@ class StaticBuilder(object):
                         # Don't build the same URL more than once
                         continue
                     seen_urls.add(url)
-                    self._build_one(url, base_url)
+                    built_files.add(self._build_one(url, base_url))
+        for extra_file in previous_files - built_files:
+            os.remove(extra_file)
+            parent = os.path.dirname(extra_file)
+            if not os.listdir(parent):
+                # now empty, remove
+                os.removedirs(parent)
         return seen_urls
 
     def _build_one(self, url, base_url):
@@ -135,11 +139,18 @@ class StaticBuilder(object):
         dirname = os.path.dirname(filename)
         if not os.path.isdir(dirname):
             os.makedirs(dirname)
-        with open(filename, 'wb') as fd:
-            # response.response is the original iterable return by the app
-            # response is a convenience wrapper built by the test client
-            for chunk in response.response:
-                fd.write(chunk)
+        content = response.data
+        if os.path.isfile(filename):
+            with open(filename, 'rb') as fd:
+                previous_content = fd.read()
+        else:
+            previous_content = None
+        if content != previous_content:
+            # Do not overwrite when content hasn't changed to help rsync
+            # by keeping the modification date.
+            with open(filename, 'wb') as fd:
+                fd.write(content)
+        return filename
     
     def serve(self, **options):
         """Run an HTTP server on the result of the build.
