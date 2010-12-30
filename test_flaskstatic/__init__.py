@@ -136,11 +136,17 @@ class TestBuilder(unittest.TestCase):
 
     def test_nothing_else_matters(self):
         with self.built_app() as (temp, app, builder, urls):
+            expected_files = set(self.filenames.itervalues())
             # No other files
-            self.assertEquals(
-                set(walk_directory(builder.root)),
-                set(self.filenames.itervalues())
-            )
+            self.assertEquals(set(walk_directory(temp)), expected_files)
+            # create an empty life
+            os.mkdir(os.path.join(temp, 'extra'))
+            open(os.path.join(temp, 'extra', 'extra.txt'), 'wb').close()
+            # files in the destination that were not just built are removed
+            builder.build()
+            self.assertEquals(set(walk_directory(temp)), expected_files)
+            self.assert_(not os.path.exists(os.path.join(temp, 'extra')))
+                
 
     def test_transitivity(self):
         with self.built_app() as (temp, app, builder, urls):
