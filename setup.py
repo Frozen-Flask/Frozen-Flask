@@ -17,7 +17,7 @@ from setuptools import setup
 
 setup(
     name='Flask-Static',
-    version='0.1dev',
+    version='0.1',
     url='https://github.com/SimonSapin/Flask-Static',
     license='BSD',
     author='Simon Sapin',
