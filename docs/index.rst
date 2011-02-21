@@ -7,6 +7,8 @@ traditional web server.
 
 .. _Flask: http://flask.pocoo.org/
 
+**Note:** This project used to be called Flask-Static.
+
 Installation
 ------------
 
@@ -140,3 +142,18 @@ API
 .. autoclass:: Freezer
     :members: register_generator, freeze, serve
 
+Changelog
+---------
+
+Version 0.2, released 2011-02-21
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Renamed the project from Flask-Static to Frozen-Flask and while we’re at
+breaking API compatibility, :func:`flaskext.static.StaticBuilder.build`
+is now :func:`flaskext.frozen.Freezer.freeze`. Other function or method names
+were left unchanged.
+
+Version 0.2, released 2011-02-06
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+First properly tagged release.
