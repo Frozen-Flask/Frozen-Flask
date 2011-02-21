@@ -127,7 +127,7 @@ class StaticBuilder(object):
             # Used by most server when they can not determine the type
             guessed_type = 'application/octet-stream'
         assert guessed_type == response.mimetype, (
-            'Filaname extension of %r (type %s) does not match Content-Type: %s'
+            'Filename extension of %r (type %s) does not match Content-Type: %s'
             % (basename, guessed_type, response.content_type)
         )
         
