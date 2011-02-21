@@ -17,7 +17,7 @@ from setuptools import setup
 
 setup(
     name='Frozen-Flask',
-    version='0.2dev',
+    version='0.2',
     url='https://github.com/SimonSapin/Frozen-Flask',
     license='BSD',
     author='Simon Sapin',
