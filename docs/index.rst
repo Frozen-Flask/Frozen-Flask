@@ -24,24 +24,24 @@ or you can get the `source code from github
 Configuration
 -------------
 
-To get started all you need to do is to instantiate a :class:`.StaticBuilder` object
+To get started all you need to do is to instantiate a :class:`.Freezer` object
 after configuring the application::
 
     from flask import Flask
-    from flaskext.frozen import StaticBuilder
+    from flaskext.frozen import Freezer
     
     app = Flask(__name__)
     app.config.from_pyfile('mysettings.cfg')
-    builder = StaticBuilder(app)
+    freezer = Freezer(app)
 
 Frozen-Flask accepts the following configuration values:
 
-``STATIC_BUILDER_DESTINATION``
+``FREEZER_DESTINATION``
     Path to the directory where to put the generated static site. If relative,
     interpreted as relative to the application root, next to the ``static`` and
     ``templates`` directories. Defaults to ``build``.
 
-``STATIC_BUILDER_BASE_URL``
+``FREEZER_BASE_URL``
     Full URL you application is supposed to be installed at. This affects
     the output of :func:`flask.url_for` for absolute URLs (with 
     ``_external=True``) or if your application is not at the root of its
@@ -72,7 +72,7 @@ tuples as for :func:`flask.url_for`::
         product = models.Product.get_or_404(id=product_id)
         return render_template('product.html', product=product)
 
-    @builder.register_generator
+    @freezer.register_generator
     def product_urls():
         for product in models.Product.all():
             yield 'product_details', {'product_id': product.id}
@@ -80,7 +80,7 @@ tuples as for :func:`flask.url_for`::
 Once everything is configured, run the build::
 
     if __name__ == '__main__':
-        builder.build()
+        freezer.freeze()
 
 As loading files directly in a web browser does not play well with some URLs,
 (browsers do not show ``index.html`` for directories, and absolute path may
@@ -88,8 +88,8 @@ have a different meaning, ...) you can also start a server to check that
 everything is fine before uploading::
 
     if __name__ == '__main__':
-        builder.build()
-        builder.serve()
+        freezer.freeze()
+        freezer.serve()
 
 `Flask-Script <http://packages.python.org/Flask-Script/>`_ may come in handy
 here.
@@ -98,7 +98,7 @@ Filenames and MIME types
 ------------------------
 
 For each generated URL, Frozen-Flask simulates a request and save the content
-in a file in the ``STATIC_BUILDER_DESTINATION`` directory. The filename is
+in a file in the ``FREEZER_DESTINATION`` directory. The filename is
 built from the URL. URLs with a trailing slash are interpreted as a directory
 name and the content is saved in ``index.html``.
 
@@ -137,6 +137,6 @@ API
 
 .. module:: flaskext.frozen
 
-.. autoclass:: StaticBuilder
-    :members: register_generator, build, serve
+.. autoclass:: Freezer
+    :members: register_generator, freeze, serve
 
