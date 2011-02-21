@@ -23,10 +23,10 @@ from werkzeug.exceptions import HTTPException
 from flask import Flask, Module, url_for, request, send_from_directory
 
 
-__all__ = ['StaticBuilder']
+__all__ = ['Freezer']
 
 
-class StaticBuilder(object):
+class Freezer(object):
     """
     :param app: your application
     :type app: Flask instance
@@ -39,8 +39,8 @@ class StaticBuilder(object):
     """
     def __init__(self, app, with_static_files=True,
                  with_no_argument_rules=True):
-        app.config.setdefault('STATIC_BUILDER_DESTINATION', 'build')
-        app.config.setdefault('STATIC_BUILDER_BASE_URL', 'http://localhost/')
+        app.config.setdefault('FREEZER_DESTINATION', 'build')
+        app.config.setdefault('FREEZER_BASE_URL', 'http://localhost/')
         self.app = app
         self.url_generators = []
         if with_static_files:
@@ -66,10 +66,10 @@ class StaticBuilder(object):
         """The build destination."""
         return os.path.join(
             self.app.root_path,
-            self.app.config['STATIC_BUILDER_DESTINATION']
+            self.app.config['FREEZER_DESTINATION']
         )
     
-    def build(self):
+    def freeze(self):
         """Clean the destination and build all URLs from generators."""
         previous_files = set(
             os.path.join(self.root, *name.split('/'))
@@ -77,7 +77,7 @@ class StaticBuilder(object):
         )
         seen_urls = set()
         built_files = set()
-        base_url = self.app.config['STATIC_BUILDER_BASE_URL']
+        base_url = self.app.config['FREEZER_BASE_URL']
         script_name = urlparse.urlsplit(base_url).path.rstrip('/')
         # A request context is required to use url_for
         with self.app.test_request_context(base_url=script_name):
@@ -164,7 +164,7 @@ class StaticBuilder(object):
         """Return a Flask application serving the build destination."""
         root = os.path.join(
             self.app.root_path,
-            self.app.config['STATIC_BUILDER_DESTINATION']
+            self.app.config['FREEZER_DESTINATION']
         )
         
         def dispatch_request():

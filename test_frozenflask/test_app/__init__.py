@@ -1,5 +1,5 @@
 from flask import Flask, url_for
-from flaskext.frozen import StaticBuilder
+from flaskext.frozen import Freezer
 
 from .admin import admin_module
 
@@ -9,7 +9,7 @@ def product(product_id):
 def init_app():
     app = Flask(__name__)
     app.register_module(admin_module, url_prefix='/admin')
-    builder = StaticBuilder(app)
+    freezer = Freezer(app)
 
     @app.route('/')
     def index():
@@ -27,7 +27,7 @@ def init_app():
 
     app.route('/product_<int:product_id>/')(product)
 
-    @builder.register_generator
+    @freezer.register_generator
     def app_urls():
         # endpoint, values
         for id in (0, 1):
@@ -35,5 +35,5 @@ def init_app():
         # single string: url
         yield '/product_2/'
     
-    return app, builder
+    return app, freezer
 

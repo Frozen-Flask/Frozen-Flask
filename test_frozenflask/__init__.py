@@ -6,7 +6,7 @@ import shutil
 import os.path
 from contextlib import contextmanager
 
-from flaskext.frozen import StaticBuilder, walk_directory
+from flaskext.frozen import Freezer, walk_directory
 from . import test_app
 
 
@@ -114,28 +114,28 @@ class TestBuilder(unittest.TestCase):
     @contextmanager
     def built_app(self):
         with temp_directory() as temp:
-            app, builder = test_app.init_app()
-            app.config['STATIC_BUILDER_DESTINATION'] = temp
+            app, freezer = test_app.init_app()
+            app.config['FREEZER_DESTINATION'] = temp
             app.config.update(self.app_extra_config)
-            urls = builder.build()
-            yield temp, app, builder, urls
+            urls = freezer.freeze()
+            yield temp, app, freezer, urls
     
     def test_urls(self):
-        with self.built_app() as (temp, app, builder, urls):
+        with self.built_app() as (temp, app, freezer, urls):
             self.assertEquals(set(urls), set(self.expected_output))
             # Make sure it was not accidently used as a destination
             default = os.path.join(os.path.dirname(__file__), 'build')
             self.assert_(not os.path.exists(default))
             
     def test_contents(self):
-        with self.built_app() as (temp, app, builder, urls):
+        with self.built_app() as (temp, app, freezer, urls):
             for url, filename in self.filenames.iteritems():
-                filename = os.path.join(builder.root, *filename.split('/'))
+                filename = os.path.join(freezer.root, *filename.split('/'))
                 content = read_file(filename)
                 self.assertEquals(content, self.expected_output[url])
 
     def test_nothing_else_matters(self):
-        with self.built_app() as (temp, app, builder, urls):
+        with self.built_app() as (temp, app, freezer, urls):
             expected_files = set(self.filenames.itervalues())
             # No other files
             self.assertEquals(set(walk_directory(temp)), expected_files)
@@ -143,25 +143,25 @@ class TestBuilder(unittest.TestCase):
             os.mkdir(os.path.join(temp, 'extra'))
             open(os.path.join(temp, 'extra', 'extra.txt'), 'wb').close()
             # files in the destination that were not just built are removed
-            builder.build()
+            freezer.freeze()
             self.assertEquals(set(walk_directory(temp)), expected_files)
             self.assert_(not os.path.exists(os.path.join(temp, 'extra')))
                 
 
     def test_transitivity(self):
-        with self.built_app() as (temp, app, builder, urls):
+        with self.built_app() as (temp, app, freezer, urls):
             with temp_directory() as temp2:
-                # Run the builder on it's own output
-                app2 = builder.make_static_app()
-                app2.config['STATIC_BUILDER_DESTINATION'] = temp2
-                builder2 = StaticBuilder(app2)
-                builder2.register_generator(self.filenames.iterkeys)
-                builder2.build()
+                # Run the freezer on it's own output
+                app2 = freezer.make_static_app()
+                app2.config['FREEZER_DESTINATION'] = temp2
+                freezer2 = Freezer(app2)
+                freezer2.register_generator(self.filenames.iterkeys)
+                freezer2.freeze()
                 self.assert_(not diff(temp, temp2))
 
 
 class TestBaseURL(TestBuilder):
-    app_extra_config = {'STATIC_BUILDER_BASE_URL': 'http://example/myapp/'}
+    app_extra_config = {'FREEZER_BASE_URL': 'http://example/myapp/'}
     expected_output = TestBuilder.expected_output.copy()
     expected_output['/where_am_i/'] = \
         '/myapp/where_am_i/ http://example/myapp/where_am_i/'
