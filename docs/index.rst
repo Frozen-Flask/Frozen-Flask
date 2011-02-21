@@ -145,8 +145,8 @@ API
 Changelog
 ---------
 
-Version 0.2, released 2011-02-21
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Version 0.2, released on 2011-02-21
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Renamed the project from Flask-Static to Frozen-Flask. While we’re at
 breaking API compatibility, :func:`flaskext.static.StaticBuilder.build`
@@ -154,7 +154,7 @@ is now :func:`flaskext.frozen.Freezer.freeze` and the prefix for configuration
 keys is ``FREEZER_`` instead of ``STATIC_BUILDER_``.
 Other names were left unchanged.
 
-Version 0.2, released 2011-02-06
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Version 0.2, released on 2011-02-06
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 First properly tagged release.
