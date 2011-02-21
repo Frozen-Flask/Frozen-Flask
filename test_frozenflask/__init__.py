@@ -6,7 +6,7 @@ import shutil
 import os.path
 from contextlib import contextmanager
 
-from flaskext.static import StaticBuilder, walk_directory
+from flaskext.frozen import StaticBuilder, walk_directory
 from . import test_app
 
 

@@ -42,7 +42,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Flask-Static'
+project = u'Frozen-Flask'
 copyright = u'2010, Simon Sapin'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -101,7 +101,7 @@ html_theme = 'flask_small'
 #html_theme_options = {}
 html_theme_options = {
      'index_logo': None,
-     'github_fork': 'SimonSapin/Flask-Static'
+     'github_fork': 'SimonSapin/Frozen-Flask'
 }
 
 # Add any paths that contain custom themes here, relative to this directory.

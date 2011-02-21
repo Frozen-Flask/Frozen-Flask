@@ -1,32 +1,32 @@
 """
-Flask-Static
+Frozen-Flask
 ------------
 
-Generates a static website from a Flask application. The result can be hosted
+Freezes a Flask application into a set of static files. The result can be hosted
 without any server-side software other than a traditional web server.
 
 Links
 `````
 
-* `documentation <http://packages.python.org/Flask-Static>`_
+* `documentation <http://packages.python.org/Frozen-Flask>`_
 * `development version
-  <http://github.com/SimonSapin/Flask-Static/zipball/master#egg=Flask-Static-dev>`_
+  <http://github.com/SimonSapin/Frozen-Flask/zipball/master#egg=Frozen-Flask-dev>`_
 """
 
 from setuptools import setup
 
 setup(
-    name='Flask-Static',
-    version='0.1',
-    url='https://github.com/SimonSapin/Flask-Static',
+    name='Frozen-Flask',
+    version='0.2dev',
+    url='https://github.com/SimonSapin/Frozen-Flask',
     license='BSD',
     author='Simon Sapin',
     author_email='simon.sapin@exyr.org',
-    description='Generates a static website from a Flask application',
+    description='Freezes a Flask application into a set of static files.',
     long_description=__doc__,
     packages=['flaskext'],
     namespace_packages=['flaskext'],
-    test_suite='test_flaskstatic',
+    test_suite='test_frozenflask',
     zip_safe=False,
     platforms='any',
     install_requires=[

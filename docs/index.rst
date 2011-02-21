@@ -1,9 +1,9 @@
-Flask-Static
+Frozen-Flask
 ============
 
-Flask-Static builds a static snapshot of your `Flask`_ application. The
-result can be hosted without any server-side software other than a traditional
-web server.
+Frozen-Flask freezes a `Flask`_ application into a set of static files.
+The result can be hosted without any server-side software other than a
+traditional web server.
 
 .. _Flask: http://flask.pocoo.org/
 
@@ -12,14 +12,14 @@ Installation
 
 Install the extension with one of the following commands::
 
-    $ easy_install Flask-Static
+    $ easy_install Frozen-Flask
 
 or alternatively if you have pip installed::
 
-    $ pip install Flask-Static
+    $ pip install Frozen-Flask
 
 or you can get the `source code from github
-<https://github.com/SimonSapin/Flask-Static>`_.
+<https://github.com/SimonSapin/Frozen-Flask>`_.
 
 Configuration
 -------------
@@ -28,13 +28,13 @@ To get started all you need to do is to instantiate a :class:`.StaticBuilder` ob
 after configuring the application::
 
     from flask import Flask
-    from flaskext.static import StaticBuilder
+    from flaskext.frozen import StaticBuilder
     
     app = Flask(__name__)
     app.config.from_pyfile('mysettings.cfg')
     builder = StaticBuilder(app)
 
-Flask-Static accepts the following configuration values:
+Frozen-Flask accepts the following configuration values:
 
 ``STATIC_BUILDER_DESTINATION``
     Path to the directory where to put the generated static site. If relative,
@@ -97,7 +97,7 @@ here.
 Filenames and MIME types
 ------------------------
 
-For each generated URL, Flask-Static simulates a request and save the content
+For each generated URL, Frozen-Flask simulates a request and save the content
 in a file in the ``STATIC_BUILDER_DESTINATION`` directory. The filename is
 built from the URL. URLs with a trailing slash are interpreted as a directory
 name and the content is saved in ``index.html``.
@@ -116,7 +116,7 @@ For example, the following views will both fail::
         return '/* ... */'
 
 as the default ``Content-Type`` in Flask is ``text/html; charset=utf-8``, but
-the MIME types guessed by the Flask-Static as well as most web servers from the
+the MIME types guessed by the Frozen-Flask as well as most web servers from the
 filenames are ``application/octet-stream`` and ``text/css``.
 
 This can be fixed by adding a trailing slash to the URL or serving with the
@@ -135,7 +135,7 @@ right ``Content-Type``::
 API
 ---
 
-.. module:: flaskext.static
+.. module:: flaskext.frozen
 
 .. autoclass:: StaticBuilder
     :members: register_generator, build, serve

@@ -1,10 +1,11 @@
 """
-    flaskext.static
+    flaskext.frozen
     ~~~~~~~~~~~~~~~
 
-    Flask-Static builds a static snapshot of your Flask application. The
-    result can be hosted without any server-side software other than a
+    Frozen-Flask freezes a Flask application into a set of static files.
+    The result can be hosted without any server-side software other than a
     traditional web server.
+
 
     :copyright: (c) 2010 by Simon Sapin.
     :license: BSD, see LICENSE for more details.

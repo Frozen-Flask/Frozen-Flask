@@ -1,5 +1,5 @@
 from flask import Flask, url_for
-from flaskext.static import StaticBuilder
+from flaskext.frozen import StaticBuilder
 
 from .admin import admin_module
 
