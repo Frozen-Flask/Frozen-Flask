@@ -26,6 +26,7 @@ setup(
     long_description=__doc__,
     packages=find_packages(),
     namespace_packages=['flaskext'],
+    package_data={'': ['static/*']}, # static files for the test app
     test_suite='flaskext.frozen.tests',
     zip_safe=False,
     platforms='any',
