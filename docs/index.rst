@@ -62,8 +62,10 @@ URL rules that take no arguments and static files (both of which can be
 disabled, see :ref:`api`) but you’ll need to help it for everything else.
 
 To do so, register URL generators. A generator is a callable that take no
-parameter and return an iterable of URL strings, or ``(endpoint, values)``
-tuples as for :func:`flask.url_for`::
+parameter and return an iterable of URL strings, ``(endpoint, values)``
+tuples as for :func:`flask.url_for`, or just a ``values`` dictionary.
+In the last case, ``endpoint`` defaults to the name of the generator function,
+just like with Flask views.::
 
     @app.route('/')
     def products_list():
@@ -78,6 +80,21 @@ tuples as for :func:`flask.url_for`::
     def product_urls():
         for product in models.Product.all():
             yield 'product_details', {'product_id': product.id}
+
+    # This URL generator is the same as the one above. Generating the same URL
+    # more than once is okay, they are de-duplicated.
+    @freezer.register_generator
+    def product_details():
+        for product in models.Product.all():
+            # `endpoint` is implicitly the name of the function: product_details
+            yield {'product_id': product.id}
+
+
+Note that the view and the generator have the same name. **TL;DR: that’s okay.**
+Having two functions with the same name is generally a bad practice but
+causes no problem here as the functions are only used by their decorators.
+For non-trivial apps you probably want to have a module for views and
+another one for URL generators anyway.
 
 Once everything is configured, run the build::
 
