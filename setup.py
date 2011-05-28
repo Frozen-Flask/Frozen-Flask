@@ -13,7 +13,7 @@ Links
   <http://github.com/SimonSapin/Frozen-Flask/zipball/master#egg=Frozen-Flask-dev>`_
 """
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='Frozen-Flask',
@@ -24,9 +24,9 @@ setup(
     author_email='simon.sapin@exyr.org',
     description='Freezes a Flask application into a set of static files.',
     long_description=__doc__,
-    packages=['flaskext'],
+    packages=find_packages(),
     namespace_packages=['flaskext'],
-    test_suite='test_frozenflask',
+    test_suite='flaskext.frozen.tests',
     zip_safe=False,
     platforms='any',
     install_requires=[

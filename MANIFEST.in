@@ -1,7 +1,4 @@
 include LICENSE
-recursive-include test_flatpages *
-recursive-exclude test_flatpages *.pyc
-recursive-exclude test_flatpages *.pyo
 recursive-include docs *
 recursive-exclude docs *.pyc
 recursive-exclude docs *.pyo
