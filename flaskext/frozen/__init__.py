@@ -82,16 +82,19 @@ class Freezer(object):
                 # Don't build the same URL more than once
                 continue
             seen_urls.add(url)
-            built_files.add(self._build_one(url))
+            new_filename = self._build_one(url)
+            built_files.add(new_filename)
+        # Remove files from the previous build that are not here anymore.
         for extra_file in previous_files - built_files:
             os.remove(extra_file)
             parent = os.path.dirname(extra_file)
             if not os.listdir(parent):
-                # now empty, remove
+                # The directory is now empty, remove it.
                 os.removedirs(parent)
         return seen_urls
     
     def _urls(self):
+        """Run all generators and yield URLs relative to the app root."""
         base_url = self.app.config['FREEZER_BASE_URL']
         script_name = urlparse.urlsplit(base_url).path.rstrip('/')
         # A request context is required to use url_for
