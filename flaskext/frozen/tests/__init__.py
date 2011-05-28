@@ -120,7 +120,12 @@ class TestBuilder(unittest.TestCase):
             urls = freezer.freeze()
             yield temp, app, freezer, urls
     
-    def test_urls(self):
+    def test_all_urls_method(self):
+        app, freezer = test_app.init_app()
+        # Do not use set() here: also test that URLs are not duplicated.
+        assert sorted(freezer.all_urls()) == sorted(self.expected_output)
+        
+    def test_built_urls(self):
         with self.built_app() as (temp, app, freezer, urls):
             self.assertEquals(set(urls), set(self.expected_output))
             # Make sure it was not accidently used as a destination
