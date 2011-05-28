@@ -86,7 +86,7 @@ class Freezer(object):
         )
         seen_urls = set()
         built_files = set()
-        for url in self._urls():
+        for url in self.all_urls():
             if url in seen_urls:
                 # Don't build the same URL more than once
                 continue
@@ -102,8 +102,11 @@ class Freezer(object):
                 os.removedirs(parent)
         return seen_urls
     
-    def _urls(self):
-        """Run all generators and yield URLs relative to the app root."""
+    def all_urls(self):
+        """
+        Run all generators and yield URLs relative to the app root.
+        May be useful for testing URL generators.
+        """
         base_url = self.app.config['FREEZER_BASE_URL']
         script_name = urlparse.urlsplit(base_url).path.rstrip('/')
         # A request context is required to use url_for
@@ -239,8 +242,11 @@ class Freezer(object):
 
 
 def walk_directory(root):
-    """Recursively walk the `root` directory and yield slash-separated paths
+    """
+    Recursively walk the `root` directory and yield slash-separated paths
     relative to the root.
+    
+    Used to implement the URL genertor for static files.
     """
     for name in os.listdir(root):
         full_name = os.path.join(root, name)

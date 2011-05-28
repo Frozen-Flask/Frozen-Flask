@@ -140,7 +140,9 @@ API
 .. module:: flaskext.frozen
 
 .. autoclass:: Freezer
-    :members: register_generator, freeze, serve
+    :members: register_generator, all_urls, freeze, serve
+
+.. autofunction:: walk_directory
 
 Changelog
 ---------
