@@ -22,6 +22,15 @@ from werkzeug import Client
 from werkzeug.exceptions import HTTPException
 from flask import Flask, Module, url_for, request, send_from_directory
 
+try:
+    from collections import Mapping
+    def is_mapping(obj):
+        return isinstance(obj, Mapping)
+except ImportError:
+    # Python 2.5, no Abstract Base Classes. Default to duck-typing.
+    def is_mapping(obj):
+        return hasattr(obj, 'keys')
+
 
 __all__ = ['Freezer']
 
@@ -104,7 +113,14 @@ class Freezer(object):
                     if isinstance(generated, basestring):
                         url = generated
                     else:
-                        endpoint, values = generated
+                        if is_mapping(generated):
+                            values = generated
+                            # The endpoint defaults to the name of the generator
+                            # function, just like with Flask views.
+                            endpoint = generator.__name__
+                        else:
+                            # Assume a tuple.
+                            endpoint, values = generated
                         url = url_for(endpoint, **values)
                         assert url.startswith(script_name), (
                             'url_for returned an URL %r not starting with '

@@ -3,8 +3,6 @@ from flaskext.frozen import Freezer
 
 from .admin import admin_module
 
-def product(product_id):
-    return 'Product num %i' % product_id
 
 def init_app():
     app = Flask(__name__)
@@ -25,13 +23,17 @@ def init_app():
         content = 'User-agent: *\nDisallow: /'
         return app.response_class(content, mimetype='text/plain')
 
-    app.route('/product_<int:product_id>/')(product)
+    @app.route('/product_<int:product_id>/')
+    def product(product_id):
+        return 'Product num %i' % product_id
 
     @freezer.register_generator
-    def app_urls():
+    def product():
         # endpoint, values
-        for id in (0, 1):
-            yield 'product', {'product_id': id}
+        yield 'product', {'product_id': 0}
+        # Just a `values` dict. The endpoint defaults to the name of the
+        # generator function, just like with Flask views
+        yield {'product_id': 1}
         # single string: url
         yield '/product_2/'
     
