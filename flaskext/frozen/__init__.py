@@ -77,28 +77,12 @@ class Freezer(object):
         )
         seen_urls = set()
         built_files = set()
-        base_url = self.app.config['FREEZER_BASE_URL']
-        script_name = urlparse.urlsplit(base_url).path.rstrip('/')
-        # A request context is required to use url_for
-        with self.app.test_request_context(base_url=script_name):
-            for generator in self.url_generators:
-                for url in generator():
-                    if not isinstance(url, basestring):
-                        endpoint, values = url
-                        url = url_for(endpoint, **values)
-                        assert not url.startswith(('http:', 'https:')), \
-                            'External URLs not supported: ' + url
-                        assert url.startswith(script_name), (
-                            'url_for returned an URL %r not starting with '
-                            'script_name %r. Bug in Werkzeug?'
-                            % (url, script_name)
-                        )
-                        url = url[len(script_name):]
-                    if url in seen_urls:
-                        # Don't build the same URL more than once
-                        continue
-                    seen_urls.add(url)
-                    built_files.add(self._build_one(url, base_url))
+        for url in self._urls():
+            if url in seen_urls:
+                # Don't build the same URL more than once
+                continue
+            seen_urls.add(url)
+            built_files.add(self._build_one(url))
         for extra_file in previous_files - built_files:
             os.remove(extra_file)
             parent = os.path.dirname(extra_file)
@@ -106,11 +90,34 @@ class Freezer(object):
                 # now empty, remove
                 os.removedirs(parent)
         return seen_urls
+    
+    def _urls(self):
+        base_url = self.app.config['FREEZER_BASE_URL']
+        script_name = urlparse.urlsplit(base_url).path.rstrip('/')
+        # A request context is required to use url_for
+        with self.app.test_request_context(base_url=script_name):
+            for generator in self.url_generators:
+                for generated in generator():
+                    if isinstance(generated, basestring):
+                        url = generated
+                    else:
+                        endpoint, values = generated
+                        url = url_for(endpoint, **values)
+                        assert url.startswith(script_name), (
+                            'url_for returned an URL %r not starting with '
+                            'script_name %r. Bug in Werkzeug?'
+                            % (url, script_name)
+                        )
+                        url = url[len(script_name):]
+                    assert not url.startswith(('http:', 'https:')), \
+                        'External URLs not supported: ' + url
+                    yield url
 
-    def _build_one(self, url, base_url):
+    def _build_one(self, url):
         """Get the given ``url`` from the app and write the matching file.
         """
         client = self.app.test_client()
+        base_url = self.app.config['FREEZER_BASE_URL']
         response = client.get(url, follow_redirects=True, base_url=base_url)
         # The client follows redirects by itself
         # Any other status code is probably an error
