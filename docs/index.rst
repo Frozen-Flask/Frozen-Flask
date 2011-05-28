@@ -164,6 +164,15 @@ API
 Changelog
 ---------
 
+Version 0.3, released on 2011-05-28
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* URL generators can omit the endpoint and just yield ``values`` dictionaries.
+  In that case, the name of the generator function is used as the endpoint,
+  just like with Flask views.
+* :meth:`Freezer.all_urls` and :func:`walk_directory` are now part of the
+  public API.
+
 Version 0.2, released on 2011-02-21
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
