@@ -139,7 +139,7 @@ class TestBuilder(unittest.TestCase):
             expected_files = set(self.filenames.itervalues())
             # No other files
             self.assertEquals(set(walk_directory(temp)), expected_files)
-            # create an empty life
+            # create an empty file
             os.mkdir(os.path.join(temp, 'extra'))
             open(os.path.join(temp, 'extra', 'extra.txt'), 'wb').close()
             # files in the destination that were not just built are removed
