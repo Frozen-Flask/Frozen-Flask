@@ -1,8 +1,10 @@
+# coding: utf8
 from __future__ import with_statement
 
 import unittest
 import tempfile
 import shutil
+import urllib
 import os.path
 from contextlib import contextmanager
 
@@ -97,6 +99,8 @@ class TestBuilder(unittest.TestCase):
         '/static/style.css': '/* Main CSS */\n',
         '/admin/static/style.css': '/* Admin CSS */\n',
         '/where_am_i/': '/where_am_i/ http://localhost/where_am_i/',
+        u'/page/I løvë Unicode/':
+            u'Hello\xa0World! I løvë Unicode'.encode('utf8'),
     }
     filenames = {
         '/': 'index.html',
@@ -108,6 +112,8 @@ class TestBuilder(unittest.TestCase):
         '/static/style.css': 'static/style.css',
         '/admin/static/style.css': 'admin/static/style.css',
         '/where_am_i/': 'where_am_i/index.html',
+        u'/page/I løvë Unicode/':
+            u'page/I løvë Unicode/index.html',
     }
     app_extra_config = {}
     
@@ -123,7 +129,8 @@ class TestBuilder(unittest.TestCase):
     def test_all_urls_method(self):
         app, freezer = test_app.init_app()
         # Do not use set() here: also test that URLs are not duplicated.
-        assert sorted(freezer.all_urls()) == sorted(self.expected_output)
+        self.assertEquals(sorted(freezer.all_urls()),
+                          sorted(self.expected_output))
         
     def test_built_urls(self):
         with self.built_app() as (temp, app, freezer, urls):
@@ -141,6 +148,8 @@ class TestBuilder(unittest.TestCase):
 
     def test_nothing_else_matters(self):
         with self.built_app() as (temp, app, freezer, urls):
+            # Get unicode filenames from os.listdir() (via walk_directory)
+            temp = temp.decode('utf8')
             expected_files = set(self.filenames.itervalues())
             # No other files
             self.assertEquals(set(walk_directory(temp)), expected_files)

@@ -1,3 +1,4 @@
+# coding: utf8
 from flask import Flask, url_for
 from flaskext.frozen import Freezer
 
@@ -12,6 +13,10 @@ def init_app():
     @app.route('/')
     def index():
         return 'Main index'
+
+    @app.route('/page/<name>/')
+    def page(name):
+        return u'Hello\xa0World! ' + name
 
     @app.route('/where_am_i/')
     def where_am_i():
@@ -36,6 +41,8 @@ def init_app():
         yield {'product_id': 1}
         # single string: url
         yield '/product_2/'
+        
+        yield 'page', {'name': u'I løvë Unicode'}
     
     return app, freezer
 
