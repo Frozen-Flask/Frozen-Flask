@@ -99,7 +99,7 @@ class TestBuilder(unittest.TestCase):
         '/static/style.css': '/* Main CSS */\n',
         '/admin/static/style.css': '/* Admin CSS */\n',
         '/where_am_i/': '/where_am_i/ http://localhost/where_am_i/',
-        u'/page/I løvë Unicode/':
+        u'/page/I løvë Unicode/'.encode('utf8'):
             u'Hello\xa0World! I løvë Unicode'.encode('utf8'),
     }
     filenames = {
@@ -112,8 +112,8 @@ class TestBuilder(unittest.TestCase):
         '/static/style.css': 'static/style.css',
         '/admin/static/style.css': 'admin/static/style.css',
         '/where_am_i/': 'where_am_i/index.html',
-        u'/page/I løvë Unicode/':
-            u'page/I løvë Unicode/index.html',
+        u'/page/I løvë Unicode/'.encode('utf8'):
+            u'page/I løvë Unicode/index.html'.encode('utf8'),
     }
     app_extra_config = {}
     
@@ -148,8 +148,7 @@ class TestBuilder(unittest.TestCase):
 
     def test_nothing_else_matters(self):
         with self.built_app() as (temp, app, freezer, urls):
-            # Get unicode filenames from os.listdir() (via walk_directory)
-            temp = temp.decode('utf8')
+            temp = temp
             expected_files = set(self.filenames.itervalues())
             # No other files
             self.assertEquals(set(walk_directory(temp)), expected_files)
@@ -168,6 +167,7 @@ class TestBuilder(unittest.TestCase):
                 # Run the freezer on it's own output
                 app2 = freezer.make_static_app()
                 app2.config['FREEZER_DESTINATION'] = temp2
+                app2.debug = True
                 freezer2 = Freezer(app2)
                 freezer2.register_generator(self.filenames.iterkeys)
                 freezer2.freeze()

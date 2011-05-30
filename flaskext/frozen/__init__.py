@@ -75,10 +75,10 @@ class Freezer(object):
     def root(self):
         """The build destination."""
         # unicode() will raise if the path is not ASCII or already unicode.
-        return unicode(os.path.join(
+        return os.path.join(
             self.app.root_path,
             self.app.config['FREEZER_DESTINATION']
-        ))
+        )
     
     def freeze(self):
         """Clean the destination and build all URLs from generators."""
@@ -135,9 +135,6 @@ class Freezer(object):
                         url = url[len(script_name):]
                     # Flask.url_for "quotes" URLs, eg. a space becomes %20
                     url = urllib.unquote(url)
-                    # werkzeug.routing.Map defaults to UTF-8
-                    if not isinstance(url, unicode):
-                        url = url.decode('utf8')
                     assert not url.startswith(('http:', 'https:')), \
                         'External URLs not supported: ' + url
                     yield url
@@ -205,14 +202,16 @@ class Freezer(object):
         
         def dispatch_request():
             try:
-                path = request.path
+                # request.path is unicode, but the freezer previously wrote
+                # to UTF-8 filenames, so encode to UTF-8 now.
+                path = request.path.encode('utf8')
                 if path.endswith('/'):
                     path += 'index.html'
                 assert path.startswith('/')
                 # Disable etags because of a Flask bug:
                 # https://github.com/mitsuhiko/flask/pull/237
                 # They are useless for tests anyway.
-                return send_from_directory(root, path[1:], add_etags=False)
+                return send_from_directory(root, path[1:])
             except HTTPException, e:
                 # eg. NotFound
                 return e
