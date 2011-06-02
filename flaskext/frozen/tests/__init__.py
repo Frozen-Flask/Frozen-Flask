@@ -4,7 +4,6 @@ from __future__ import with_statement
 import unittest
 import tempfile
 import shutil
-import urllib
 import os.path
 from contextlib import contextmanager
 
@@ -54,7 +53,7 @@ class TestTempDirectory(unittest.TestCase):
         try:
             with temp_directory() as temp:
                 assert os.path.isdir(temp)
-                1/0
+                1 / 0
         except ZeroDivisionError:
             pass
         else:
@@ -87,6 +86,7 @@ class TestWalkDirectory(unittest.TestCase):
             set(['__init__.py', 'static/style.css', 'admin/__init__.py',
                  'admin/static/style.css'])
         )
+
 
 class TestBuilder(unittest.TestCase):
     expected_output = {
@@ -159,7 +159,6 @@ class TestBuilder(unittest.TestCase):
             freezer.freeze()
             self.assertEquals(set(walk_directory(temp)), expected_files)
             self.assert_(not os.path.exists(os.path.join(temp, 'extra')))
-                
 
     def test_transitivity(self):
         with self.built_app() as (temp, app, freezer, urls):

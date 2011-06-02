@@ -15,11 +15,9 @@ from __future__ import with_statement
 
 import os.path
 import mimetypes
-import shutil
 import urlparse
 import urllib
 
-from werkzeug import Client
 from werkzeug.exceptions import HTTPException
 from flask import Flask, Module, url_for, request, send_from_directory
 
@@ -57,20 +55,20 @@ class Freezer(object):
             self.register_generator(self.static_files_urls)
         if with_no_argument_rules:
             self.register_generator(self.no_argument_rules_urls)
-    
+
     def register_generator(self, function):
         """Register a function as an URL generator.
-        
-        The function should return an iterable of URL paths or 
+
+        The function should return an iterable of URL paths or
         ``(endpoint, values)`` tuples to be used as
         ``url_for(endpoint, **values)``.
-        
+
         :Returns: the function, so that it can be used as a decorator
         """
         self.url_generators.append(function)
         # Allow use as a decorator
         return function
-    
+
     @property
     def root(self):
         """The build destination."""
@@ -79,7 +77,7 @@ class Freezer(object):
             self.app.root_path,
             self.app.config['FREEZER_DESTINATION']
         )
-    
+
     def freeze(self):
         """Clean the destination and build all URLs from generators."""
         previous_files = set(
@@ -103,7 +101,7 @@ class Freezer(object):
                 # The directory is now empty, remove it.
                 os.removedirs(parent)
         return seen_urls
-    
+
     def all_urls(self):
         """
         Run all generators and yield URLs relative to the app root.
@@ -120,8 +118,8 @@ class Freezer(object):
                     else:
                         if is_mapping(generated):
                             values = generated
-                            # The endpoint defaults to the name of the generator
-                            # function, just like with Flask views.
+                            # The endpoint defaults to the name of the
+                            # generator function, just like with Flask views.
                             endpoint = generator.__name__
                         else:
                             # Assume a tuple.
@@ -149,9 +147,9 @@ class Freezer(object):
         # Any other status code is probably an error
         assert response.status_code == 200, 'Unexpected status %r on URL %s' \
             % (response.status, url)
-        
+
         destination_path = url + 'index.html' if url.endswith('/') else url
-        
+
         # Most web servers guess the mime type of static files by their
         # filename.  Check that this guess is consistent with the actual
         # Content-Type header we got from the app.
@@ -161,14 +159,14 @@ class Freezer(object):
             # Used by most server when they can not determine the type
             guessed_type = 'application/octet-stream'
         assert guessed_type == response.mimetype, (
-            'Filename extension of %r (type %s) does not match Content-Type: %s'
-            % (basename, guessed_type, response.content_type)
+            'Filename extension of %r (type %s) does not match Content-Type:'
+            ' %s' % (basename, guessed_type, response.content_type)
         )
-        
+
         # Remove the initial slash that should always be there
         assert destination_path[0] == '/'
         destination_path = destination_path[1:]
-        
+
         filename = os.path.join(self.root, *destination_path.split('/'))
         dirname = os.path.dirname(filename)
         if not os.path.isdir(dirname):
@@ -185,10 +183,10 @@ class Freezer(object):
             with open(filename, 'wb') as fd:
                 fd.write(content)
         return filename
-    
+
     def serve(self, **options):
         """Run an HTTP server on the result of the build.
-        
+
         :param options: passed to ``app.run()``.
         """
         self.make_static_app().run(**options)
@@ -199,7 +197,7 @@ class Freezer(object):
             self.app.root_path,
             self.app.config['FREEZER_DESTINATION']
         )
-        
+
         def dispatch_request():
             try:
                 # request.path is unicode, but the freezer previously wrote
@@ -215,7 +213,7 @@ class Freezer(object):
             except HTTPException, e:
                 # eg. NotFound
                 return e
-        
+
         app = Flask(__name__)
         # Do not use the URL map
         app.dispatch_request = dispatch_request
