@@ -113,6 +113,8 @@ everything is fine before uploading::
 `Flask-Script <http://packages.python.org/Flask-Script/>`_ may come in handy
 here.
 
+.. _mime-types:
+
 Filenames and MIME types
 ------------------------
 
@@ -148,6 +150,21 @@ right ``Content-Type``::
     @app.route('/style.css')
     def compressed_css():
         return '/* ... */', 200, {'Content-Type': 'text/css; charset=utf-8'}
+
+Character encodings
+-------------------
+
+Flask uses Unicode everywhere internally, and defaults to UTF-8 for I/O.
+It will send the right ``Content-Type`` header with both a MIME type and
+and encoding (eg. ``text/html; charset=utf-8``). Frozen-Flask will try to
+`preserve MIME types <#mime-types>`_ through file extensions, but it can not
+preserve the encoding meta-data. You may need to add the right
+``<meta>`` tag to your HTML (you should anyway).
+
+Flask also defaults to UTF-8 for URLs. Since Frozen-Flask chooses the name of
+the files it builds from URLs, filenames are UTF-8 too. As links in your HTML
+have the same encoding, it should Just Work™. If it doesn’t, please `report
+a bug <https://github.com/SimonSapin/Frozen-Flask/issues>`_.
 
 .. _api:
 
