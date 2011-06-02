@@ -181,6 +181,14 @@ API
 Changelog
 ---------
 
+Version 0.4, released on 2011-06-02
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Bugfix: correctly unquote URLs to build filenames. Spaces and non-ASCII
+  characters should be %-encoded in URLs but not in frozen filenames. (Web
+  servers do the decoding.)
+* Add a documentation section about character encodings.
+
 Version 0.3, released on 2011-05-28
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
