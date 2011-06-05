@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Flask-FlatPages documentation build configuration file, created by
+# Frozen-Flask documentation build configuration file, created by
 # sphinx-quickstart on Fri Dec 24 15:20:25 2010.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -171,7 +171,7 @@ html_theme_path = ['_themes']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'Flask-FlatPagesdoc'
+htmlhelp_basename = 'Frozen-Flask-doc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -185,7 +185,7 @@ htmlhelp_basename = 'Flask-FlatPagesdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'Flask-FlatPages.tex', u'Flask-FlatPages Documentation',
+  ('index', 'Frozen-Flask.tex', u'Frozen-Flask Documentation',
    u'Simon Sapin', 'manual'),
 ]
 
@@ -218,6 +218,6 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'flask-flatpages', u'Flask-FlatPages Documentation',
+    ('index', 'frozen-flask', u'Frozen-Flask Documentation',
      [u'Simon Sapin'], 1)
 ]
