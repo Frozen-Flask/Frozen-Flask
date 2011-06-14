@@ -116,16 +116,21 @@ class TestBuilder(unittest.TestCase):
             u'page/I løvë Unicode/index.html'.encode('utf8'),
     }
     app_extra_config = {}
+    defer_init_app = True
     
     @contextmanager
     def built_app(self):
         with temp_directory() as temp:
-            app, freezer = test_app.init_app()
+            app, freezer = test_app.init_app(self.defer_init_app)
             app.config['FREEZER_DESTINATION'] = temp
             app.config.update(self.app_extra_config)
             urls = freezer.freeze()
             yield temp, app, freezer, urls
     
+    def test_without_app(self):
+        freezer = Freezer()
+        self.assertRaises(Exception, freezer.freeze)
+        
     def test_all_urls_method(self):
         app, freezer = test_app.init_app()
         # Do not use set() here: also test that URLs are not duplicated.
@@ -171,6 +176,10 @@ class TestBuilder(unittest.TestCase):
                 freezer2.register_generator(self.filenames.iterkeys)
                 freezer2.freeze()
                 self.assert_(not diff(temp, temp2))
+
+
+class TestInitApp(TestBuilder):
+    defer_init_app = True
 
 
 class TestBaseURL(TestBuilder):

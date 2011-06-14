@@ -5,10 +5,13 @@ from flaskext.frozen import Freezer
 from .admin import admin_module
 
 
-def init_app():
+def init_app(defer_init_app=False):
     app = Flask(__name__)
     app.register_module(admin_module, url_prefix='/admin')
-    freezer = Freezer(app)
+    if defer_init_app:
+        freezer = Freezer()
+    else:
+        freezer = Freezer(app)
 
     @app.route('/')
     def index():
@@ -44,5 +47,8 @@ def init_app():
         
         yield 'page', {'name': u'I løvë Unicode'}
     
+    if defer_init_app:
+        freezer.init_app(app)
+
     return app, freezer
 

@@ -45,16 +45,20 @@ class Freezer(object):
                                    for URL rules that take no arguments.
     :type with_no_argument_rules boolean:
     """
-    def __init__(self, app, with_static_files=True,
+    def __init__(self, app=None, with_static_files=True,
                  with_no_argument_rules=True):
-        app.config.setdefault('FREEZER_DESTINATION', 'build')
-        app.config.setdefault('FREEZER_BASE_URL', 'http://localhost/')
-        self.app = app
         self.url_generators = []
         if with_static_files:
             self.register_generator(self.static_files_urls)
         if with_no_argument_rules:
             self.register_generator(self.no_argument_rules_urls)
+        self.init_app(app)
+    
+    def init_app(self, app):
+        self.app = app
+        if app:
+            app.config.setdefault('FREEZER_DESTINATION', 'build')
+            app.config.setdefault('FREEZER_BASE_URL', 'http://localhost/')
 
     def register_generator(self, function):
         """Register a function as an URL generator.
