@@ -84,6 +84,8 @@ class Freezer(object):
 
     def freeze(self):
         """Clean the destination and build all URLs from generators."""
+        if not os.path.isdir(self.root):
+            os.makedirs(self.root)
         previous_files = set(
             os.path.join(self.root, *name.split('/'))
             for name in walk_directory(self.root)

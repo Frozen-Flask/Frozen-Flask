@@ -115,15 +115,17 @@ class TestBuilder(unittest.TestCase):
         u'/page/I løvë Unicode/'.encode('utf8'):
             u'page/I løvë Unicode/index.html'.encode('utf8'),
     }
-    app_extra_config = {}
     defer_init_app = True
+
+    def do_extra_config(self, app, freezer):
+        pass # To be overriden
     
     @contextmanager
     def built_app(self):
         with temp_directory() as temp:
             app, freezer = test_app.init_app(self.defer_init_app)
             app.config['FREEZER_DESTINATION'] = temp
-            app.config.update(self.app_extra_config)
+            self.do_extra_config(app, freezer)
             urls = freezer.freeze()
             yield temp, app, freezer, urls
     
@@ -153,17 +155,17 @@ class TestBuilder(unittest.TestCase):
 
     def test_nothing_else_matters(self):
         with self.built_app() as (temp, app, freezer, urls):
-            temp = temp
+            dest = app.config['FREEZER_DESTINATION']
             expected_files = set(self.filenames.itervalues())
             # No other files
-            self.assertEquals(set(walk_directory(temp)), expected_files)
+            self.assertEquals(set(walk_directory(dest)), expected_files)
             # create an empty file
-            os.mkdir(os.path.join(temp, 'extra'))
-            open(os.path.join(temp, 'extra', 'extra.txt'), 'wb').close()
+            os.mkdir(os.path.join(dest, 'extra'))
+            open(os.path.join(dest, 'extra', 'extra.txt'), 'wb').close()
             # files in the destination that were not just built are removed
             freezer.freeze()
-            self.assertEquals(set(walk_directory(temp)), expected_files)
-            self.assert_(not os.path.exists(os.path.join(temp, 'extra')))
+            self.assertEquals(set(walk_directory(dest)), expected_files)
+            self.assert_(not os.path.exists(os.path.join(dest, 'extra')))
 
     def test_transitivity(self):
         with self.built_app() as (temp, app, freezer, urls):
@@ -175,7 +177,8 @@ class TestBuilder(unittest.TestCase):
                 freezer2 = Freezer(app2)
                 freezer2.register_generator(self.filenames.iterkeys)
                 freezer2.freeze()
-                self.assert_(not diff(temp, temp2))
+                destination = app.config['FREEZER_DESTINATION']
+                self.assertEquals(diff(destination, temp2), set())
 
 
 class TestInitApp(TestBuilder):
@@ -183,9 +186,19 @@ class TestInitApp(TestBuilder):
 
 
 class TestBaseURL(TestBuilder):
-    app_extra_config = {'FREEZER_BASE_URL': 'http://example/myapp/'}
     expected_output = TestBuilder.expected_output.copy()
     expected_output['/where_am_i/'] = \
         '/myapp/where_am_i/ http://example/myapp/where_am_i/'
+
+    def do_extra_config(self, app, freezer):
+        app.config['FREEZER_BASE_URL'] = 'http://example/myapp/'
+
+
+class TestNonexsistentDestination(TestBuilder):
+    def do_extra_config(self, app, freezer):
+        # frozen/htdocs does not exsist in the newly created temp directory,
+        # the Freezer has to create it.
+        app.config['FREEZER_DESTINATION'] = os.path.join(
+            app.config['FREEZER_DESTINATION'], 'frozen', 'htdocs')
 
 
