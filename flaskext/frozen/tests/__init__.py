@@ -167,6 +167,22 @@ class TestBuilder(unittest.TestCase):
             self.assertEquals(set(walk_directory(dest)), expected_files)
             self.assert_(not os.path.exists(os.path.join(dest, 'extra')))
 
+    def test_something_else_matters(self):
+        with self.built_app() as (temp, app, freezer, urls):
+            app.config['FREEZER_OVERWRITE'] = False
+            dest = app.config['FREEZER_DESTINATION']
+            expected_files = set(self.filenames.itervalues())
+            # No other files
+            self.assertEquals(set(walk_directory(dest)), expected_files)
+            # create an empty file
+            os.mkdir(os.path.join(dest, 'extra'))
+            open(os.path.join(dest, 'extra', 'extra.txt'), 'wb').close()
+            expected_files.add('extra/extra.txt')
+            # Verify that files in destination persist.
+            freezer.freeze()
+            self.assertEquals(set(walk_directory(dest)), expected_files)
+            self.assert_(os.path.exists(os.path.join(dest, 'extra')))
+
     def test_transitivity(self):
         with self.built_app() as (temp, app, freezer, urls):
             with temp_directory() as temp2:
