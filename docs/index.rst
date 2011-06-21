@@ -49,7 +49,13 @@ Frozen-Flask accepts the following configuration values:
     ``_external=True``) or if your application is not at the root of its
     domain name.
     Defaults to ``'http://localhost/'``.
-    
+
+``FREEZER_OVERWRITE``
+    If set to `True`, Frozen-Flask will remove files in the destination
+    directory that were not built during the current freeze. This is intended
+    to clean up output files no longer needed on followup calls to
+    :meth:`Freezer.freeze`. Defaults to `True`.
+
 URL generators
 --------------
 
