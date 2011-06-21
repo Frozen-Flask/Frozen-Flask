@@ -59,6 +59,7 @@ class Freezer(object):
         if app:
             app.config.setdefault('FREEZER_DESTINATION', 'build')
             app.config.setdefault('FREEZER_BASE_URL', 'http://localhost/')
+            app.config.setdefault('FREEZER_OVERWRITE', True)
 
     def register_generator(self, function):
         """Register a function as an URL generator.
@@ -84,6 +85,7 @@ class Freezer(object):
 
     def freeze(self):
         """Clean the destination and build all URLs from generators."""
+        overwrite_destination = self.app.config['FREEZER_OVERWRITE']
         if not os.path.isdir(self.root):
             os.makedirs(self.root)
         previous_files = set(
@@ -99,13 +101,14 @@ class Freezer(object):
             seen_urls.add(url)
             new_filename = self._build_one(url)
             built_files.add(new_filename)
-        # Remove files from the previous build that are not here anymore.
-        for extra_file in previous_files - built_files:
-            os.remove(extra_file)
-            parent = os.path.dirname(extra_file)
-            if not os.listdir(parent):
-                # The directory is now empty, remove it.
-                os.removedirs(parent)
+        if overwrite_destination:
+            # Remove files from the previous build that are not here anymore.
+            for extra_file in previous_files - built_files:
+                os.remove(extra_file)
+                parent = os.path.dirname(extra_file)
+                if not os.listdir(parent):
+                    # The directory is now empty, remove it.
+                    os.removedirs(parent)
         return seen_urls
 
     def all_urls(self):
