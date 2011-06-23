@@ -33,7 +33,6 @@ except ImportError:
 
 __all__ = ['Freezer']
 
-
 class Freezer(object):
     """
     :param app: your application
@@ -142,8 +141,9 @@ class Freezer(object):
                         url = url[len(script_name):]
                     # Flask.url_for "quotes" URLs, eg. a space becomes %20
                     url = urllib.unquote(url)
-                    assert not url.startswith(('http:', 'https:')), \
-                        'External URLs not supported: ' + url
+                    if url.startswith(('http:', 'https:')):
+                        raise ValueError('External URLs not supported: ' + url)
+
                     yield url
 
     def _build_one(self, url):
@@ -154,8 +154,9 @@ class Freezer(object):
         response = client.get(url, follow_redirects=True, base_url=base_url)
         # The client follows redirects by itself
         # Any other status code is probably an error
-        assert response.status_code == 200, 'Unexpected status %r on URL %s' \
-            % (response.status, url)
+        if not(response.status_code == 200):
+            raise ValueError('Unexpected status %r on URL %s' \
+                % (response.status, url))
 
         destination_path = url + 'index.html' if url.endswith('/') else url
 
@@ -167,10 +168,10 @@ class Freezer(object):
         if not guessed_type:
             # Used by most server when they can not determine the type
             guessed_type = 'application/octet-stream'
-        assert guessed_type == response.mimetype, (
-            'Filename extension of %r (type %s) does not match Content-Type:'
-            ' %s' % (basename, guessed_type, response.content_type)
-        )
+        if not guessed_type == response.mimetype:
+            raise ValueError(
+                'Filename extension of %r (type %s) does not match Content-'
+                'Type: %s' % (basename, guessed_type, response.content_type))
 
         # Remove the initial slash that should always be there
         assert destination_path[0] == '/'
