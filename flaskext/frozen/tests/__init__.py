@@ -5,6 +5,7 @@ import unittest
 import tempfile
 import shutil
 import os.path
+import os
 from contextlib import contextmanager
 
 from flaskext.frozen import Freezer, walk_directory
@@ -158,13 +159,13 @@ class TestBuilder(unittest.TestCase):
             dest = app.config['FREEZER_DESTINATION']
             expected_files = set(self.filenames.itervalues())
             # No other files
-            self.assertEquals(set(walk_directory(dest)), expected_files)
+            self.assertEqualsExceptUnicode(set(walk_directory(dest)),expected_files)
             # create an empty file
             os.mkdir(os.path.join(dest, 'extra'))
             open(os.path.join(dest, 'extra', 'extra.txt'), 'wb').close()
             # files in the destination that were not just built are removed
             freezer.freeze()
-            self.assertEquals(set(walk_directory(dest)), expected_files)
+            self.assertEqualsExceptUnicode(set(walk_directory(dest)),expected_files)
             self.assert_(not os.path.exists(os.path.join(dest, 'extra')))
 
     def test_something_else_matters(self):
@@ -173,14 +174,14 @@ class TestBuilder(unittest.TestCase):
             dest = app.config['FREEZER_DESTINATION']
             expected_files = set(self.filenames.itervalues())
             # No other files
-            self.assertEquals(set(walk_directory(dest)), expected_files)
+            self.assertEqualsExceptUnicode(set(walk_directory(dest)),expected_files)
             # create an empty file
             os.mkdir(os.path.join(dest, 'extra'))
             open(os.path.join(dest, 'extra', 'extra.txt'), 'wb').close()
             expected_files.add('extra/extra.txt')
             # Verify that files in destination persist.
             freezer.freeze()
-            self.assertEquals(set(walk_directory(dest)), expected_files)
+            self.assertEqualsExceptUnicode(set(walk_directory(dest)),expected_files)
             self.assert_(os.path.exists(os.path.join(dest, 'extra')))
 
     def test_transitivity(self):
@@ -195,6 +196,12 @@ class TestBuilder(unittest.TestCase):
                 freezer2.freeze()
                 destination = app.config['FREEZER_DESTINATION']
                 self.assertEquals(diff(destination, temp2), set())
+    
+    def assertEqualsExceptUnicode(self,set1,set2):
+        diff=set1^set2
+        if os.environ.get('FROZEN_FLASK_TEST_IGNORE_UNICODE','False')=='True':
+            diff=set(filter(lambda s:'Unicode' not in s,diff))
+        self.assertEquals(diff,set())
 
 
 class TestInitApp(TestBuilder):
