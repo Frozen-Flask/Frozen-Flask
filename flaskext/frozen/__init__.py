@@ -43,11 +43,16 @@ class Freezer(object):
     :param with_no_argument_rules: Whether to automatically generate URLs
                                    for URL rules that take no arguments.
     :type with_no_argument_rules boolean:
+    :param crawl_links: Whether to search downloaded pages for additional
+                        links to download.
+    :type crawl_links boolean:
     """
     def __init__(self, app=None, with_static_files=True,
-                 with_no_argument_rules=True):
+                 with_no_argument_rules=True,crawl_links=False):
         self.url_generators = []
         self.excluded_patterns=[]
+        self.crawl_links=crawl_links
+        
         if with_static_files:
             self.register_generator(self.static_files_urls)
         if with_no_argument_rules:
@@ -186,7 +191,7 @@ class Freezer(object):
                 continue
             seen_urls.add(url)
             new_filename,content = self._build_one(url)
-            if self._contains_links(new_filename):
+            if self.crawl_links and self._contains_links(new_filename):
                 for link in self._extract_links(content):
                     if not ':' in link: #url is not external
                         if '?' in link:#strip query

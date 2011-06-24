@@ -9,9 +9,9 @@ def init_app(defer_init_app=False):
     app = Flask(__name__)
     app.register_module(admin_module, url_prefix='/admin')
     if defer_init_app:
-        freezer = Freezer()
+        freezer = Freezer(crawl_links=True)
     else:
-        freezer = Freezer(app)
+        freezer = Freezer(app,crawl_links=True)
     
     freezer.exclude_pattern('/page/excluded')
     
