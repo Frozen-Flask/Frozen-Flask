@@ -17,6 +17,7 @@ import os.path
 import mimetypes
 import urlparse
 import urllib
+import re
 
 from werkzeug.exceptions import HTTPException
 from flask import Flask, Module, url_for, request, send_from_directory
@@ -32,6 +33,65 @@ except ImportError:
 
 
 __all__ = ['Freezer']
+
+#note that these patterns are somewhat liberal
+#for example aaahref='link' would be matched
+#we assume false positives are ok, however
+"""
+A pattern for matching links in html.
+This includes both links in an ``a`` or ``img`` tag.
+They are structured as follows:
+
+#. the string 'href' or 'src'
+#. optional whitespace
+#. an equal (=) sign
+#. optional whitespace
+#. an optional single (') or double quote (") character
+#. optional whitespace
+#. a string of characters (the link to be captured)
+#. optional whitespace
+#. closing '>', whitespace, single (') quote, or double quote (") character
+   where the single/double quotes match up with the initial single/double
+   quote
+
+"""
+_html_url_ref_pattern=re.compile('(?:(?:href)|(?:src))\\s*=\\s*([\'"]?)\\s*([^"\\s>]+)\\s*\\1')
+
+"""
+a pattern for matching a link in css. defined as follows:
+
+#. the string 'url('
+#. optional whitespace
+#. an optional single (') or double quote (")
+#. optional whitespace
+#. a string of characters (the link to be captured)
+#. optional whitespace
+#. a closing single (') quote, or double quote (") matching the initial quote
+#. optional whitespace
+#. a closing paren ())
+
+"""
+_css_url_ref_pattern=re.compile('url\\(\\s*(["\']?)\\s*([^\\s"]+)\\s*\\1\\s*\\)')
+
+"""
+:param content: html/css text
+:Returns: a generator yeilding all links (as defined above) in content.
+"""
+def extract_links(content):
+    #we search for both css and html links in content regardless of type
+    #this is since html can contain embedded css and looking for html links
+    #in css can't hurt
+    for pattern in (_html_url_ref_pattern,_css_url_ref_pattern):
+        for match in pattern.finditer(content):
+            link=match.group(2)
+            #fix for greedily grabbing single quotes inside a single quoted string
+            if match.group(1)=="'" and "'" in link:
+                link=link[:link.find("'")]
+            #fix for greedily grabbing close parent ()) inside an unquoted string
+            if pattern == _css_url_ref_pattern and not match.group(1) and ')' in link:
+                yield link[:link.find(')')]
+            yield link
+
 
 class Freezer(object):
     """

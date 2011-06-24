@@ -8,6 +8,7 @@ import os.path
 import os
 from contextlib import contextmanager
 
+import flaskext.frozen
 from flaskext.frozen import Freezer, walk_directory
 from . import test_app
 
@@ -89,6 +90,14 @@ class TestWalkDirectory(unittest.TestCase):
         )
 
 
+class TestExtractLinks(unittest.TestCase):
+    def test_extract_links(self):
+        with open(os.path.dirname(__file__)+"/test_content_links",'r') as links:
+            content=read_file(os.path.dirname(__file__)+"/test_content")
+            for link in flaskext.frozen.extract_links(content):
+                self.assertEquals(link,links.readline().rstrip())
+
+
 class TestBuilder(unittest.TestCase):
     expected_output = {
         '/': 'Main index',
@@ -117,7 +126,7 @@ class TestBuilder(unittest.TestCase):
             u'page/I løvë Unicode/index.html'.encode('utf8'),
     }
     defer_init_app = True
-
+    
     def do_extra_config(self, app, freezer):
         pass # To be overriden
     
@@ -129,7 +138,7 @@ class TestBuilder(unittest.TestCase):
             self.do_extra_config(app, freezer)
             urls = freezer.freeze()
             yield temp, app, freezer, urls
-    
+        
     def test_without_app(self):
         freezer = Freezer()
         self.assertRaises(Exception, freezer.freeze)
