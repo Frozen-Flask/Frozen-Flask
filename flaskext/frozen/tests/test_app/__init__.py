@@ -12,7 +12,9 @@ def init_app(defer_init_app=False):
         freezer = Freezer()
     else:
         freezer = Freezer(app)
-
+    
+    freezer.exclude_pattern('/page/excluded')
+    
     @app.route('/')
     def index():
         return 'Main index'
@@ -44,7 +46,7 @@ def init_app(defer_init_app=False):
         yield {'product_id': 1}
         # single string: url
         yield '/product_2/'
-        
+        yield '/page/excluded'
         yield 'page', {'name': u'I løvë Unicode'}
     
     if defer_init_app:

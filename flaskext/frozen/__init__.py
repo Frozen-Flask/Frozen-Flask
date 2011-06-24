@@ -36,9 +36,9 @@ __all__ = ['Freezer']
 
 #note that these patterns are somewhat liberal
 #for example aaahref='link' would be matched
-#we assume false positives are ok, however
-"""
-A pattern for matching links in html.
+#we assume false positives are ok, however, you can always exclude them
+"""A pattern for matching links in html.
+
 This includes both links in an ``a`` or ``img`` tag.
 They are structured as follows:
 
@@ -57,8 +57,9 @@ They are structured as follows:
 """
 _html_url_ref_pattern=re.compile('(?:(?:href)|(?:src))\\s*=\\s*([\'"]?)\\s*([^"\\s>]+)\\s*\\1')
 
-"""
-a pattern for matching a link in css. defined as follows:
+"""A pattern for matching a link in css.
+
+Defined as follows:
 
 #. the string 'url('
 #. optional whitespace
@@ -107,12 +108,21 @@ class Freezer(object):
     def __init__(self, app=None, with_static_files=True,
                  with_no_argument_rules=True):
         self.url_generators = []
+        self.excluded_patterns=[]
         if with_static_files:
             self.register_generator(self.static_files_urls)
         if with_no_argument_rules:
             self.register_generator(self.no_argument_rules_urls)
         self.init_app(app)
     
+    def exclude_pattern(self,pattern):
+        """Prevent download of urls matching pattern.
+
+        :param pattern: A regular expression
+        :type pattern: A string
+        """
+        self.excluded_patterns.append(re.compile(pattern))
+        
     def init_app(self, app):
         self.app = app
         if app:
@@ -156,6 +166,13 @@ class Freezer(object):
         for url in self.all_urls():
             if url in seen_urls:
                 # Don't build the same URL more than once
+                continue
+            skip_url=False
+            for pattern in self.excluded_patterns:
+                if pattern.match(url):
+                    skip_url=True
+                    break
+            if skip_url:
                 continue
             seen_urls.add(url)
             new_filename = self._build_one(url)

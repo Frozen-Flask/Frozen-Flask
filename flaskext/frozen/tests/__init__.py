@@ -112,6 +112,7 @@ class TestBuilder(unittest.TestCase):
         u'/page/I løvë Unicode/'.encode('utf8'):
             u'Hello\xa0World! I løvë Unicode'.encode('utf8'),
     }
+    excluded_urls=["/page/excluded"]
     filenames = {
         '/': 'index.html',
         '/admin/': 'admin/index.html',
@@ -146,8 +147,10 @@ class TestBuilder(unittest.TestCase):
     def test_all_urls_method(self):
         app, freezer = test_app.init_app()
         # Do not use set() here: also test that URLs are not duplicated.
+        expected=sorted(self.expected_output)
+        expected.append(*self.excluded_urls)
         self.assertEquals(sorted(freezer.all_urls()),
-                          sorted(self.expected_output))
+                          sorted(expected))
         
     def test_built_urls(self):
         with self.built_app() as (temp, app, freezer, urls):
