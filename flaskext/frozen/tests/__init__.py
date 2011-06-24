@@ -90,7 +90,7 @@ class TestWalkDirectory(unittest.TestCase):
 
 class TestBuilder(unittest.TestCase):
     expected_output = {
-        '/': 'Main index href="/page/crawled/"',
+        '/': 'Main index href="/page/crawled/" src="http://ignore.com"',
         '/some/nested/page/':'url("../../../product_7/")',
         '/admin/': 'Admin index',
         '/robots.txt': 'User-agent: *\nDisallow: /',

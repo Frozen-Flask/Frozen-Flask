@@ -17,7 +17,7 @@ def init_app(defer_init_app=False):
     
     @app.route('/')
     def index():
-        return 'Main index href="/page/crawled/"'
+        return 'Main index href="/page/crawled/" src="http://ignore.com"'
 
     @app.route('/some/nested/page/')
     def nest():
