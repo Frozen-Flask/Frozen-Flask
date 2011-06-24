@@ -9,13 +9,19 @@ def init_app(defer_init_app=False):
     app = Flask(__name__)
     app.register_module(admin_module, url_prefix='/admin')
     if defer_init_app:
-        freezer = Freezer()
+        freezer = Freezer(crawl_links=True)
     else:
-        freezer = Freezer(app)
-
+        freezer = Freezer(app,crawl_links=True)
+    
+    freezer.exclude_pattern('/page/excluded')
+    
     @app.route('/')
     def index():
-        return 'Main index'
+        return 'Main index href="/page/crawled/" src="http://ignore.com"'
+
+    @app.route('/some/nested/page/')
+    def nest():
+        return 'url("../../../product_7/")'
 
     @app.route('/page/<name>/')
     def page(name):
@@ -44,7 +50,7 @@ def init_app(defer_init_app=False):
         yield {'product_id': 1}
         # single string: url
         yield '/product_2/'
-        
+        yield '/page/excluded'
         yield 'page', {'name': u'I løvë Unicode'}
     
     if defer_init_app:
