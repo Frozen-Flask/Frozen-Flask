@@ -17,7 +17,11 @@ def init_app(defer_init_app=False):
     
     @app.route('/')
     def index():
-        return 'Main index'
+        return 'Main index href="/page/crawled/"'
+
+    @app.route('/some/nested/page/')
+    def nest():
+        return 'url("../../../product_7/")'
 
     @app.route('/page/<name>/')
     def page(name):

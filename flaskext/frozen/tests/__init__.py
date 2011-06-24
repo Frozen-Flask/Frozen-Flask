@@ -8,7 +8,6 @@ import os.path
 import os
 from contextlib import contextmanager
 
-import flaskext.frozen
 from flaskext.frozen import Freezer, walk_directory
 from . import test_app
 
@@ -89,18 +88,10 @@ class TestWalkDirectory(unittest.TestCase):
                  'admin/static/style.css'])
         )
 
-
-class TestExtractLinks(unittest.TestCase):
-    def test_extract_links(self):
-        with open(os.path.dirname(__file__)+"/test_content_links",'r') as links:
-            content=read_file(os.path.dirname(__file__)+"/test_content")
-            for link in flaskext.frozen.extract_links(content):
-                self.assertEquals(link,links.readline().rstrip())
-
-
 class TestBuilder(unittest.TestCase):
     expected_output = {
-        '/': 'Main index',
+        '/': 'Main index href="/page/crawled/"',
+        '/some/nested/page/':'url("../../../product_7/")',
         '/admin/': 'Admin index',
         '/robots.txt': 'User-agent: *\nDisallow: /',
         '/product_0/': 'Product num 0',
@@ -113,18 +104,27 @@ class TestBuilder(unittest.TestCase):
             u'Hello\xa0World! I løvë Unicode'.encode('utf8'),
     }
     excluded_urls=["/page/excluded"]
+    crawled_output={
+        '/page/crawled/': u'Hello\xa0World! crawled'.encode('utf8'),
+        '/product_7/': 'Product num 7'
+    }
+    all_output=dict(expected_output,**crawled_output)
     filenames = {
         '/': 'index.html',
+        '/some/nested/page/':'some/nested/page/index.html',
+        '/some/nested/page/':'some/nested/page/index.html',
         '/admin/': 'admin/index.html',
         '/robots.txt': 'robots.txt',
         '/product_0/': 'product_0/index.html',
         '/product_1/': 'product_1/index.html',
         '/product_2/': 'product_2/index.html',
+        '/product_7/': 'product_7/index.html',
         '/static/style.css': 'static/style.css',
         '/admin/static/style.css': 'admin/static/style.css',
         '/where_am_i/': 'where_am_i/index.html',
         u'/page/I løvë Unicode/'.encode('utf8'):
             u'page/I løvë Unicode/index.html'.encode('utf8'),
+        '/page/crawled/':'page/crawled/index.html'
     }
     defer_init_app = True
     
@@ -139,7 +139,13 @@ class TestBuilder(unittest.TestCase):
             self.do_extra_config(app, freezer)
             urls = freezer.freeze()
             yield temp, app, freezer, urls
-        
+            
+    def test_extract_links(self):
+        with open(os.path.dirname(__file__)+"/test_content_links",'r') as links:
+            content=read_file(os.path.dirname(__file__)+"/test_content")
+            for link in Freezer()._extract_links(content):
+                self.assertEquals(link,links.readline().rstrip())
+                           
     def test_without_app(self):
         freezer = Freezer()
         self.assertRaises(Exception, freezer.freeze)
@@ -154,7 +160,7 @@ class TestBuilder(unittest.TestCase):
         
     def test_built_urls(self):
         with self.built_app() as (temp, app, freezer, urls):
-            self.assertEquals(set(urls), set(self.expected_output))
+            self.assertEquals(set(urls), set(self.all_output))
             # Make sure it was not accidently used as a destination
             default = os.path.join(os.path.dirname(__file__), 'build')
             self.assert_(not os.path.exists(default))
@@ -164,7 +170,7 @@ class TestBuilder(unittest.TestCase):
             for url, filename in self.filenames.iteritems():
                 filename = os.path.join(freezer.root, *filename.split('/'))
                 content = read_file(filename)
-                self.assertEquals(content, self.expected_output[url])
+                self.assertEquals(content, self.all_output[url])
 
     def test_nothing_else_matters(self):
         with self.built_app() as (temp, app, freezer, urls):
@@ -221,8 +227,8 @@ class TestInitApp(TestBuilder):
 
 
 class TestBaseURL(TestBuilder):
-    expected_output = TestBuilder.expected_output.copy()
-    expected_output['/where_am_i/'] = \
+    all_output = TestBuilder.all_output.copy()
+    all_output['/where_am_i/'] = \
         '/myapp/where_am_i/ http://example/myapp/where_am_i/'
 
     def do_extra_config(self, app, freezer):

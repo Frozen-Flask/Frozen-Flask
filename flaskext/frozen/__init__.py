@@ -33,67 +33,6 @@ except ImportError:
 
 
 __all__ = ['Freezer']
-
-#note that these patterns are somewhat liberal
-#for example aaahref='link' would be matched
-#we assume false positives are ok, however, you can always exclude them
-"""A pattern for matching links in html.
-
-This includes both links in an ``a`` or ``img`` tag.
-They are structured as follows:
-
-#. the string 'href' or 'src'
-#. optional whitespace
-#. an equal (=) sign
-#. optional whitespace
-#. an optional single (') or double quote (") character
-#. optional whitespace
-#. a string of characters (the link to be captured)
-#. optional whitespace
-#. closing '>', whitespace, single (') quote, or double quote (") character
-   where the single/double quotes match up with the initial single/double
-   quote
-
-"""
-_html_url_ref_pattern=re.compile('(?:(?:href)|(?:src))\\s*=\\s*([\'"]?)\\s*([^"\\s>]+)\\s*\\1')
-
-"""A pattern for matching a link in css.
-
-Defined as follows:
-
-#. the string 'url('
-#. optional whitespace
-#. an optional single (') or double quote (")
-#. optional whitespace
-#. a string of characters (the link to be captured)
-#. optional whitespace
-#. a closing single (') quote, or double quote (") matching the initial quote
-#. optional whitespace
-#. a closing paren ())
-
-"""
-_css_url_ref_pattern=re.compile('url\\(\\s*(["\']?)\\s*([^\\s"]+)\\s*\\1\\s*\\)')
-
-"""
-:param content: html/css text
-:Returns: a generator yeilding all links (as defined above) in content.
-"""
-def extract_links(content):
-    #we search for both css and html links in content regardless of type
-    #this is since html can contain embedded css and looking for html links
-    #in css can't hurt
-    for pattern in (_html_url_ref_pattern,_css_url_ref_pattern):
-        for match in pattern.finditer(content):
-            link=match.group(2)
-            #fix for greedily grabbing single quotes inside a single quoted string
-            if match.group(1)=="'" and "'" in link:
-                link=link[:link.find("'")]
-            #fix for greedily grabbing close parent ()) inside an unquoted string
-            if pattern == _css_url_ref_pattern and not match.group(1) and ')' in link:
-                yield link[:link.find(')')]
-            yield link
-
-
 class Freezer(object):
     """
     :param app: your application
@@ -115,21 +54,13 @@ class Freezer(object):
             self.register_generator(self.no_argument_rules_urls)
         self.init_app(app)
     
-    def exclude_pattern(self,pattern):
-        """Prevent download of urls matching pattern.
-
-        :param pattern: A regular expression
-        :type pattern: A string
-        """
-        self.excluded_patterns.append(re.compile(pattern))
-        
     def init_app(self, app):
         self.app = app
         if app:
             app.config.setdefault('FREEZER_DESTINATION', 'build')
             app.config.setdefault('FREEZER_BASE_URL', 'http://localhost/')
             app.config.setdefault('FREEZER_OVERWRITE', True)
-        
+    
     def register_generator(self, function):
         """Register a function as an URL generator.
 
@@ -142,7 +73,15 @@ class Freezer(object):
         self.url_generators.append(function)
         # Allow use as a decorator
         return function
+    
+    def exclude_pattern(self,pattern):
+        """Prevent download of urls matching ``pattern``.
 
+        :param pattern: A regular expression
+        :type pattern: A string
+        """
+        self.excluded_patterns.append(re.compile(pattern))
+    
     @property
     def root(self):
         """The build destination."""
@@ -151,7 +90,81 @@ class Freezer(object):
             self.app.root_path,
             self.app.config['FREEZER_DESTINATION']
         )
+    
+    #note that these patterns are somewhat liberal
+    #for example aaahref='link' would be matched
+    #we assume false positives are ok, however, you can always exclude them
+    """A pattern for matching links in html.
 
+    This includes both links in an ``a`` or ``img`` tag.
+    They are structured as follows:
+
+    #. the string 'href' or 'src'
+    #. optional whitespace
+    #. an equal (=) sign
+    #. optional whitespace
+    #. an optional single (') or double quote (") character
+    #. optional whitespace
+    #. a string of characters (the link to be captured)
+    #. optional whitespace
+    #. closing '>', whitespace, single (') quote, or double quote (") character
+       where the single/double quotes match up with the initial single/double
+       quote
+
+    """
+    _html_url_ref_pattern=re.compile('(?:(?:href)|(?:src))\\s*=\\s*([\'"]?)\\s*([^"\\s>]+)\\s*\\1')
+
+    """A pattern for matching a link in css.
+
+    Defined as follows:
+
+    #. the string 'url('
+    #. optional whitespace
+    #. an optional single (') or double quote (")
+    #. optional whitespace
+    #. a string of characters (the link to be captured)
+    #. optional whitespace
+    #. a closing single (') quote, or double quote (") matching the initial quote
+    #. optional whitespace
+    #. a closing paren ())
+
+    """
+    _css_url_ref_pattern=re.compile('url\\(\\s*(["\']?)\\s*([^\\s"]+)\\s*\\1\\s*\\)')
+
+    """
+    :param content: html/css text
+    :Returns: a generator yeilding all links (as defined above) in content.
+    """
+    def _extract_links(self,content):
+        #we search for both css and html links in content regardless of type
+        #this is since html can contain embedded css and looking for html links
+        #in css can't hurt
+        for pattern in (self._html_url_ref_pattern,self._css_url_ref_pattern):
+            for match in pattern.finditer(content):
+                link=match.group(2)
+                #fix for greedily grabbing single quotes inside a single quoted string
+                if match.group(1)=="'" and "'" in link:
+                    link=link[:link.find("'")]
+                #fix for greedily grabbing close parent ()) inside an unquoted string
+                if pattern == self._css_url_ref_pattern and not match.group(1) and ')' in link:
+                    yield link[:link.find(')')]
+                yield link
+    
+    def _is_url_excluded(self,url):
+        """Test if ``url`` should be excluded by matching against all
+           ``excluded_patterns``"""
+        for pattern in self.excluded_patterns:
+            if pattern.match(url):
+                return True
+        return False
+    def _contains_links(self,file_name):
+        """Test if a file with ``file_name`` should be scanned for links
+           by seeing if it's extension is .css/.html/.xhtml"""
+        for extension in ('html','css','xhtml'):
+            if file_name.endswith('.'+extension):
+                return True
+        return False
+        
     def freeze(self):
         """Clean the destination and build all URLs from generators."""
         overwrite_destination = self.app.config['FREEZER_OVERWRITE']
@@ -163,19 +176,27 @@ class Freezer(object):
         )
         seen_urls = set()
         built_files = set()
-        for url in self.all_urls():
+        urls=[u for u in self.all_urls()]
+        while urls:
+            url=urls.pop()
             if url in seen_urls:
                 # Don't build the same URL more than once
                 continue
-            skip_url=False
-            for pattern in self.excluded_patterns:
-                if pattern.match(url):
-                    skip_url=True
-                    break
-            if skip_url:
+            if self._is_url_excluded(url):
                 continue
             seen_urls.add(url)
-            new_filename = self._build_one(url)
+            new_filename,content = self._build_one(url)
+            if self._contains_links(new_filename):
+                for link in self._extract_links(content):
+                    if not ':' in link: #url is not external
+                        if '?' in link:#strip query
+                            url=url[:url.rfind('?')]
+                        if '#' in link:#strip anchor tag
+                            url=url[:url.rfind('#')]
+                        if not link.startswith('/'):#resolve relative paths
+                            link=urlparse.urljoin(url,link)
+                        if url:
+                            urls.append(link)
             built_files.add(new_filename)
         if overwrite_destination:
             # Remove files from the previous build that are not here anymore.
@@ -269,7 +290,7 @@ class Freezer(object):
             # by keeping the modification date.
             with open(filename, 'wb') as fd:
                 fd.write(content)
-        return filename
+        return (filename,content)
 
     def serve(self, **options):
         """Run an HTTP server on the result of the build.
