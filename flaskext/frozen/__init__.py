@@ -193,11 +193,11 @@ class Freezer(object):
             new_filename,content = self._build_one(url)
             if self.crawl_links and self._contains_links(new_filename):
                 for link in self._extract_links(content):
-                    if not ':' in link: #url is not external
+                    if not (':' in link or link.startswith('//')): #url is not external
                         if '?' in link:#strip query
-                            url=url[:url.rfind('?')]
+                            link=link[:link.rfind('?')]
                         if '#' in link:#strip anchor tag
-                            url=url[:url.rfind('#')]
+                            link=link[:link.rfind('#')]
                         if not link.startswith('/'):#resolve relative paths
                             link=urlparse.urljoin(url,link)
                         if url:
