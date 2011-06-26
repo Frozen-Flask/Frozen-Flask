@@ -50,7 +50,7 @@ Frozen-Flask accepts the following configuration values:
     domain name.
     Defaults to ``'http://localhost/'``.
 
-``FREEZER_OVERWRITE``
+``FREEZER_REMOVE_EXTRA_FILES``
     If set to `True`, Frozen-Flask will remove files in the destination
     directory that were not built during the current freeze. This is intended
     to clean up output files no longer needed on followup calls to

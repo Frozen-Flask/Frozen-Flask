@@ -169,7 +169,7 @@ class TestBuilder(unittest.TestCase):
 
     def test_something_else_matters(self):
         with self.built_app() as (temp, app, freezer, urls):
-            app.config['FREEZER_OVERWRITE'] = False
+            app.config['FREEZER_REMOVE_EXTRA_FILES'] = False
             dest = app.config['FREEZER_DESTINATION']
             expected_files = set(self.filenames.itervalues())
             # No other files
