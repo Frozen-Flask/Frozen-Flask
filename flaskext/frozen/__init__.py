@@ -17,6 +17,7 @@ import os.path
 import mimetypes
 import urlparse
 import urllib
+import warnings
 
 from werkzeug.exceptions import HTTPException
 from flask import Flask, Module, url_for, request, send_from_directory
@@ -32,6 +33,11 @@ except ImportError:
 
 
 __all__ = ['Freezer']
+
+
+class MissingURLGeneratorWarning(Warning):
+    pass
+
 
 class Freezer(object):
     """
@@ -117,6 +123,7 @@ class Freezer(object):
         """
         base_url = self.app.config['FREEZER_BASE_URL']
         script_name = urlparse.urlsplit(base_url).path.rstrip('/')
+        seen_endpoints = set()
         # A request context is required to use url_for
         with self.app.test_request_context(base_url=script_name):
             for generator in self.url_generators:
@@ -132,6 +139,7 @@ class Freezer(object):
                         else:
                             # Assume a tuple.
                             endpoint, values = generated
+                        seen_endpoints.add(endpoint)
                         url = url_for(endpoint, **values)
                         assert url.startswith(script_name), (
                             'url_for returned an URL %r not starting with '
@@ -146,6 +154,22 @@ class Freezer(object):
                         raise ValueError('External URLs not supported: ' + url)
 
                     yield url
+
+        all_endpoints = set(
+            rule.endpoint for rule in self.app.url_map.iter_rules())
+        not_generated_endpoints = all_endpoints - seen_endpoints
+        
+        if self.static_files_urls in self.url_generators:
+            # Special case: do not warn when there is no static file
+            not_generated_endpoints -= set(self._static_rules_endpoints())
+
+        if not_generated_endpoints:
+            warnings.warn(
+                'Nothing frozen for endpoints %s. Did you forget an URL '
+                'generator?' % ', '.join(
+                    unicode(e) for e in not_generated_endpoints),
+                MissingURLGeneratorWarning,
+                stacklevel=3)
 
     def _build_one(self, url):
         """Get the given ``url`` from the app and write the matching file.
@@ -229,9 +253,10 @@ class Freezer(object):
         # Do not use the URL map
         app.dispatch_request = dispatch_request
         return app
-
-    def static_files_urls(self):
-        """URL generator for static files for app and all registered modules.
+    
+    def _static_rules_endpoints(self):
+        """
+        Yield the 'static' URL rules for the app and all modules.
         """
         send_static_file = unwrap_method(Flask.send_static_file)
         # Assumption about a Flask internal detail:
@@ -242,15 +267,21 @@ class Freezer(object):
         
         for rule in self.app.url_map.iter_rules():
             view = self.app.view_functions[rule.endpoint]
-            if unwrap_method(view) is not send_static_file:
-                continue
-            # Found an URL rule for the static files view
-            root = os.path.join(method_self(view).root_path, 'static')
+            if unwrap_method(view) is send_static_file:
+                yield rule.endpoint
+
+    def static_files_urls(self):
+        """URL generator for static files for app and all registered modules.
+        """
+        for endpoint in self._static_rules_endpoints():
+            view = self.app.view_functions[endpoint]
+            app_or_module = method_self(view)
+            root = os.path.join(app_or_module.root_path, 'static')
             if not os.path.isdir(root):
                 # No 'static' directory for this app/module.
                 continue
             for filename in walk_directory(root):
-                yield rule.endpoint, {'filename': filename}
+                yield endpoint, {'filename': filename}
 
     def no_argument_rules_urls(self):
         """URL generator for URL rules that take no arguments."""

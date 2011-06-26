@@ -5,10 +5,40 @@ import unittest
 import tempfile
 import shutil
 import os.path
+import warnings
 from contextlib import contextmanager
 
-from flaskext.frozen import Freezer, walk_directory
+from flaskext.frozen import Freezer, walk_directory, MissingURLGeneratorWarning
 from . import test_app
+
+
+try:
+    # Since Python
+    from warnings import catch_warnings
+except ImportError:
+    # Python 2.5
+    class WarningMessage(object):
+        def __init__(self, message, category, *args, **kwargs):
+            self.message = message
+            self.category = category
+
+    @contextmanager
+    def catch_warnings(record=False):
+        assert record, 'record=False is not supported'
+
+        _filters = warnings.filters
+        warnings.filters = _filters[:]
+        _showwarning = warnings.showwarning
+        log = []
+        def showwarning(*args, **kwargs):
+            log.append(WarningMessage(*args, **kwargs))
+        warnings.showwarning = showwarning
+        
+        try:
+            yield log
+        finally:
+            warnings.filters = _filters
+            warnings.showwarning = _showwarning
 
 
 @contextmanager
@@ -121,11 +151,16 @@ class TestBuilder(unittest.TestCase):
         pass # To be overriden
     
     @contextmanager
-    def built_app(self):
+    def make_app(self):
         with temp_directory() as temp:
             app, freezer = test_app.init_app(self.defer_init_app)
             app.config['FREEZER_DESTINATION'] = temp
             self.do_extra_config(app, freezer)
+            yield temp, app, freezer
+    
+    @contextmanager
+    def built_app(self):
+        with self.make_app() as (temp, app, freezer):
             urls = freezer.freeze()
             yield temp, app, freezer, urls
     
@@ -197,11 +232,9 @@ class TestBuilder(unittest.TestCase):
                 self.assertEquals(diff(destination, temp2), set())
 
     def test_error_on_external_url(self):
-        with temp_directory() as temp:
-            for url in ['http://example.com/foo', '//example.com/foo',
-                        'file:///foo']:
-                app, freezer = test_app.init_app(self.defer_init_app)
-                app.config['FREEZER_DESTINATION'] = temp
+        for url in ['http://example.com/foo', '//example.com/foo',
+                    'file:///foo']:
+            with self.make_app() as (temp, app, freezer):
                 @freezer.register_generator
                 def external_url():
                     yield url
@@ -209,9 +242,23 @@ class TestBuilder(unittest.TestCase):
                 try:
                     freezer.freeze()
                 except ValueError, e:
-                    assert 'External URLs not supported' in e.message
+                    assert 'External URLs not supported' in e.args[0]
                 else:
                     assert False, 'Expected ValueError'
+
+    def test_warn_on_missing_generator(self):
+        with self.make_app() as (temp, app, freezer):
+            # Add a new endpoint without URL generator
+            @app.route('/extra/<some_argument>')
+            def external_url(some_argument):
+                return some_argument
+            
+            with catch_warnings(record=True) as logged_warnings:
+                warnings.simplefilter("always")
+                freezer.freeze()
+                self.assertEquals(len(logged_warnings), 1)
+                self.assertEquals(logged_warnings[0].category,
+                                  MissingURLGeneratorWarning)
 
 
 class TestInitApp(TestBuilder):
