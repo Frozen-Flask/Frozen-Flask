@@ -141,7 +141,8 @@ class Freezer(object):
                         url = url[len(script_name):]
                     # Flask.url_for "quotes" URLs, eg. a space becomes %20
                     url = urllib.unquote(url)
-                    if url.startswith(('http:', 'https:')):
+                    parsed_url = urlparse.urlsplit(url)
+                    if parsed_url.scheme or parsed_url.netloc:
                         raise ValueError('External URLs not supported: ' + url)
 
                     yield url

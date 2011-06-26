@@ -196,6 +196,23 @@ class TestBuilder(unittest.TestCase):
                 destination = app.config['FREEZER_DESTINATION']
                 self.assertEquals(diff(destination, temp2), set())
 
+    def test_error_on_external_url(self):
+        with temp_directory() as temp:
+            for url in ['http://example.com/foo', '//example.com/foo',
+                        'file:///foo']:
+                app, freezer = test_app.init_app(self.defer_init_app)
+                app.config['FREEZER_DESTINATION'] = temp
+                @freezer.register_generator
+                def external_url():
+                    yield url
+
+                try:
+                    freezer.freeze()
+                except ValueError, e:
+                    assert 'External URLs not supported' in e.message
+                else:
+                    assert False, 'Expected ValueError'
+
 
 class TestInitApp(TestBuilder):
     defer_init_app = True
