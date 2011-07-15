@@ -7,6 +7,7 @@ import shutil
 import os.path
 import warnings
 from contextlib import contextmanager
+from unicodedata import normalize
 
 from flaskext.frozen import Freezer, walk_directory, MissingURLGeneratorWarning
 from . import test_app
@@ -33,7 +34,7 @@ except ImportError:
         def showwarning(*args, **kwargs):
             log.append(WarningMessage(*args, **kwargs))
         warnings.showwarning = showwarning
-        
+
         try:
             yield log
         finally:
@@ -78,7 +79,7 @@ class TestTempDirectory(unittest.TestCase):
             assert os.path.isdir(temp)
         # should be removed now
         assert not os.path.exists(temp)
-            
+
     def test_exception(self):
         try:
             with temp_directory() as temp:
@@ -89,7 +90,7 @@ class TestTempDirectory(unittest.TestCase):
         else:
             assert False, 'Exception did not propagate'
         assert not os.path.exists(temp)
-            
+
     def test_writing(self):
         with temp_directory() as temp:
             filename = os.path.join(temp, 'foo')
@@ -149,7 +150,7 @@ class TestBuilder(unittest.TestCase):
 
     def do_extra_config(self, app, freezer):
         pass # To be overriden
-    
+
     @contextmanager
     def make_app(self):
         with temp_directory() as temp:
@@ -157,30 +158,42 @@ class TestBuilder(unittest.TestCase):
             app.config['FREEZER_DESTINATION'] = temp
             self.do_extra_config(app, freezer)
             yield temp, app, freezer
-    
+
     @contextmanager
     def built_app(self):
         with self.make_app() as (temp, app, freezer):
             urls = freezer.freeze()
             yield temp, app, freezer, urls
-    
+
+    def assertFilenamesEqual(self, set1, set2):
+        # Fix for https://github.com/SimonSapin/Frozen-Flask/issues/5
+        self.assertEquals(*[
+            # Use any normalization here, as long as it is the same for
+            # both sets.
+            # normalize() works on Unicode strings, but Frozen-Flask
+            # uses UTF-8 for filenames everywhere.
+            set(normalize('NFC', name.decode('utf8')).encode('utf8')
+                for name in set_)
+            for set_ in [set1, set2]
+        ])
+
     def test_without_app(self):
         freezer = Freezer()
         self.assertRaises(Exception, freezer.freeze)
-        
+
     def test_all_urls_method(self):
         app, freezer = test_app.init_app()
         # Do not use set() here: also test that URLs are not duplicated.
         self.assertEquals(sorted(freezer.all_urls()),
                           sorted(self.expected_output))
-        
+
     def test_built_urls(self):
         with self.built_app() as (temp, app, freezer, urls):
             self.assertEquals(set(urls), set(self.expected_output))
             # Make sure it was not accidently used as a destination
             default = os.path.join(os.path.dirname(__file__), 'build')
             self.assert_(not os.path.exists(default))
-            
+
     def test_contents(self):
         with self.built_app() as (temp, app, freezer, urls):
             for url, filename in self.filenames.iteritems():
@@ -193,13 +206,13 @@ class TestBuilder(unittest.TestCase):
             dest = app.config['FREEZER_DESTINATION']
             expected_files = set(self.filenames.itervalues())
             # No other files
-            self.assertEquals(set(walk_directory(dest)), expected_files)
+            self.assertFilenamesEqual(walk_directory(dest), expected_files)
             # create an empty file
             os.mkdir(os.path.join(dest, 'extra'))
             open(os.path.join(dest, 'extra', 'extra.txt'), 'wb').close()
             # files in the destination that were not just built are removed
             freezer.freeze()
-            self.assertEquals(set(walk_directory(dest)), expected_files)
+            self.assertFilenamesEqual(walk_directory(dest), expected_files)
             self.assert_(not os.path.exists(os.path.join(dest, 'extra')))
 
     def test_something_else_matters(self):
@@ -208,14 +221,14 @@ class TestBuilder(unittest.TestCase):
             dest = app.config['FREEZER_DESTINATION']
             expected_files = set(self.filenames.itervalues())
             # No other files
-            self.assertEquals(set(walk_directory(dest)), expected_files)
+            self.assertFilenamesEqual(walk_directory(dest), expected_files)
             # create an empty file
             os.mkdir(os.path.join(dest, 'extra'))
             open(os.path.join(dest, 'extra', 'extra.txt'), 'wb').close()
             expected_files.add('extra/extra.txt')
             # Verify that files in destination persist.
             freezer.freeze()
-            self.assertEquals(set(walk_directory(dest)), expected_files)
+            self.assertFilenamesEqual(walk_directory(dest), expected_files)
             self.assert_(os.path.exists(os.path.join(dest, 'extra')))
 
     def test_transitivity(self):
@@ -252,7 +265,7 @@ class TestBuilder(unittest.TestCase):
             @app.route('/extra/<some_argument>')
             def external_url(some_argument):
                 return some_argument
-            
+
             with catch_warnings(record=True) as logged_warnings:
                 warnings.simplefilter("always")
                 freezer.freeze()
@@ -280,5 +293,3 @@ class TestNonexsistentDestination(TestBuilder):
         # the Freezer has to create it.
         app.config['FREEZER_DESTINATION'] = os.path.join(
             app.config['FREEZER_DESTINATION'], 'frozen', 'htdocs')
-
-
