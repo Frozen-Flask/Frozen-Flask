@@ -7,9 +7,9 @@ import shutil
 import os.path
 import warnings
 from contextlib import contextmanager
-from unicodedata import normalize
 
-from flaskext.frozen import Freezer, walk_directory, MissingURLGeneratorWarning
+from flaskext.frozen import (Freezer, walk_directory, normalize,
+                             MissingURLGeneratorWarning)
 from . import test_app
 
 
@@ -167,15 +167,9 @@ class TestBuilder(unittest.TestCase):
 
     def assertFilenamesEqual(self, set1, set2):
         # Fix for https://github.com/SimonSapin/Frozen-Flask/issues/5
-        self.assertEquals(*[
-            # Use any normalization here, as long as it is the same for
-            # both sets.
-            # normalize() works on Unicode strings, but Frozen-Flask
-            # uses UTF-8 for filenames everywhere.
-            set(normalize('NFC', name.decode('utf8')).encode('utf8')
-                for name in set_)
-            for set_ in [set1, set2]
-        ])
+        set1 = sorted(normalize(name) for name in set1)
+        set2 = sorted(normalize(name) for name in set2)
+        self.assertEquals(set1, set2)
 
     def test_without_app(self):
         freezer = Freezer()

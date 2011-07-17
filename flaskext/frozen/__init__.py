@@ -18,6 +18,7 @@ import mimetypes
 import urlparse
 import urllib
 import warnings
+import unicodedata
 
 from werkzeug.exceptions import HTTPException
 from flask import Flask, Module, url_for, request, send_from_directory
@@ -58,7 +59,7 @@ class Freezer(object):
         if with_no_argument_rules:
             self.register_generator(self.no_argument_rules_urls)
         self.init_app(app)
-    
+
     def init_app(self, app):
         self.app = app
         if app:
@@ -94,7 +95,8 @@ class Freezer(object):
         if not os.path.isdir(self.root):
             os.makedirs(self.root)
         previous_files = set(
-            os.path.join(self.root, *name.split('/'))
+            # See https://github.com/SimonSapin/Frozen-Flask/issues/5
+            normalize(os.path.join(self.root, *name.split('/')))
             for name in walk_directory(self.root)
         )
         seen_urls = set()
@@ -105,7 +107,7 @@ class Freezer(object):
                 continue
             seen_urls.add(url)
             new_filename = self._build_one(url)
-            built_files.add(new_filename)
+            built_files.add(normalize(new_filename))
         if remove_extra:
             # Remove files from the previous build that are not here anymore.
             for extra_file in previous_files - built_files:
@@ -158,7 +160,7 @@ class Freezer(object):
         all_endpoints = set(
             rule.endpoint for rule in self.app.url_map.iter_rules())
         not_generated_endpoints = all_endpoints - seen_endpoints
-        
+
         if self.static_files_urls in self.url_generators:
             # Special case: do not warn when there is no static file
             not_generated_endpoints -= set(self._static_rules_endpoints())
@@ -253,7 +255,7 @@ class Freezer(object):
         # Do not use the URL map
         app.dispatch_request = dispatch_request
         return app
-    
+
     def _static_rules_endpoints(self):
         """
         Yield the 'static' URL rules for the app and all modules.
@@ -264,7 +266,7 @@ class Freezer(object):
         # This will break loudly if the assumption isn't valid anymore in
         # a future version of Flask
         assert unwrap_method(Module.send_static_file) is send_static_file
-        
+
         for rule in self.app.url_map.iter_rules():
             view = self.app.view_functions[rule.endpoint]
             if unwrap_method(view) is send_static_file:
@@ -294,7 +296,7 @@ def walk_directory(root):
     """
     Recursively walk the `root` directory and yield slash-separated paths
     relative to the root.
-    
+
     Used to implement the URL genertor for static files.
     """
     for name in os.listdir(root):
@@ -329,3 +331,14 @@ def method_self(method):
         # Python 3
         return method.__self__
 
+
+def normalize(string):
+    """
+    Do Unicode normalization on an UTF-8 byte-string.
+
+    Fix for https://github.com/SimonSapin/Frozen-Flask/issues/5
+    """
+    # Use any normalization here, as long as it is the same for both sets.
+    # normalize() works on Unicode strings, but Frozen-Flask uses UTF-8 for
+    # filenames everywhere.
+    return unicodedata.normalize('NFC', string.decode('utf8')).encode('utf8')
