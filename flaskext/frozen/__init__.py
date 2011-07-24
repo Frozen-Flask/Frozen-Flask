@@ -42,7 +42,7 @@ class MissingURLGeneratorWarning(Warning):
 
 class Freezer(object):
     """
-    :param app: your application
+    :param app: your application or None if you use :meth:`init_app`
     :type app: Flask instance
     :param with_static_files: Whether to automatically generate URLs
                               for static files.
@@ -61,6 +61,11 @@ class Freezer(object):
         self.init_app(app)
 
     def init_app(self, app):
+        """
+        Allow to register an app after the Freezer initialization.
+
+        :param app: your Flask application
+        """
         self.app = app
         if app:
             app.config.setdefault('FREEZER_DESTINATION', 'build')
@@ -149,7 +154,7 @@ class Freezer(object):
                             % (url, script_name)
                         )
                         url = url[len(script_name):]
-                    # Flask.url_for "quotes" URLs, eg. a space becomes %20
+                    # flask.url_for "quotes" URLs, eg. a space becomes %20
                     url = urllib.unquote(url)
                     parsed_url = urlparse.urlsplit(url)
                     if parsed_url.scheme or parsed_url.netloc:
