@@ -116,7 +116,7 @@ class TestWalkDirectory(unittest.TestCase):
             set(f for f in walk_directory(os.path.dirname(test_app.__file__))
                 if not f.endswith(('.pyc', '.pyo'))),
             set(['__init__.py', 'static/style.css', 'admin/__init__.py',
-                 'admin/static/style.css'])
+                 'admin/admin_static/style.css'])
         )
 
 
@@ -129,7 +129,7 @@ class TestBuilder(unittest.TestCase):
         u'/product_1/': 'Product num 1',
         u'/product_2/': 'Product num 2',
         u'/static/style.css': '/* Main CSS */\n',
-        u'/admin/static/style.css': '/* Admin CSS */\n',
+        u'/admin/css/style.css': '/* Admin CSS */\n',
         u'/where_am_i/': '/where_am_i/ http://localhost/where_am_i/',
         u'/page/I løvë Unicode/':
             u'Hello\xa0World! I løvë Unicode'.encode('utf8'),
@@ -142,7 +142,7 @@ class TestBuilder(unittest.TestCase):
         u'/product_1/': u'product_1/index.html',
         u'/product_2/': u'product_2/index.html',
         u'/static/style.css': u'static/style.css',
-        u'/admin/static/style.css': u'admin/static/style.css',
+        u'/admin/css/style.css': u'admin/css/style.css',
         u'/where_am_i/': u'where_am_i/index.html',
         u'/page/I løvë Unicode/': u'page/I løvë Unicode/index.html',
     }

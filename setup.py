@@ -26,12 +26,13 @@ setup(
     long_description=__doc__,
     packages=find_packages(),
     namespace_packages=['flaskext'],
-    package_data={'': ['static/*']}, # static files for the test app
+    # static files for the test app
+    package_data={'': ['static/*', 'admin_static/*']},
     test_suite='flaskext.frozen.tests',
     zip_safe=False,
     platforms='any',
     install_requires=[
-        'Flask',
+        'Flask >= 0.7',
     ],
     classifiers=[
         'Environment :: Web Environment',

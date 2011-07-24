@@ -1,9 +1,9 @@
-from flask import Module
+from flask import Blueprint
 
-admin_module = Module(__name__, name='admin')
+admin_blueprint = Blueprint('admin', __name__,
+    static_folder='admin_static', static_url_path='/css')
 
 
-@admin_module.route('/')
+@admin_blueprint.route('/')
 def index():
     return 'Admin index'
-

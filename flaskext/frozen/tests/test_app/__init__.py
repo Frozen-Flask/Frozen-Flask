@@ -2,12 +2,12 @@
 from flask import Flask, url_for
 from flaskext.frozen import Freezer
 
-from .admin import admin_module
+from .admin import admin_blueprint
 
 
 def init_app(defer_init_app=False):
     app = Flask(__name__)
-    app.register_module(admin_module, url_prefix='/admin')
+    app.register_blueprint(admin_blueprint, url_prefix='/admin')
     if defer_init_app:
         freezer = Freezer()
     else:
@@ -44,11 +44,10 @@ def init_app(defer_init_app=False):
         yield {'product_id': 1}
         # single string: url
         yield '/product_2/'
-        
+
         yield 'page', {'name': u'I løvë Unicode'}
-    
+
     if defer_init_app:
         freezer.init_app(app)
 
     return app, freezer
-

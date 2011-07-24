@@ -286,8 +286,8 @@ class Freezer(object):
         for endpoint in self._static_rules_endpoints():
             view = self.app.view_functions[endpoint]
             app_or_module = method_self(view)
-            root = os.path.join(app_or_module.root_path, 'static')
-            if not os.path.isdir(root):
+            root = app_or_module.static_folder
+            if root is None or not os.path.isdir(root):
                 # No 'static' directory for this app/module.
                 continue
             for filename in walk_directory(root):
