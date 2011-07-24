@@ -18,7 +18,7 @@ import mimetypes
 import urlparse
 import urllib
 import warnings
-import unicodedata
+from unicodedata import normalize
 
 from werkzeug.exceptions import HTTPException
 from flask import Flask, Module, url_for, request, send_from_directory
@@ -90,8 +90,8 @@ class Freezer(object):
         """The build destination."""
         # unicode() will raise if the path is not ASCII or already unicode.
         return os.path.join(
-            self.app.root_path,
-            self.app.config['FREEZER_DESTINATION']
+            unicode(self.app.root_path),
+            unicode(self.app.config['FREEZER_DESTINATION'])
         )
 
     def freeze(self):
@@ -101,7 +101,7 @@ class Freezer(object):
             os.makedirs(self.root)
         previous_files = set(
             # See https://github.com/SimonSapin/Frozen-Flask/issues/5
-            normalize(os.path.join(self.root, *name.split('/')))
+            normalize('NFC', os.path.join(self.root, *name.split('/')))
             for name in walk_directory(self.root)
         )
         seen_urls = set()
@@ -112,7 +112,7 @@ class Freezer(object):
                 continue
             seen_urls.add(url)
             new_filename = self._build_one(url)
-            built_files.add(normalize(new_filename))
+            built_files.add(normalize('NFC', new_filename))
         if remove_extra:
             # Remove files from the previous build that are not here anymore.
             for extra_file in previous_files - built_files:
@@ -131,6 +131,7 @@ class Freezer(object):
         base_url = self.app.config['FREEZER_BASE_URL']
         script_name = urlparse.urlsplit(base_url).path.rstrip('/')
         seen_endpoints = set()
+        url_encoding = self.app.url_map.charset
         # A request context is required to use url_for
         with self.app.test_request_context(base_url=script_name):
             for generator in self.url_generators:
@@ -160,6 +161,8 @@ class Freezer(object):
                     if parsed_url.scheme or parsed_url.netloc:
                         raise ValueError('External URLs not supported: ' + url)
 
+                    if not isinstance(url, unicode):
+                        url = url.decode(url_encoding)
                     yield url
 
         all_endpoints = set(
@@ -335,15 +338,3 @@ def method_self(method):
     except AttributeError:
         # Python 3
         return method.__self__
-
-
-def normalize(string):
-    """
-    Do Unicode normalization on an UTF-8 byte-string.
-
-    Fix for https://github.com/SimonSapin/Frozen-Flask/issues/5
-    """
-    # Use any normalization here, as long as it is the same for both sets.
-    # normalize() works on Unicode strings, but Frozen-Flask uses UTF-8 for
-    # filenames everywhere.
-    return unicodedata.normalize('NFC', string.decode('utf8')).encode('utf8')

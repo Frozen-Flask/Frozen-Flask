@@ -169,10 +169,9 @@ and encoding (eg. ``text/html; charset=utf-8``). Frozen-Flask will try to
 preserve the encoding meta-data. You may need to add the right
 ``<meta>`` tag to your HTML. (You should anyway).
 
-Flask also defaults to UTF-8 for URLs. Since Frozen-Flask chooses the name of
-the files it builds from URLs, filenames are UTF-8 too. As links in your HTML
-have the same encoding, it should Just Work™. If it doesn’t, please `report
-a bug <https://github.com/SimonSapin/Frozen-Flask/issues>`_.
+Flask also defaults to UTF-8 for URLs, so your web server will get URL-encoded
+UTF-8 HTTP requests. It’s up to you to make sure that it converts these to the
+native filesystem encoding. Frozen-Flask always writes Unicode filenames.
 
 .. _api:
 
@@ -198,6 +197,8 @@ Version 0.5, to be released Real Soon™
 * New configuration: ``FREEZER_REMOVE_EXTRA_FILES``
 * Warn if an URL generator seems to be missing. (ie. if no URL was generated
   for a given endpoint.)
+* Write Unicode filenames instead of UTF-8. Non-ASCII filenames are often
+  undefined territory anyway.
 * Bug fixes.
 
 Version 0.4, released on 2011-06-02

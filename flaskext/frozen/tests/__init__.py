@@ -7,8 +7,9 @@ import shutil
 import os.path
 import warnings
 from contextlib import contextmanager
+from unicodedata import normalize
 
-from flaskext.frozen import (Freezer, walk_directory, normalize,
+from flaskext.frozen import (Freezer, walk_directory,
                              MissingURLGeneratorWarning)
 from . import test_app
 
@@ -121,30 +122,29 @@ class TestWalkDirectory(unittest.TestCase):
 
 class TestBuilder(unittest.TestCase):
     expected_output = {
-        '/': 'Main index',
-        '/admin/': 'Admin index',
-        '/robots.txt': 'User-agent: *\nDisallow: /',
-        '/product_0/': 'Product num 0',
-        '/product_1/': 'Product num 1',
-        '/product_2/': 'Product num 2',
-        '/static/style.css': '/* Main CSS */\n',
-        '/admin/static/style.css': '/* Admin CSS */\n',
-        '/where_am_i/': '/where_am_i/ http://localhost/where_am_i/',
-        u'/page/I løvë Unicode/'.encode('utf8'):
+        u'/': 'Main index',
+        u'/admin/': 'Admin index',
+        u'/robots.txt': 'User-agent: *\nDisallow: /',
+        u'/product_0/': 'Product num 0',
+        u'/product_1/': 'Product num 1',
+        u'/product_2/': 'Product num 2',
+        u'/static/style.css': '/* Main CSS */\n',
+        u'/admin/static/style.css': '/* Admin CSS */\n',
+        u'/where_am_i/': '/where_am_i/ http://localhost/where_am_i/',
+        u'/page/I løvë Unicode/':
             u'Hello\xa0World! I løvë Unicode'.encode('utf8'),
     }
     filenames = {
-        '/': 'index.html',
-        '/admin/': 'admin/index.html',
-        '/robots.txt': 'robots.txt',
-        '/product_0/': 'product_0/index.html',
-        '/product_1/': 'product_1/index.html',
-        '/product_2/': 'product_2/index.html',
-        '/static/style.css': 'static/style.css',
-        '/admin/static/style.css': 'admin/static/style.css',
-        '/where_am_i/': 'where_am_i/index.html',
-        u'/page/I løvë Unicode/'.encode('utf8'):
-            u'page/I løvë Unicode/index.html'.encode('utf8'),
+        u'/': u'index.html',
+        u'/admin/': u'admin/index.html',
+        u'/robots.txt': u'robots.txt',
+        u'/product_0/': u'product_0/index.html',
+        u'/product_1/': u'product_1/index.html',
+        u'/product_2/': u'product_2/index.html',
+        u'/static/style.css': u'static/style.css',
+        u'/admin/static/style.css': u'admin/static/style.css',
+        u'/where_am_i/': u'where_am_i/index.html',
+        u'/page/I løvë Unicode/': u'page/I løvë Unicode/index.html',
     }
     defer_init_app = True
 
@@ -167,8 +167,8 @@ class TestBuilder(unittest.TestCase):
 
     def assertFilenamesEqual(self, set1, set2):
         # Fix for https://github.com/SimonSapin/Frozen-Flask/issues/5
-        set1 = sorted(normalize(name) for name in set1)
-        set2 = sorted(normalize(name) for name in set2)
+        set1 = sorted(normalize('NFC', name) for name in set1)
+        set2 = sorted(normalize('NFC', name) for name in set2)
         self.assertEquals(set1, set2)
 
     def test_without_app(self):
@@ -196,34 +196,35 @@ class TestBuilder(unittest.TestCase):
                 self.assertEquals(content, self.expected_output[url])
 
     def test_nothing_else_matters(self):
-        with self.built_app() as (temp, app, freezer, urls):
-            dest = app.config['FREEZER_DESTINATION']
-            expected_files = set(self.filenames.itervalues())
-            # No other files
-            self.assertFilenamesEqual(walk_directory(dest), expected_files)
-            # create an empty file
-            os.mkdir(os.path.join(dest, 'extra'))
-            open(os.path.join(dest, 'extra', 'extra.txt'), 'wb').close()
-            # files in the destination that were not just built are removed
-            freezer.freeze()
-            self.assertFilenamesEqual(walk_directory(dest), expected_files)
-            self.assert_(not os.path.exists(os.path.join(dest, 'extra')))
+        self._extra_files(remove=True)
 
     def test_something_else_matters(self):
+        self._extra_files(remove=False)
+
+    def _extra_files(self, remove):
         with self.built_app() as (temp, app, freezer, urls):
-            app.config['FREEZER_REMOVE_EXTRA_FILES'] = False
-            dest = app.config['FREEZER_DESTINATION']
+            app.config['FREEZER_REMOVE_EXTRA_FILES'] = remove
+            dest = unicode(app.config['FREEZER_DESTINATION'])
             expected_files = set(self.filenames.itervalues())
+
             # No other files
             self.assertFilenamesEqual(walk_directory(dest), expected_files)
+
             # create an empty file
             os.mkdir(os.path.join(dest, 'extra'))
             open(os.path.join(dest, 'extra', 'extra.txt'), 'wb').close()
-            expected_files.add('extra/extra.txt')
+            if not remove:
+                expected_files.add(u'extra/extra.txt')
+
             # Verify that files in destination persist.
             freezer.freeze()
             self.assertFilenamesEqual(walk_directory(dest), expected_files)
-            self.assert_(os.path.exists(os.path.join(dest, 'extra')))
+
+            exists = os.path.exists(os.path.join(dest, 'extra'))
+            if remove:
+                self.assert_(not exists)
+            else:
+                self.assert_(exists)
 
     def test_transitivity(self):
         with self.built_app() as (temp, app, freezer, urls):
