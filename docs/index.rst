@@ -188,7 +188,7 @@ API
 Changelog
 ---------
 
-Version 0.5, to be released Real Soon™
+Version 0.5, released on 2011-07-24
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * You can now construct a Freezer and add URL generators without an app, and
