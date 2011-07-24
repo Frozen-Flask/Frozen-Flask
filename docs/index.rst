@@ -31,7 +31,7 @@ after configuring the application::
 
     from flask import Flask
     from flaskext.frozen import Freezer
-    
+
     app = Flask(__name__)
     app.config.from_pyfile('mysettings.cfg')
     freezer = Freezer(app)
@@ -45,7 +45,7 @@ Frozen-Flask accepts the following configuration values:
 
 ``FREEZER_BASE_URL``
     Full URL you application is supposed to be installed at. This affects
-    the output of :func:`flask.url_for` for absolute URLs (with 
+    the output of :func:`flask.url_for` for absolute URLs (with
     ``_external=True``) or if your application is not at the root of its
     domain name.
     Defaults to ``'http://localhost/'``.
@@ -55,6 +55,8 @@ Frozen-Flask accepts the following configuration values:
     directory that were not built during the current freeze. This is intended
     to clean up output files no longer needed on followup calls to
     :meth:`Freezer.freeze`. Defaults to `True`.
+
+    .. versionadded:: 0.5
 
 URL generators
 --------------
@@ -165,7 +167,7 @@ It will send the right ``Content-Type`` header with both a MIME type and
 and encoding (eg. ``text/html; charset=utf-8``). Frozen-Flask will try to
 `preserve MIME types <#mime-types>`_ through file extensions, but it can not
 preserve the encoding meta-data. You may need to add the right
-``<meta>`` tag to your HTML (you should anyway).
+``<meta>`` tag to your HTML. (You should anyway).
 
 Flask also defaults to UTF-8 for URLs. Since Frozen-Flask chooses the name of
 the files it builds from URLs, filenames are UTF-8 too. As links in your HTML
@@ -180,12 +182,23 @@ API
 .. module:: flaskext.frozen
 
 .. autoclass:: Freezer
-    :members: register_generator, all_urls, freeze, serve
+    :members: init_app, register_generator, all_urls, freeze, serve
 
 .. autofunction:: walk_directory
 
 Changelog
 ---------
+
+Version 0.5, to be released Real Soon™
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* You can now construct a Freezer and add URL generators without an app, and
+  register the app later with :meth:`Freezer.init_app`.
+* The ``FREEZER_DESTINATION`` directory is created if it does not exist.
+* New configuration: ``FREEZER_REMOVE_EXTRA_FILES``
+* Warn if an URL generator seems to be missing. (ie. if no URL was generated
+  for a given endpoint.)
+* Bug fixes.
 
 Version 0.4, released on 2011-06-02
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
