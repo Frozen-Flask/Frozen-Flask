@@ -105,14 +105,17 @@ class Freezer(object):
             for name in walk_directory(self.root)
         )
         seen_urls = set()
+        seen_endpoints = set()
         built_files = set()
-        for url in self.all_urls():
+        for url, endpoint in self._generate_all_urls():
+            seen_endpoints.add(endpoint)
             if url in seen_urls:
                 # Don't build the same URL more than once
                 continue
             seen_urls.add(url)
             new_filename = self._build_one(url)
             built_files.add(normalize('NFC', new_filename))
+        self._check_endpoints(seen_endpoints)
         if remove_extra:
             # Remove files from the previous build that are not here anymore.
             for extra_file in previous_files - built_files:
@@ -128,9 +131,15 @@ class Freezer(object):
         Run all generators and yield URLs relative to the app root.
         May be useful for testing URL generators.
         """
+        for url, _endpoint in self._generate_all_urls():
+            yield url
+
+    def _generate_all_urls(self):
+        """
+        Run all generators and yield (url, enpoint) tuples.
+        """
         base_url = self.app.config['FREEZER_BASE_URL']
         script_name = urlparse.urlsplit(base_url).path.rstrip('/')
-        seen_endpoints = set()
         url_encoding = self.app.url_map.charset
         # A request context is required to use url_for
         with self.app.test_request_context(base_url=script_name):
@@ -138,6 +147,7 @@ class Freezer(object):
                 for generated in generator():
                     if isinstance(generated, basestring):
                         url = generated
+                        endpoint = None
                     else:
                         if is_mapping(generated):
                             values = generated
@@ -147,7 +157,6 @@ class Freezer(object):
                         else:
                             # Assume a tuple.
                             endpoint, values = generated
-                        seen_endpoints.add(endpoint)
                         url = url_for(endpoint, **values)
                         assert url.startswith(script_name), (
                             'url_for returned an URL %r not starting with '
@@ -163,8 +172,12 @@ class Freezer(object):
 
                     if not isinstance(url, unicode):
                         url = url.decode(url_encoding)
-                    yield url
+                    yield url, endpoint
 
+    def _check_endpoints(self, seen_endpoints):
+        """
+        Warn if some of the app's enpoints are not in seen_endpoints.
+        """
         all_endpoints = set(
             rule.endpoint for rule in self.app.url_map.iter_rules())
         not_generated_endpoints = all_endpoints - seen_endpoints
