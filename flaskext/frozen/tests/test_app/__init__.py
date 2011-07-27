@@ -15,10 +15,12 @@ def init_app(defer_init_app=False):
 
     @app.route('/')
     def index():
+        url_for('product', product_id='3')  # Pretend we’re adding a link
         return 'Main index'
 
     @app.route('/page/<name>/')
     def page(name):
+        url_for('product', product_id='4')  # Another link
         return u'Hello\xa0World! ' + name
 
     @app.route('/where_am_i/')

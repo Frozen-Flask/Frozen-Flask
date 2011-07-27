@@ -128,6 +128,8 @@ class TestBuilder(unittest.TestCase):
         u'/product_0/': 'Product num 0',
         u'/product_1/': 'Product num 1',
         u'/product_2/': 'Product num 2',
+        u'/product_3/': 'Product num 3',
+        u'/product_4/': 'Product num 4',
         u'/static/style.css': '/* Main CSS */\n',
         u'/admin/css/style.css': '/* Admin CSS */\n',
         u'/where_am_i/': '/where_am_i/ http://localhost/where_am_i/',
@@ -141,6 +143,8 @@ class TestBuilder(unittest.TestCase):
         u'/product_0/': u'product_0/index.html',
         u'/product_1/': u'product_1/index.html',
         u'/product_2/': u'product_2/index.html',
+        u'/product_3/': u'product_3/index.html',
+        u'/product_4/': u'product_4/index.html',
         u'/static/style.css': u'static/style.css',
         u'/admin/css/style.css': u'admin/css/style.css',
         u'/where_am_i/': u'where_am_i/index.html',
@@ -177,9 +181,12 @@ class TestBuilder(unittest.TestCase):
 
     def test_all_urls_method(self):
         app, freezer = test_app.init_app()
+        expected = sorted(self.expected_output)
+        # url_for() calls are not logged when just calling .all_urls()
+        expected.remove('/product_3/')
+        expected.remove('/product_4/')
         # Do not use set() here: also test that URLs are not duplicated.
-        self.assertEquals(sorted(freezer.all_urls()),
-                          sorted(self.expected_output))
+        self.assertEquals(sorted(freezer.all_urls()), expected)
 
     def test_built_urls(self):
         with self.built_app() as (temp, app, freezer, urls):

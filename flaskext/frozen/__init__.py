@@ -18,7 +18,9 @@ import mimetypes
 import urlparse
 import urllib
 import warnings
+import collections
 from unicodedata import normalize
+from threading import Lock
 
 from werkzeug.exceptions import HTTPException
 from flask import Flask, Blueprint, url_for, request, send_from_directory
@@ -52,8 +54,9 @@ class Freezer(object):
     :type with_no_argument_rules boolean:
     """
     def __init__(self, app=None, with_static_files=True,
-                 with_no_argument_rules=True):
+                 with_no_argument_rules=True, log_url_for=True):
         self.url_generators = []
+        self.log_url_for = log_url_for
         if with_static_files:
             self.register_generator(self.static_files_urls)
         if with_no_argument_rules:
@@ -68,6 +71,9 @@ class Freezer(object):
         """
         self.app = app
         if app:
+            logger_class = (UrlForLogger if self.log_url_for
+                            else DummyUrlForLogger)
+            self.url_for_logger = logger_class(app)
             app.config.setdefault('FREEZER_DESTINATION', 'build')
             app.config.setdefault('FREEZER_BASE_URL', 'http://localhost/')
             app.config.setdefault('FREEZER_REMOVE_EXTRA_FILES', True)
@@ -141,9 +147,11 @@ class Freezer(object):
         base_url = self.app.config['FREEZER_BASE_URL']
         script_name = urlparse.urlsplit(base_url).path.rstrip('/')
         url_encoding = self.app.url_map.charset
+        url_generators = list(self.url_generators)
+        url_generators += [self.url_for_logger.iter_calls]
         # A request context is required to use url_for
         with self.app.test_request_context(base_url=script_name):
-            for generator in self.url_generators:
+            for generator in url_generators:
                 for generated in generator():
                     if isinstance(generated, basestring):
                         url = generated
@@ -199,7 +207,11 @@ class Freezer(object):
         """
         client = self.app.test_client()
         base_url = self.app.config['FREEZER_BASE_URL']
-        response = client.get(url, follow_redirects=True, base_url=base_url)
+
+        with self.url_for_logger:
+            response = client.get(url, follow_redirects=True,
+                                  base_url=base_url)
+
         # The client follows redirects by itself
         # Any other status code is probably an error
         if not(response.status_code == 200):
@@ -350,3 +362,61 @@ def method_self(method):
     except AttributeError:
         # Python 3
         return method.__self__
+
+
+class UrlForLogger(object):
+    """
+    Log all calls to url_for() for this app made inside the with block.
+
+    Use this object as a context manager in a with block to enable logging.
+    """
+
+    def __init__(self, app):
+        self.app = app
+        self.logged_calls = collections.deque()
+        self._enabled = False
+        self._lock = Lock()
+
+        def logger(endpoint, values):
+            # Make a copy of values as other @app.url_defaults functions are
+            # meant to mutate this dict.
+            if self._enabled:
+                self.logged_calls.append((endpoint, values.copy()))
+
+        # Do not use app.url_defaults() as we want to insert at the front
+        # of the list to get unmodifies values.
+        self.app.url_default_functions.setdefault(None, []).insert(0, logger)
+
+    def __enter__(self):
+        self._lock.acquire()
+        self._enabled = True
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._enabled = False
+        self._lock.release()
+
+    def iter_calls(self):
+        """
+        Return an iterable of (endpoint, values_dict) tuples, one for each
+        call that was made while the logger was enabled.
+        """
+        # "Iterate" on the call deque while it is still being appended to.
+        while self.logged_calls:
+            yield self.logged_calls.popleft()
+
+
+class DummyUrlForLogger(object):
+    """
+    Gives the same API as UrlForLogger, but does not actually log anything.
+    """
+    def __init__(self, app):
+        pass
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass
+
+    def iter_calls(self):
+        return iter([])
