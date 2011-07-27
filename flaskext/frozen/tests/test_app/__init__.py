@@ -5,21 +5,23 @@ from flaskext.frozen import Freezer
 from .admin import admin_blueprint
 
 
-def init_app(defer_init_app=False):
+def create_app(defer_init_app=False, freezer_kwargs=None):
     app = Flask(__name__)
     app.register_blueprint(admin_blueprint, url_prefix='/admin')
+    if not freezer_kwargs:
+        freezer_kwargs = {}
     if defer_init_app:
-        freezer = Freezer()
+        freezer = Freezer(**freezer_kwargs)
     else:
-        freezer = Freezer(app)
+        freezer = Freezer(app, **freezer_kwargs)
 
     @app.route('/')
     def index():
-        url_for('product', product_id='3')  # Pretend we’re adding a link
         return 'Main index'
 
     @app.route('/page/<name>/')
     def page(name):
+        url_for('product', product_id='3')  # Pretend we’re adding a link
         url_for('product', product_id='4')  # Another link
         return u'Hello\xa0World! ' + name
 

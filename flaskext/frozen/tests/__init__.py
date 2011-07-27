@@ -151,6 +151,7 @@ class TestBuilder(unittest.TestCase):
         u'/page/I løvë Unicode/': u'page/I løvë Unicode/index.html',
     }
     defer_init_app = True
+    freezer_kwargs = None
 
     def do_extra_config(self, app, freezer):
         pass # To be overriden
@@ -158,7 +159,8 @@ class TestBuilder(unittest.TestCase):
     @contextmanager
     def make_app(self):
         with temp_directory() as temp:
-            app, freezer = test_app.init_app(self.defer_init_app)
+            app, freezer = test_app.create_app(self.defer_init_app,
+                                               self.freezer_kwargs)
             app.config['FREEZER_DESTINATION'] = temp
             self.do_extra_config(app, freezer)
             yield temp, app, freezer
@@ -180,11 +182,13 @@ class TestBuilder(unittest.TestCase):
         self.assertRaises(Exception, freezer.freeze)
 
     def test_all_urls_method(self):
-        app, freezer = test_app.init_app()
+        app, freezer = test_app.create_app(freezer_kwargs=self.freezer_kwargs)
         expected = sorted(self.expected_output)
         # url_for() calls are not logged when just calling .all_urls()
-        expected.remove('/product_3/')
-        expected.remove('/product_4/')
+        if '/product_3/' in expected:
+            expected.remove('/product_3/')
+        if '/product_4/' in expected:
+            expected.remove('/product_4/')
         # Do not use set() here: also test that URLs are not duplicated.
         self.assertEquals(sorted(freezer.all_urls()), expected)
 
@@ -295,3 +299,18 @@ class TestNonexsistentDestination(TestBuilder):
         # the Freezer has to create it.
         app.config['FREEZER_DESTINATION'] = os.path.join(
             app.config['FREEZER_DESTINATION'], 'frozen', 'htdocs')
+
+
+class TestWithoutUrlForLog(TestBuilder):
+    freezer_kwargs = dict(log_url_for=False)
+
+    expected_output = TestBuilder.expected_output.copy()
+    del expected_output[u'/product_3/']
+    del expected_output[u'/product_4/']
+
+    filenames = TestBuilder.filenames.copy()
+    del filenames[u'/product_3/']
+    del filenames[u'/product_4/']
+
+# with_no_argument_rules=False and with_static_files=False are
+# not tested as they produces (expected!) warnings
