@@ -46,12 +46,20 @@ class Freezer(object):
     """
     :param app: your application or None if you use :meth:`init_app`
     :type app: Flask instance
+
     :param with_static_files: Whether to automatically generate URLs
                               for static files.
-    :type with_static_files boolean:
+    :type with_static_files: boolean
+
     :param with_no_argument_rules: Whether to automatically generate URLs
                                    for URL rules that take no arguments.
-    :type with_no_argument_rules boolean:
+    :type with_no_argument_rules: boolean
+
+    :param log_url_for: Whether to log calls your app makes to
+                        :func:`url_for` and generate URLs from that.
+
+                        .. versionadded:: 0.6
+    :type log_url_for: boolean
     """
     def __init__(self, app=None, with_static_files=True,
                  with_no_argument_rules=True, log_url_for=True):
