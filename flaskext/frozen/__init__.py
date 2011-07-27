@@ -144,6 +144,10 @@ class Freezer(object):
         """
         Run all generators and yield URLs relative to the app root.
         May be useful for testing URL generators.
+
+        .. note::
+            This does not generate any page, so URLs that are normally
+            generated from :func:`url_for` calls will not be included here.
         """
         for url, _endpoint in self._generate_all_urls():
             yield url
