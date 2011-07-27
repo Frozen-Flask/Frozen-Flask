@@ -21,7 +21,7 @@ import warnings
 from unicodedata import normalize
 
 from werkzeug.exceptions import HTTPException
-from flask import Flask, Module, url_for, request, send_from_directory
+from flask import Flask, Blueprint, url_for, request, send_from_directory
 
 try:
     from collections import Mapping
@@ -277,14 +277,14 @@ class Freezer(object):
 
     def _static_rules_endpoints(self):
         """
-        Yield the 'static' URL rules for the app and all modules.
+        Yield the 'static' URL rules for the app and all blueprints.
         """
         send_static_file = unwrap_method(Flask.send_static_file)
         # Assumption about a Flask internal detail:
-        # Flask and Module inherit the same method.
+        # Flask and Blueprint inherit the same method.
         # This will break loudly if the assumption isn't valid anymore in
         # a future version of Flask
-        assert unwrap_method(Module.send_static_file) is send_static_file
+        assert unwrap_method(Blueprint.send_static_file) is send_static_file
 
         for rule in self.app.url_map.iter_rules():
             view = self.app.view_functions[rule.endpoint]
@@ -292,14 +292,15 @@ class Freezer(object):
                 yield rule.endpoint
 
     def static_files_urls(self):
-        """URL generator for static files for app and all registered modules.
+        """
+        URL generator for static files for app and all registered blueprints.
         """
         for endpoint in self._static_rules_endpoints():
             view = self.app.view_functions[endpoint]
-            app_or_module = method_self(view)
-            root = app_or_module.static_folder
+            app_or_blueprint = method_self(view)
+            root = app_or_blueprint.static_folder
             if root is None or not os.path.isdir(root):
-                # No 'static' directory for this app/module.
+                # No 'static' directory for this app/blueprint.
                 continue
             for filename in walk_directory(root):
                 yield endpoint, {'filename': filename}
