@@ -206,12 +206,13 @@ class Freezer(object):
             raise ValueError('Unexpected status %r on URL %s' \
                 % (response.status, url))
 
-        destination_path = url + 'index.html' if url.endswith('/') else url
+        destination_path = self.urlpath_to_filepath(url)
+        filename = os.path.join(self.root, *destination_path.split('/'))
 
         # Most web servers guess the mime type of static files by their
         # filename.  Check that this guess is consistent with the actual
         # Content-Type header we got from the app.
-        basename = destination_path.rsplit('/', 1)[-1]
+        basename = os.path.basename(filename)
         guessed_type, guessed_encoding = mimetypes.guess_type(basename)
         if not guessed_type:
             # Used by most server when they can not determine the type
@@ -221,14 +222,12 @@ class Freezer(object):
                 'Filename extension of %r (type %s) does not match Content-'
                 'Type: %s' % (basename, guessed_type, response.content_type))
 
-        # Remove the initial slash that should always be there
-        assert destination_path[0] == '/'
-        destination_path = destination_path[1:]
-
-        filename = os.path.join(self.root, *destination_path.split('/'))
+        # Create directories as needed
         dirname = os.path.dirname(filename)
         if not os.path.isdir(dirname):
             os.makedirs(dirname)
+
+        # Write the file, but only if its content has changed
         content = response.data
         if os.path.isfile(filename):
             with open(filename, 'rb') as fd:
@@ -240,7 +239,18 @@ class Freezer(object):
             # by keeping the modification date.
             with open(filename, 'wb') as fd:
                 fd.write(content)
+
         return filename
+
+    def urlpath_to_filepath(self, path):
+        """
+        Convert a URL path like /admin/ to a file path like admin/index.html
+        """
+        if path.endswith('/'):
+            path += 'index.html'
+        # Remove the initial slash that should always be there
+        assert path.startswith('/')
+        return path[1:]
 
     def serve(self, **options):
         """Run an HTTP server on the result of the build.
@@ -257,20 +267,8 @@ class Freezer(object):
         )
 
         def dispatch_request():
-            try:
-                # request.path is unicode, but the freezer previously wrote
-                # to UTF-8 filenames, so encode to UTF-8 now.
-                path = request.path.encode('utf8')
-                if path.endswith('/'):
-                    path += 'index.html'
-                assert path.startswith('/')
-                # Disable etags because of a Flask bug:
-                # https://github.com/mitsuhiko/flask/pull/237
-                # They are useless for tests anyway.
-                return send_from_directory(root, path[1:])
-            except HTTPException, e:
-                # eg. NotFound
-                return e
+            filename = self.urlpath_to_filepath(request.path)
+            return send_from_directory(root, filename)
 
         app = Flask(__name__)
         # Do not use the URL map
