@@ -56,7 +56,7 @@ class Freezer(object):
     :type with_no_argument_rules: boolean
 
     :param log_url_for: Whether to log calls your app makes to
-                        :func:`url_for` and generate URLs from that.
+                        :func:`~flask.url_for` and generate URLs from that.
 
                         .. versionadded:: 0.6
     :type log_url_for: boolean
@@ -147,7 +147,8 @@ class Freezer(object):
 
         .. note::
             This does not generate any page, so URLs that are normally
-            generated from :func:`url_for` calls will not be included here.
+            generated from :func:`~flask.url_for` calls will not be included
+            here.
         """
         for url, _endpoint in self._generate_all_urls():
             yield url

@@ -1,6 +1,8 @@
 Frozen-Flask
 ============
 
+.. module:: flaskext.frozen
+
 Frozen-Flask freezes a `Flask`_ application into a set of static files.
 The result can be hosted without any server-side software other than a
 traditional web server.
@@ -23,20 +25,142 @@ or alternatively if you have pip installed::
 or you can get the `source code from github
 <https://github.com/SimonSapin/Frozen-Flask>`_.
 
+Getting started
+---------------
+
+Create a :class:`Freezer` instance and call its :meth:`~Freezer.freeze`
+method. Put that in a ``freeze.py`` script (or call it however you want)::
+
+    from flaskext.frozen import Freezer
+    from myapplication import app
+
+    freezer = Freezer(app)
+
+    if __name__ == '__main__':
+        freezer.freeze()
+
+This will create a ``build`` directory at your application’s root path
+with the static files generated from your application.
+
+This build will be most likely be partial since Frozen-Flask can only guess
+so much about your application.
+
+Finding URLs
+------------
+
+Frozen-Flask works by finding which URLs exist in your application, simulating
+requests at the WSGI level and writing the responses to aptly named files.
+
+The following URLs can be found automatically:
+
+* Static files handled by Flask for your application or any of its
+  `blueprints <http://flask.pocoo.org/docs/blueprints/>`_.
+* Views with no variable parts in the URL.
+* *New in version 0.6:* Results of calls to :func:`flask.url_for` made by your
+  application in the request for another URL.
+  In other words, if you use :func:`~flask.url_for` to create links in your
+  application, these links will be “followed”.
+
+This means that if your application has an index page at the URL ``/``
+(without parameters) and every other page can be found from there by
+recursively following links built with :func:`~flask.url_for`, then
+Frozen-Flask can discover all URLs automatically and you’re done.
+
+Otherwise, you may need to write URL generators.
+
+URL generators
+--------------
+
+Let’s say that your application looks like this::
+
+    @app.route('/')
+    def products_list():
+        return render_template('index.html', products=models.Product.all())
+
+    @app.route('/product_<int:product_id>/')
+    def product_details():
+        product = models.Product.get_or_404(id=product_id)
+        return render_template('product.html', product=product)
+
+If, for some reason, some products pages are not linked from another page
+(or these links are not built by :func:`~flask.url_for`), Frozen-Flask will
+not find them.
+
+To tell Frozen-Flask about them, write an URL generator::
+
+    @freezer.register_generator
+    def product_details():
+        for product in models.Product.all():
+            yield {'product_id': product.id}
+
+Frozen-Flask will find the URL by calling ``url_for(endpoint, values)`` where
+``endpoint`` is the name of the generator function and ``values`` is each
+dict yielded by the function.
+
+You can specify a different endpoint by yielding a ``(endpoint, values)``
+tuple instead of just ``values``, or you can by-pass ``url_for`` and simply
+yield URLs as strings.
+
+Also, generator functions do not have to be `Python generators
+<http://docs.python.org/glossary.html#term-generator>`_ using ``yield``,
+they can be any callable and return any iterable object.
+
+All of these are thus equivalent::
+
+    @freezer.register_generator
+    def product_details():  # endpoint defaults to the function name
+        # `values` dicts
+        yield {'product_id': '1'}
+        yield {'product_id': '2'}
+
+    @freezer.register_generator
+    def product_url_generator():  # Some other function name
+        # `(endpoint, values)` tuples
+        yield 'product_details', {'product_id': '1'}
+        yield 'product_details', {'product_id': '2'}
+
+    @freezer.register_generator
+    def product_url_generator():
+        # URLs as strings
+        yield '/product_1/'
+        yield '/product_2/'
+
+    @freezer.register_generator
+    def product_url_generator():
+        # Return a list. (Any iterable type will do.)
+        return [
+            '/product_1/',
+            # Mixing forms works too.
+            ('product_details', {'product_id': '2'}),
+        ]
+
+Generating the same URL more than once is okay, Frozen-Flask will build it
+only once. Having different functions with the same name is generally a bad
+practice, but still work here as they are only used by their decorators.
+In practice you will probably have a module for you views and another one
+for the freezer and URL generators, so having the same name is not a problem.
+
+Testing your frozen application
+-------------------------------
+
+Loading frozen files directly in a web browser does not play well with URLs,
+so links in your pages will probably not work. To work around this,
+the :meth:`~Freezer.serve` method can start an HTTP server on the build result,
+so that check that everything is fine before uploading::
+
+    if __name__ == '__main__':
+        freezer.freeze()
+        freezer.serve()
+
+`Flask-Script <http://packages.python.org/Flask-Script/>`_ may come in handy
+here.
+
 Configuration
 -------------
 
-To get started all you need to do is to instantiate a :class:`.Freezer` object
-after configuring the application::
-
-    from flask import Flask
-    from flaskext.frozen import Freezer
-
-    app = Flask(__name__)
-    app.config.from_pyfile('mysettings.cfg')
-    freezer = Freezer(app)
-
-Frozen-Flask accepts the following configuration values:
+Frozen-Flask can be configured using Flask’s `configuration system
+<http://flask.pocoo.org/docs/config/>`_. The following configuration values
+are accepted:
 
 ``FREEZER_DESTINATION``
     Path to the directory where to put the generated static site. If relative,
@@ -58,68 +182,6 @@ Frozen-Flask accepts the following configuration values:
 
     .. versionadded:: 0.5
 
-URL generators
---------------
-
-The extension work by simulating requests to your application. These requests
-are done at the WSGI level. This allow a behavior similar to a real client,
-but bypasses the HTTP/TCP/IP stack.
-
-This, the extension needs a list of URLs to request. It can get by with
-URL rules that take no arguments and static files (both of which can be
-disabled, see :ref:`api`) but you’ll need to help it for everything else.
-
-To do so, register URL generators. A generator is a callable that take no
-parameter and return an iterable of URL strings, ``(endpoint, values)``
-tuples as for :func:`flask.url_for`, or just a ``values`` dictionary.
-In the last case, ``endpoint`` defaults to the name of the generator function,
-just like with Flask views.::
-
-    @app.route('/')
-    def products_list():
-        return render_template('index.html', products=models.Product.all())
-
-    @app.route('/product_<int:product_id>/')
-    def product_details():
-        product = models.Product.get_or_404(id=product_id)
-        return render_template('product.html', product=product)
-
-    @freezer.register_generator
-    def product_urls():
-        for product in models.Product.all():
-            yield 'product_details', {'product_id': product.id}
-
-    # This URL generator is the same as the one above. Generating the same URL
-    # more than once is okay, they are de-duplicated.
-    @freezer.register_generator
-    def product_details():
-        for product in models.Product.all():
-            # `endpoint` is implicitly the name of the function: product_details
-            yield {'product_id': product.id}
-
-
-Note that the view and the generator have the same name. **TL;DR: that’s okay.**
-Having two functions with the same name is generally a bad practice but
-causes no problem here as the functions are only used by their decorators.
-For non-trivial apps you probably want to have a module for views and
-another one for URL generators anyway.
-
-Once everything is configured, run the build::
-
-    if __name__ == '__main__':
-        freezer.freeze()
-
-As loading files directly in a web browser does not play well with some URLs,
-(browsers do not show ``index.html`` for directories, and absolute path may
-have a different meaning, ...) you can also start a server to check that
-everything is fine before uploading::
-
-    if __name__ == '__main__':
-        freezer.freeze()
-        freezer.serve()
-
-`Flask-Script <http://packages.python.org/Flask-Script/>`_ may come in handy
-here.
 
 .. _mime-types:
 
@@ -175,10 +237,8 @@ native filesystem encoding. Frozen-Flask always writes Unicode filenames.
 
 .. _api:
 
-API
----
-
-.. module:: flaskext.frozen
+API reference
+-------------
 
 .. autoclass:: Freezer
     :members: init_app, register_generator, all_urls, freeze, serve
@@ -189,7 +249,7 @@ Changelog
 ---------
 
 Version 0.6, to be released Real Soon™
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Frozen-Flask now requires Flask 0.7 or later. Please use previous version of
   Frozen-Flask if you need previous versions of Flask.
