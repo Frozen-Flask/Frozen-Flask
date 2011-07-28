@@ -23,7 +23,8 @@ from unicodedata import normalize
 from threading import Lock
 
 from werkzeug.exceptions import HTTPException
-from flask import Flask, Blueprint, url_for, request, send_from_directory
+from flask import (Flask, Blueprint, url_for, request, send_from_directory,
+                   redirect)
 
 try:
     from collections import Mapping
@@ -153,12 +154,18 @@ class Freezer(object):
         for url, _endpoint in self._generate_all_urls():
             yield url
 
+    def _script_name(self):
+        """
+        Return the path part of FREEZER_BASE_URL, without trailing slash.
+        """
+        base_url = self.app.config['FREEZER_BASE_URL']
+        return urlparse.urlsplit(base_url).path.rstrip('/')
+
     def _generate_all_urls(self):
         """
         Run all generators and yield (url, enpoint) tuples.
         """
-        base_url = self.app.config['FREEZER_BASE_URL']
-        script_name = urlparse.urlsplit(base_url).path.rstrip('/')
+        script_name = self._script_name()
         url_encoding = self.app.url_map.charset
         url_generators = list(self.url_generators)
         url_generators += [self.url_for_logger.iter_calls]
@@ -290,10 +297,15 @@ class Freezer(object):
             self.app.root_path,
             self.app.config['FREEZER_DESTINATION']
         )
+        script_name = self._script_name()
 
         def dispatch_request():
-            filename = self.urlpath_to_filepath(request.path)
-            return send_from_directory(root, filename)
+            if not request.path.startswith(script_name):
+                return redirect(script_name + '/')
+            else:
+                path = request.path[len(script_name):]
+                filename = self.urlpath_to_filepath(path)
+                return send_from_directory(root, filename)
 
         app = Flask(__name__)
         # Do not use the URL map

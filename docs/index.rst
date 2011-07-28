@@ -256,6 +256,7 @@ Version 0.6, to be released Real Soon™
 * Support for Flask Blueprints
 * Added the :obj:`log_url_for` parameter to :class:`Freezer`. This makes some
   URL generators unnecessary since more URLs are discovered automatically.
+* Bug fixes.
 
 
 Version 0.5, released on 2011-07-24
