@@ -289,7 +289,10 @@ class Freezer(object):
 
         :param options: passed to ``app.run()``.
         """
-        self.make_static_app().run(**options)
+        app = self.make_static_app()
+        script_name = self._script_name()
+        app.wsgi_app = script_name_middleware(app.wsgi_app, script_name)
+        app.run(**options)
 
     def make_static_app(self):
         """Return a Flask application serving the build destination."""
@@ -297,15 +300,10 @@ class Freezer(object):
             self.app.root_path,
             self.app.config['FREEZER_DESTINATION']
         )
-        script_name = self._script_name()
 
         def dispatch_request():
-            if not request.path.startswith(script_name):
-                return redirect(script_name + '/')
-            else:
-                path = request.path[len(script_name):]
-                filename = self.urlpath_to_filepath(path)
-                return send_from_directory(root, filename)
+            filename = self.urlpath_to_filepath(request.path)
+            return send_from_directory(root, filename)
 
         app = Flask(__name__)
         # Do not use the URL map
@@ -445,3 +443,21 @@ class DummyUrlForLogger(object):
 
     def iter_calls(self):
         return iter([])
+
+
+def script_name_middleware(application, script_name):
+    """
+    Wrap a WSGI application in a middleware that moves ``script_name``
+    from the environ's PATH_INFO to SCRIPT_NAME if it is there, and
+    redirect to ``script_name`` otherwise.
+    """
+    def new_application(environ, start_response):
+        path_info = environ['PATH_INFO']
+        if path_info.startswith(script_name):
+            environ['SCRIPT_NAME'] += script_name
+            environ['PATH_INFO'] = path_info[len(script_name):]
+            next = application
+        else:
+            next = redirect(script_name + '/')
+        return next(environ, start_response)
+    return new_application
