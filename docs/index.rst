@@ -28,8 +28,9 @@ or you can get the `source code from github
 Getting started
 ---------------
 
-Create a :class:`Freezer` instance and call its :meth:`~Freezer.freeze`
-method. Put that in a ``freeze.py`` script (or call it however you want)::
+Create a :class:`Freezer` instance with you ``app`` object and call its
+:meth:`~Freezer.freeze` method. Put that in a ``freeze.py`` script
+(or call it whatever you like)::
 
     from flaskext.frozen import Freezer
     from myapplication import app
@@ -39,11 +40,34 @@ method. Put that in a ``freeze.py`` script (or call it however you want)::
     if __name__ == '__main__':
         freezer.freeze()
 
-This will create a ``build`` directory at your application’s root path
-with the static files generated from your application.
+This will create a ``build`` directory next to your application’s ``static``
+and ``templates`` directories, with your application’s content frozen into
+static files.
+
+.. note::
+    Frozen-Flask considers it “owns” its build directory. It **will**
+    silently overwrite and remove files in that directory.
+
+    If you already have something in ``build``, change the destination
+    directory in the `configuration`_.
 
 This build will be most likely be partial since Frozen-Flask can only guess
 so much about your application.
+
+Testing your frozen application
+-------------------------------
+
+You can open the newly generated static HTML files in a web browser, but
+links probably won’t work. To work around this, use the :meth:`~Freezer.serve`
+method to start an HTTP server on the build result,
+so you can check that everything is fine before uploading::
+
+    if __name__ == '__main__':
+        freezer.freeze()
+        freezer.serve()
+
+`Flask-Script <http://packages.python.org/Flask-Script/>`_ may come in handy
+here.
 
 Finding URLs
 ------------
@@ -86,7 +110,9 @@ If, for some reason, some products pages are not linked from another page
 (or these links are not built by :func:`~flask.url_for`), Frozen-Flask will
 not find them.
 
-To tell Frozen-Flask about them, write an URL generator::
+To tell Frozen-Flask about them, write an URL generator and put in after
+creating you :class:`Freezer` instance and before calling
+:meth:`~Freezer.freeze`::
 
     @freezer.register_generator
     def product_details():
@@ -139,21 +165,6 @@ only once. Having different functions with the same name is generally a bad
 practice, but still work here as they are only used by their decorators.
 In practice you will probably have a module for you views and another one
 for the freezer and URL generators, so having the same name is not a problem.
-
-Testing your frozen application
--------------------------------
-
-Loading frozen files directly in a web browser does not play well with URLs,
-so links in your pages will probably not work. To work around this,
-the :meth:`~Freezer.serve` method can start an HTTP server on the build result,
-so that check that everything is fine before uploading::
-
-    if __name__ == '__main__':
-        freezer.freeze()
-        freezer.serve()
-
-`Flask-Script <http://packages.python.org/Flask-Script/>`_ may come in handy
-here.
 
 Configuration
 -------------
@@ -213,6 +224,7 @@ filenames are ``application/octet-stream`` and ``text/css``.
 This can be fixed by adding a trailing slash to the URL or serving with the
 right ``Content-Type``::
 
+    # Saved as `lipsum/index.html` matches the 'text/html' MIME type.
     @app.route('/lipsum/')
     def lipsum():
         return '<p>Lorem ipsum, ...</p>'
