@@ -1,4 +1,4 @@
-include LICENSE
+include LICENSE artwork/*
 recursive-include docs *
 prune docs/_build
 prune docs/_themes/.git
