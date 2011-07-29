@@ -17,7 +17,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='Frozen-Flask',
-    version='0.5', # Also change this in docs/conf.py
+    version='0.6', # Also change this in docs/conf.py
     url='https://github.com/SimonSapin/Frozen-Flask',
     license='BSD',
     author='Simon Sapin',
