@@ -260,6 +260,11 @@ API reference
 Changelog
 ---------
 
+Version 0.6.1, released on 2011-07-29
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Re-release of 0.6 with the artwork included.
+
 Version 0.6, released on 2011-07-29
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
