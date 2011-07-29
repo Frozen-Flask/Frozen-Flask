@@ -103,7 +103,8 @@ html_theme = 'flask_small'
 # documentation.
 #html_theme_options = {}
 html_theme_options = {
-     'index_logo': None,
+     'index_logo': 'artwork/frozen-flask.png',
+     'index_logo_height': '156px',
      'github_fork': 'SimonSapin/Frozen-Flask'
 }
 
@@ -129,7 +130,7 @@ html_theme_path = ['_themes']
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-#html_static_path = ['_static']
+html_static_path = ['_static']
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.

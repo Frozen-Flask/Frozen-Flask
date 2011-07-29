@@ -263,6 +263,7 @@ Changelog
 Version 0.6, to be released Real Soon™
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* Thanks to Glwadys Fayolle for the new logo!
 * Frozen-Flask now requires Flask 0.7 or later. Please use previous version of
   Frozen-Flask if you need previous versions of Flask.
 * Support for Flask Blueprints
