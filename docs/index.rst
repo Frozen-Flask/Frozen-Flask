@@ -110,8 +110,8 @@ If, for some reason, some products pages are not linked from another page
 (or these links are not built by :func:`~flask.url_for`), Frozen-Flask will
 not find them.
 
-To tell Frozen-Flask about them, write an URL generator and put in after
-creating you :class:`Freezer` instance and before calling
+To tell Frozen-Flask about them, write an URL generator and put it after
+creating your :class:`Freezer` instance and before calling
 :meth:`~Freezer.freeze`::
 
     @freezer.register_generator
@@ -119,7 +119,7 @@ creating you :class:`Freezer` instance and before calling
         for product in models.Product.all():
             yield {'product_id': product.id}
 
-Frozen-Flask will find the URL by calling ``url_for(endpoint, values)`` where
+Frozen-Flask will find the URL by calling ``url_for(endpoint, **values)`` where
 ``endpoint`` is the name of the generator function and ``values`` is each
 dict yielded by the function.
 
