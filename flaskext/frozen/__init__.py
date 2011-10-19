@@ -248,7 +248,9 @@ class Freezer(object):
         guessed_type, guessed_encoding = mimetypes.guess_type(basename)
         if not guessed_type:
             # Used by most server when they can not determine the type
-            guessed_type = 'application/octet-stream'
+            guessed_type = self.app.config.get('FREEZER_GUESSED_MIMETYPE',
+                                                'application/octet-stream')
+
         if not guessed_type == response.mimetype:
             raise ValueError(
                 'Filename extension of %r (type %s) does not match Content-'
@@ -303,7 +305,14 @@ class Freezer(object):
 
         def dispatch_request():
             filename = self.urlpath_to_filepath(request.path)
-            return send_from_directory(root, filename)
+
+            # Override the default mimeype from settings
+            guessed_type, guessed_encoding = mimetypes.guess_type(filename)
+            if not guessed_type:
+                guessed_type = self.app.config.get('FREEZER_GUESSED_MIMETYPE',
+                                                    'application/octet-stream')
+
+            return send_from_directory(root, filename, mimetype=guessed_type)
 
         app = Flask(__name__)
         # Do not use the URL map
