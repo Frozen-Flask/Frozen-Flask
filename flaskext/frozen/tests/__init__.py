@@ -279,6 +279,43 @@ class TestBuilder(unittest.TestCase):
                 self.assertEquals(logged_warnings[0].category,
                                   MissingURLGeneratorWarning)
 
+    def test_wrong_default_mimetype(self):
+        with self.make_app() as (temp, app, freezer):
+            @app.route(u'/no-file-extension')
+            def no_extension():
+                return '42', 200, {'Content-Type': 'image/png'}
+            self.assertRaises(ValueError, freezer.freeze)
+
+    def test_default_mimetype(self):
+        with self.make_app() as (temp, app, freezer):
+            @app.route(u'/no-file-extension')
+            def no_extension():
+                return '42', 200, {'Content-Type': 'application/octet-stream'}
+            freezer.freeze()
+
+    def test_unknown_extension(self):
+        with self.make_app() as (temp, app, freezer):
+            @app.route(u'/unkown-extension.fuu')
+            def no_extension():
+                return '42', 200, {'Content-Type': 'application/octet-stream'}
+            freezer.freeze()
+
+    def test_configured_default_mimetype(self):
+        with self.make_app() as (temp, app, freezer):
+            app.config['FREEZER_GUESSED_MIMETYPE'] = 'image/png'
+            @app.route(u'/no-file-extension')
+            def no_extension():
+                return '42', 200, {'Content-Type': 'image/png'}
+            freezer.freeze()
+
+    def test_wrong_configured_mimetype(self):
+        with self.make_app() as (temp, app, freezer):
+            app.config['FREEZER_GUESSED_MIMETYPE'] = 'image/png'
+            @app.route(u'/no-file-extension')
+            def no_extension():
+                return '42', 200, {'Content-Type': 'application/octet-stream'}
+            self.assertRaises(ValueError, freezer.freeze)
+
 
 class TestInitApp(TestBuilder):
     defer_init_app = True
@@ -314,48 +351,3 @@ class TestWithoutUrlForLog(TestBuilder):
 
 # with_no_argument_rules=False and with_static_files=False are
 # not tested as they produces (expected!) warnings
-
-class TestDefaultMimetype(TestBuilder):
-    content = u'some content'
-
-    def test_default_mimetype(self):
-        """The is the default case - should work"""
-        with self.make_app() as (temp, app, freezer):
-            @app.route(u'/mimetype/content.html')
-            def external_url():
-                return self.content
-            freezer.freeze()
-
-    def test_default_mimetype_no_extension(self):
-        """This must fail - a file path with no extension"""
-        with self.make_app() as (temp, app, freezer):
-            @app.route(u'/mimetype/content')
-            def external_url():
-                return self.content
-
-            try:
-                freezer.freeze()
-            except ValueError:
-                pass
-            else:
-                assert False, "Mimetype application/octet-stream should fail"
-
-
-class TestOverrideMimetype(TestBuilder):
-    """Set default mimetype as text/html"""
-    content = u'some content'
-
-    def do_extra_config(self, app, freezer):
-        app.config['FREEZER_GUESSED_MIMETYPE'] = u'text/html'
-
-    def test_custom_mimetype(self):
-        """Paths with no extension are now valid and return the given mimetype"""
-        with self.make_app() as (temp, app, freezer):
-            @app.route(u'/mimetype/content')
-            def external_url():
-                return self.content
-            freezer.freeze()
-
-            resp = app.test_client().get(u'/mimetype/content')
-            assert resp.mimetype == app.config['FREEZER_GUESSED_MIMETYPE']
-
