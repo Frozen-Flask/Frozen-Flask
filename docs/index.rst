@@ -193,6 +193,14 @@ are accepted:
 
     .. versionadded:: 0.5
 
+``FREEZER_DEFAULT_MIMETYPE``
+    The MIME type that is assumed when it can not be determined from the
+    filename extension. If you’re using the Apache web server, this should
+    match the ``DefaultType`` value of Apache’s configuration.
+    Defaults to ``application/octet-stream``.
+
+    .. versionadded:: 0.7
+
 
 .. _mime-types:
 
@@ -259,6 +267,17 @@ API reference
 
 Changelog
 ---------
+
+Version 0.7, to be released Soon™
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* **Backward incompatible change:** Moved the ``flaskext.frozen`` package
+  to ``flask_frozen``. You should change your imports either to that or
+  to ``flask.ext.frozen`` if you’re using Flask 0.8 or more recent.
+  See `Flask’s documentation <http://flask.pocoo.org/docs/extensions/>`_
+  for details.
+* Added FREEZER_DEFAULT_MIMETYPE
+* Switch to tox for testing in multiple Python versions
 
 Version 0.6.1, released on 2011-07-29
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
