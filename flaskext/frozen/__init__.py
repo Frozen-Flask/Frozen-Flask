@@ -248,7 +248,7 @@ class Freezer(object):
         guessed_type, guessed_encoding = mimetypes.guess_type(basename)
         if not guessed_type:
             # Used by most server when they can not determine the type
-            guessed_type = self.app.config.get('FREEZER_GUESSED_MIMETYPE',
+            guessed_type = self.app.config.get('FREEZER_DEFAULT_MIMETYPE',
                                                 'application/octet-stream')
 
         if not guessed_type == response.mimetype:
@@ -309,7 +309,7 @@ class Freezer(object):
             # Override the default mimeype from settings
             guessed_type, guessed_encoding = mimetypes.guess_type(filename)
             if not guessed_type:
-                guessed_type = self.app.config.get('FREEZER_GUESSED_MIMETYPE',
+                guessed_type = self.app.config.get('FREEZER_DEFAULT_MIMETYPE',
                                                     'application/octet-stream')
 
             return send_from_directory(root, filename, mimetype=guessed_type)

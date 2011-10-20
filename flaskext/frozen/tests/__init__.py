@@ -302,7 +302,7 @@ class TestFreezer(unittest.TestCase):
 
     def test_configured_default_mimetype(self):
         with self.make_app() as (temp, app, freezer):
-            app.config['FREEZER_GUESSED_MIMETYPE'] = 'image/png'
+            app.config['FREEZER_DEFAULT_MIMETYPE'] = 'image/png'
             @app.route(u'/no-file-extension')
             def no_extension():
                 return '42', 200, {'Content-Type': 'image/png'}
@@ -310,7 +310,7 @@ class TestFreezer(unittest.TestCase):
 
     def test_wrong_configured_mimetype(self):
         with self.make_app() as (temp, app, freezer):
-            app.config['FREEZER_GUESSED_MIMETYPE'] = 'image/png'
+            app.config['FREEZER_DEFAULT_MIMETYPE'] = 'image/png'
             @app.route(u'/no-file-extension')
             def no_extension():
                 return '42', 200, {'Content-Type': 'application/octet-stream'}
