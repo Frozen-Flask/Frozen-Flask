@@ -86,6 +86,8 @@ class Freezer(object):
             app.config.setdefault('FREEZER_DESTINATION', 'build')
             app.config.setdefault('FREEZER_BASE_URL', 'http://localhost/')
             app.config.setdefault('FREEZER_REMOVE_EXTRA_FILES', True)
+            app.config.setdefault('FREEZER_DEFAULT_MIMETYPE',
+                                  'application/octet-stream')
 
     def register_generator(self, function):
         """Register a function as an URL generator.
@@ -248,8 +250,7 @@ class Freezer(object):
         guessed_type, guessed_encoding = mimetypes.guess_type(basename)
         if not guessed_type:
             # Used by most server when they can not determine the type
-            guessed_type = self.app.config.get('FREEZER_DEFAULT_MIMETYPE',
-                                                'application/octet-stream')
+            guessed_type = self.app.config['FREEZER_DEFAULT_MIMETYPE']
 
         if not guessed_type == response.mimetype:
             raise ValueError(
@@ -309,8 +310,7 @@ class Freezer(object):
             # Override the default mimeype from settings
             guessed_type, guessed_encoding = mimetypes.guess_type(filename)
             if not guessed_type:
-                guessed_type = self.app.config.get('FREEZER_DEFAULT_MIMETYPE',
-                                                    'application/octet-stream')
+                guessed_type = self.app.config['FREEZER_DEFAULT_MIMETYPE']
 
             return send_from_directory(root, filename, mimetype=guessed_type)
 
