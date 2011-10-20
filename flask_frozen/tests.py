@@ -9,8 +9,7 @@ import warnings
 from contextlib import contextmanager
 from unicodedata import normalize
 
-from flaskext.frozen import (Freezer, walk_directory,
-                             MissingURLGeneratorWarning)
+from flask_frozen import (Freezer, walk_directory, MissingURLGeneratorWarning)
 from . import test_app
 
 

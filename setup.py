@@ -25,10 +25,9 @@ setup(
     description='Freezes a Flask application into a set of static files.',
     long_description=__doc__,
     packages=find_packages(),
-    namespace_packages=['flaskext'],
     # static files for the test app
     package_data={'': ['static/*', 'admin_static/*']},
-    test_suite='flaskext.frozen.tests',
+    test_suite='flask_frozen.tests',
     zip_safe=False,
     platforms='any',
     install_requires=[

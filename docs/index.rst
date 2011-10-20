@@ -1,7 +1,7 @@
 Frozen-Flask
 ============
 
-.. module:: flaskext.frozen
+.. module:: flask_frozen
 
 Frozen-Flask freezes a `Flask`_ application into a set of static files.
 The result can be hosted without any server-side software other than a
@@ -32,7 +32,7 @@ Create a :class:`Freezer` instance with you ``app`` object and call its
 :meth:`~Freezer.freeze` method. Put that in a ``freeze.py`` script
 (or call it whatever you like)::
 
-    from flaskext.frozen import Freezer
+    from flask_frozen import Freezer
     from myapplication import app
 
     freezer = Freezer(app)

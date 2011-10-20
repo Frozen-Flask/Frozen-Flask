@@ -1,6 +1,6 @@
 # coding: utf8
 from flask import Flask, url_for
-from flaskext.frozen import Freezer
+from flask_frozen import Freezer
 
 from .admin import admin_blueprint
 
