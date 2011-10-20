@@ -268,8 +268,8 @@ API reference
 Changelog
 ---------
 
-Version 0.7, to be released Soon™
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Version 0.7, released on 2011-10-20
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * **Backward incompatible change:** Moved the ``flaskext.frozen`` package
   to ``flask_frozen``. You should change your imports either to that or
