@@ -120,7 +120,7 @@ class TestWalkDirectory(unittest.TestCase):
         )
 
 
-class TestBuilder(unittest.TestCase):
+class TestFreezer(unittest.TestCase):
     expected_output = {
         u'/': 'Main index',
         u'/admin/': 'Admin index',
@@ -317,12 +317,12 @@ class TestBuilder(unittest.TestCase):
             self.assertRaises(ValueError, freezer.freeze)
 
 
-class TestInitApp(TestBuilder):
+class TestInitApp(TestFreezer):
     defer_init_app = True
 
 
-class TestBaseURL(TestBuilder):
-    expected_output = TestBuilder.expected_output.copy()
+class TestBaseURL(TestFreezer):
+    expected_output = TestFreezer.expected_output.copy()
     expected_output['/where_am_i/'] = \
         '/myapp/where_am_i/ http://example/myapp/where_am_i/'
 
@@ -330,7 +330,7 @@ class TestBaseURL(TestBuilder):
         app.config['FREEZER_BASE_URL'] = 'http://example/myapp/'
 
 
-class TestNonexsistentDestination(TestBuilder):
+class TestNonexsistentDestination(TestFreezer):
     def do_extra_config(self, app, freezer):
         # frozen/htdocs does not exsist in the newly created temp directory,
         # the Freezer has to create it.
@@ -338,14 +338,14 @@ class TestNonexsistentDestination(TestBuilder):
             app.config['FREEZER_DESTINATION'], 'frozen', 'htdocs')
 
 
-class TestWithoutUrlForLog(TestBuilder):
+class TestWithoutUrlForLog(TestFreezer):
     freezer_kwargs = dict(log_url_for=False)
 
-    expected_output = TestBuilder.expected_output.copy()
+    expected_output = TestFreezer.expected_output.copy()
     del expected_output[u'/product_3/']
     del expected_output[u'/product_4/']
 
-    filenames = TestBuilder.filenames.copy()
+    filenames = TestFreezer.filenames.copy()
     del filenames[u'/product_3/']
     del filenames[u'/product_4/']
 
