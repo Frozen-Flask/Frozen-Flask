@@ -17,7 +17,8 @@ def create_app(defer_init_app=False, freezer_kwargs=None):
 
     @app.route('/')
     def index():
-        return 'Main index'
+        return ('Main index ' + 
+                url_for('static', filename="base.css", revision='b12ef20'))
 
     @app.route('/page/<name>/')
     def page(name):
