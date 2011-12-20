@@ -281,6 +281,8 @@ class Freezer(object):
         """
         Convert a URL path like /admin/ to a file path like admin/index.html
         """
+        if '?' in path:
+            path, args = path.rsplit('?', 1)
         if path.endswith('/'):
             path += 'index.html'
         # Remove the initial slash that should always be there
