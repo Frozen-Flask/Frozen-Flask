@@ -131,6 +131,7 @@ class TestFreezer(unittest.TestCase):
         u'/product_4/': 'Product num 4',
         u'/static/style.css': '/* Main CSS */\n',
         u'/static/base.css': '',
+        u'/static/base.css?revision=b12ef20': '',
         u'/admin/css/style.css': '/* Admin CSS */\n',
         u'/where_am_i/': '/where_am_i/ http://localhost/where_am_i/',
         u'/page/I løvë Unicode/':
@@ -147,10 +148,13 @@ class TestFreezer(unittest.TestCase):
         u'/product_4/': u'product_4/index.html',
         u'/static/style.css': u'static/style.css',
         u'/static/base.css': u'static/base.css',
+        u'/static/base.css?revision=b12ef20': u'static/base.css',
         u'/admin/css/style.css': u'admin/css/style.css',
         u'/where_am_i/': u'where_am_i/index.html',
         u'/page/I løvë Unicode/': u'page/I løvë Unicode/index.html',
     }
+    generated_by_url_for = [u'/product_3/', u'/product_4/',
+                            u'/static/base.css?revision=b12ef20']
     defer_init_app = True
     freezer_kwargs = None
 
@@ -186,16 +190,15 @@ class TestFreezer(unittest.TestCase):
         app, freezer = test_app.create_app(freezer_kwargs=self.freezer_kwargs)
         expected = sorted(self.expected_output)
         # url_for() calls are not logged when just calling .all_urls()
-        if '/product_3/' in expected:
-            expected.remove('/product_3/')
-        if '/product_4/' in expected:
-            expected.remove('/product_4/')
+        for url in self.generated_by_url_for:
+            if url in expected:
+                expected.remove(url)
         # Do not use set() here: also test that URLs are not duplicated.
         self.assertEquals(sorted(freezer.all_urls()), expected)
 
     def test_built_urls(self):
         with self.built_app() as (temp, app, freezer, urls):
-            urls = [url.split('?', 1)[0] for url in urls]
+#            urls = [url.split('?', 1)[0] for url in urls]
             self.assertEquals(set(urls), set(self.expected_output))
             # Make sure it was not accidently used as a destination
             default = os.path.join(os.path.dirname(__file__), 'build')
@@ -345,12 +348,10 @@ class TestWithoutUrlForLog(TestFreezer):
     freezer_kwargs = dict(log_url_for=False)
 
     expected_output = TestFreezer.expected_output.copy()
-    del expected_output[u'/product_3/']
-    del expected_output[u'/product_4/']
-
     filenames = TestFreezer.filenames.copy()
-    del filenames[u'/product_3/']
-    del filenames[u'/product_4/']
+    for url in TestFreezer.generated_by_url_for:
+        del expected_output[url]
+        del filenames[url]
 
 # with_no_argument_rules=False and with_static_files=False are
 # not tested as they produces (expected!) warnings
