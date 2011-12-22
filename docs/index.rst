@@ -213,9 +213,9 @@ built from the URL. URLs with a trailing slash are interpreted as a directory
 name and the content is saved in ``index.html``.
 
 Query strings are removed from URLs to build filenames. For example,
-``/lorem/?page=ipsum`` and ``/lorem/?page=dolor`` will both be saved to the
-same file, ``lorem/index.html``. In case of such conflict, which URL “wins”
-is undefined.
+``/lorem/?page=ipsum`` is saved to ``lorem/index.html``. URLs that are only
+different by their query strings are considered the same, and they should
+return the same response. Otherwise, the behavior is undefined.
 
 Additionally, the extension checks that the filename has an extension that
 match the MIME type given in the ``Content-Type`` HTTP response header.

@@ -114,14 +114,14 @@ class TestWalkDirectory(unittest.TestCase):
         self.assertEquals(
             set(f for f in walk_directory(os.path.dirname(test_app.__file__))
                 if not f.endswith(('.pyc', '.pyo'))),
-            set(['__init__.py', 'static/style.css', 'static/base.css',
+            set(['__init__.py', 'static/style.css',
                  'admin/__init__.py', 'admin/admin_static/style.css'])
         )
 
 
 class TestFreezer(unittest.TestCase):
     expected_output = {
-        u'/': 'Main index /static/base.css?revision=b12ef20',
+        u'/': 'Main index /product_5/?revision=b12ef20',
         u'/admin/': 'Admin index',
         u'/robots.txt': 'User-agent: *\nDisallow: /',
         u'/product_0/': 'Product num 0',
@@ -129,9 +129,8 @@ class TestFreezer(unittest.TestCase):
         u'/product_2/': 'Product num 2',
         u'/product_3/': 'Product num 3',
         u'/product_4/': 'Product num 4',
+        u'/product_5/': 'Product num 5',
         u'/static/style.css': '/* Main CSS */\n',
-        u'/static/base.css': '',
-        u'/static/base.css?revision=b12ef20': '',
         u'/admin/css/style.css': '/* Admin CSS */\n',
         u'/where_am_i/': '/where_am_i/ http://localhost/where_am_i/',
         u'/page/I løvë Unicode/':
@@ -146,15 +145,13 @@ class TestFreezer(unittest.TestCase):
         u'/product_2/': u'product_2/index.html',
         u'/product_3/': u'product_3/index.html',
         u'/product_4/': u'product_4/index.html',
+        u'/product_5/': u'product_5/index.html',
         u'/static/style.css': u'static/style.css',
-        u'/static/base.css': u'static/base.css',
-        u'/static/base.css?revision=b12ef20': u'static/base.css',
         u'/admin/css/style.css': u'admin/css/style.css',
         u'/where_am_i/': u'where_am_i/index.html',
         u'/page/I løvë Unicode/': u'page/I løvë Unicode/index.html',
     }
-    generated_by_url_for = [u'/product_3/', u'/product_4/',
-                            u'/static/base.css?revision=b12ef20']
+    generated_by_url_for = [u'/product_3/', u'/product_4/', u'/product_5/']
     defer_init_app = True
     freezer_kwargs = None
 
@@ -198,7 +195,6 @@ class TestFreezer(unittest.TestCase):
 
     def test_built_urls(self):
         with self.built_app() as (temp, app, freezer, urls):
-#            urls = [url.split('?', 1)[0] for url in urls]
             self.assertEquals(set(urls), set(self.expected_output))
             # Make sure it was not accidently used as a destination
             default = os.path.join(os.path.dirname(__file__), 'build')
@@ -328,7 +324,7 @@ class TestInitApp(TestFreezer):
 
 class TestBaseURL(TestFreezer):
     expected_output = TestFreezer.expected_output.copy()
-    expected_output['/'] = 'Main index /myapp/static/base.css?revision=b12ef20'
+    expected_output['/'] = 'Main index /myapp/product_5/?revision=b12ef20'
     expected_output['/where_am_i/'] = \
         '/myapp/where_am_i/ http://example/myapp/where_am_i/'
 
