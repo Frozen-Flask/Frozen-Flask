@@ -325,6 +325,7 @@ class TestInitApp(TestFreezer):
 
 class TestBaseURL(TestFreezer):
     expected_output = TestFreezer.expected_output.copy()
+    expected_output['/'] = 'Main index /myapp/static/base.css?revision=b12ef20'
     expected_output['/where_am_i/'] = \
         '/myapp/where_am_i/ http://example/myapp/where_am_i/'
 
