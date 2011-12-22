@@ -13,11 +13,19 @@ Links
   <http://github.com/SimonSapin/Frozen-Flask/zipball/master#egg=Frozen-Flask-dev>`_
 """
 
+import re
+import os.path
 from setuptools import setup, find_packages
+
+
+with open(os.path.join(os.path.dirname(__file__),
+                       'flask_frozen', '__init__.py')) as init_py:
+    VERSION = re.search("VERSION = '([^']+)'", init_py.read()).group(1)
+
 
 setup(
     name='Frozen-Flask',
-    version='0.7',  # Also change this in docs/conf.py
+    version=VERSION,
     url='https://github.com/SimonSapin/Frozen-Flask',
     license='BSD',
     author='Simon Sapin',

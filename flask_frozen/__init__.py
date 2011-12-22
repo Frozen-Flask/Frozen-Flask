@@ -38,6 +38,8 @@ except ImportError:
 
 __all__ = ['Freezer']
 
+VERSION = '0.8dev'
+
 
 class MissingURLGeneratorWarning(Warning):
     pass
