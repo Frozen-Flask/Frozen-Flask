@@ -13,6 +13,7 @@ Links
   <http://github.com/SimonSapin/Frozen-Flask/zipball/master#egg=Frozen-Flask-dev>`_
 """
 
+from __future__ import with_statement
 import re
 import os.path
 from setuptools import setup, find_packages
