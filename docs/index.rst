@@ -212,6 +212,11 @@ in a file in the ``FREEZER_DESTINATION`` directory. The filename is
 built from the URL. URLs with a trailing slash are interpreted as a directory
 name and the content is saved in ``index.html``.
 
+Query strings are removed from URLs to build filenames. For example,
+``/lorem/?page=ipsum`` and ``/lorem/?page=dolor`` will both be saved to the
+same file, ``lorem/index.html``. In case of such conflict, which URL “wins”
+is undefined.
+
 Additionally, the extension checks that the filename has an extension that
 match the MIME type given in the ``Content-Type`` HTTP response header.
 
@@ -268,6 +273,13 @@ API reference
 Changelog
 ---------
 
+Version 0.8, not released yet
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Remove query strings from URLs to build a file names.
+  (Should we add configuration to disable this?)
+
+
 Version 0.7, released on 2011-10-20
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -279,10 +291,12 @@ Version 0.7, released on 2011-10-20
 * Added FREEZER_DEFAULT_MIMETYPE
 * Switch to tox for testing in multiple Python versions
 
+
 Version 0.6.1, released on 2011-07-29
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Re-release of 0.6 with the artwork included.
+
 
 Version 0.6, released on 2011-07-29
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -309,6 +323,7 @@ Version 0.5, released on 2011-07-24
   undefined territory anyway.
 * Bug fixes.
 
+
 Version 0.4, released on 2011-06-02
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -316,6 +331,7 @@ Version 0.4, released on 2011-06-02
   characters should be %-encoded in URLs but not in frozen filenames. (Web
   servers do the decoding.)
 * Add a documentation section about character encodings.
+
 
 Version 0.3, released on 2011-05-28
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -326,6 +342,7 @@ Version 0.3, released on 2011-05-28
 * :meth:`Freezer.all_urls` and :func:`walk_directory` are now part of the
   public API.
 
+
 Version 0.2, released on 2011-02-21
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -334,6 +351,7 @@ breaking API compatibility, :func:`flaskext.static.StaticBuilder.build`
 is now :func:`flaskext.frozen.Freezer.freeze` and the prefix for configuration
 keys is ``FREEZER_`` instead of ``STATIC_BUILDER_``.
 Other names were left unchanged.
+
 
 Version 0.1, released on 2011-02-06
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
