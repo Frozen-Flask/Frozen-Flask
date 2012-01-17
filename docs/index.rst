@@ -202,6 +202,11 @@ are accepted:
     .. versionadded:: 0.7
 
 
+``FREEZER_IGNORE_MIMETYPE_WARNINGS``
+    If set to `True`, Frozen-Flask won't show warnings if the mimetype
+    returned from the server doesn't match the mimetype derived from the
+    filename extension.
+
 .. _mime-types:
 
 Filenames and MIME types
