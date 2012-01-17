@@ -284,7 +284,7 @@ API reference
 Changelog
 ---------
 
-Version 0.8, not released yet
+Version 0.8, released on 2012-01-17
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Remove query strings from URLs to build a file names.
