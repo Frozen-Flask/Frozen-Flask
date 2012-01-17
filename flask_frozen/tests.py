@@ -9,7 +9,8 @@ import warnings
 from contextlib import contextmanager
 from unicodedata import normalize
 
-from flask_frozen import (Freezer, walk_directory, MissingURLGeneratorWarning)
+from flask_frozen import (Freezer, walk_directory,
+    MissingURLGeneratorWarning, MimetypeMismatchWarning)
 from . import test_app
 
 
@@ -104,7 +105,7 @@ class TestTempDirectory(unittest.TestCase):
 class TestDiff(unittest.TestCase):
     def test_sanity(self):
         this_dir = os.path.dirname(__file__)
-        other_dir = os.path.dirname(this_dir)
+        other_dir = os.path.join(this_dir, 'test_app')
         self.assert_(not diff(this_dir, this_dir))
         self.assert_(diff(this_dir, other_dir))
 
@@ -285,7 +286,13 @@ class TestFreezer(unittest.TestCase):
             @app.route(u'/no-file-extension')
             def no_extension():
                 return '42', 200, {'Content-Type': 'image/png'}
-            self.assertRaises(ValueError, freezer.freeze)
+
+            with catch_warnings(record=True) as logged_warnings:
+                warnings.simplefilter("always")
+                freezer.freeze()
+                self.assertEquals(len(logged_warnings), 1)
+                self.assertEquals(logged_warnings[0].category,
+                                  MimetypeMismatchWarning)
 
     def test_default_mimetype(self):
         with self.make_app() as (temp, app, freezer):
@@ -315,7 +322,12 @@ class TestFreezer(unittest.TestCase):
             @app.route(u'/no-file-extension')
             def no_extension():
                 return '42', 200, {'Content-Type': 'application/octet-stream'}
-            self.assertRaises(ValueError, freezer.freeze)
+            with catch_warnings(record=True) as logged_warnings:
+                warnings.simplefilter("always")
+                freezer.freeze()
+                self.assertEquals(len(logged_warnings), 1)
+                self.assertEquals(logged_warnings[0].category,
+                                  MimetypeMismatchWarning)
 
 
 class TestInitApp(TestFreezer):

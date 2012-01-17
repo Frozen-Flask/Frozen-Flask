@@ -201,11 +201,13 @@ are accepted:
 
     .. versionadded:: 0.7
 
-
 ``FREEZER_IGNORE_MIMETYPE_WARNINGS``
-    If set to `True`, Frozen-Flask won't show warnings if the mimetype
-    returned from the server doesn't match the mimetype derived from the
-    filename extension.
+    If set to ``True``, Frozen-Flask won't show warnings if the MIME type
+    returned from the server doesn't match the MIME type derived from the
+    filename extension. Defaults to ``False``.
+
+    .. versionadded:: 0.8
+
 
 .. _mime-types:
 
@@ -224,8 +226,10 @@ return the same response. Otherwise, the behavior is undefined.
 
 Additionally, the extension checks that the filename has an extension that
 match the MIME type given in the ``Content-Type`` HTTP response header.
+In case of mismatch, the Content-Type that a static web server will send
+will probably not be the one you expect, so Frozen-Flask issues a warning.
 
-For example, the following views will both fail::
+For example, the following views are both wrong::
 
     @app.route('/lipsum')
     def lipsum():
@@ -250,6 +254,8 @@ right ``Content-Type``::
     @app.route('/style.css')
     def compressed_css():
         return '/* ... */', 200, {'Content-Type': 'text/css; charset=utf-8'}
+
+Alternatively, these warnings can be disabled entirely in the configuration_.
 
 Character encodings
 -------------------
@@ -283,6 +289,9 @@ Version 0.8, not released yet
 
 * Remove query strings from URLs to build a file names.
   (Should we add configuration to disable this?)
+* Raise a warning instead of an exception for `MIME type mismatches
+  <#mime-types>`_, and give the option to disable them entirely in the
+  configuration.
 
 
 Version 0.7, released on 2011-10-20
