@@ -45,6 +45,10 @@ class MissingURLGeneratorWarning(Warning):
     pass
 
 
+class MimetypeMismatchWarning(Warning):
+    pass
+
+
 class Freezer(object):
     """
     :param app: your application or None if you use :meth:`init_app`
@@ -90,6 +94,7 @@ class Freezer(object):
             app.config.setdefault('FREEZER_REMOVE_EXTRA_FILES', True)
             app.config.setdefault('FREEZER_DEFAULT_MIMETYPE',
                                   'application/octet-stream')
+            app.config.setdefault('FREEZER_IGNORE_MIMETYPE_WARNINGS', False)
 
     def register_generator(self, function):
         """Register a function as an URL generator.
@@ -247,19 +252,22 @@ class Freezer(object):
         destination_path = self.urlpath_to_filepath(url)
         filename = os.path.join(self.root, *destination_path.split('/'))
 
-        # Most web servers guess the mime type of static files by their
-        # filename.  Check that this guess is consistent with the actual
-        # Content-Type header we got from the app.
-        basename = os.path.basename(filename)
-        guessed_type, guessed_encoding = mimetypes.guess_type(basename)
-        if not guessed_type:
-            # Used by most server when they can not determine the type
-            guessed_type = self.app.config['FREEZER_DEFAULT_MIMETYPE']
+        if not self.app.config['FREEZER_IGNORE_MIMETYPE_WARNINGS']:
+            # Most web servers guess the mime type of static files by their
+            # filename.  Check that this guess is consistent with the actual
+            # Content-Type header we got from the app.
+            basename = os.path.basename(filename)
+            guessed_type, guessed_encoding = mimetypes.guess_type(basename)
+            if not guessed_type:
+                # Used by most server when they can not determine the type
+                guessed_type = self.app.config['FREEZER_DEFAULT_MIMETYPE']
 
-        if not guessed_type == response.mimetype:
-            raise ValueError(
-                'Filename extension of %r (type %s) does not match Content-'
-                'Type: %s' % (basename, guessed_type, response.content_type))
+            if not guessed_type == response.mimetype:
+                warnings.warn(
+                    'Filename extension of %r (type %s) does not match Content-'
+                    'Type: %s' % (basename, guessed_type, response.content_type),
+                    MimetypeMismatchWarning,
+                    stacklevel=3)
 
         # Create directories as needed
         dirname = os.path.dirname(filename)
