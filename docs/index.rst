@@ -311,7 +311,9 @@ Changelog
 Version 0.9
 ~~~~~~~~~~~
 
-Add :meth:`Freezer.run`
+Released on 2012-02-13.
+
+Add :meth:`Freezer.run`.
 
 
 Version 0.8
