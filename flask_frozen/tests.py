@@ -11,7 +11,7 @@ from unicodedata import normalize
 
 from flask_frozen import (Freezer, walk_directory,
     MissingURLGeneratorWarning, MimetypeMismatchWarning)
-from . import test_app
+from flask_frozen import test_app
 
 
 try:
@@ -363,3 +363,6 @@ class TestWithoutUrlForLog(TestFreezer):
 
 # with_no_argument_rules=False and with_static_files=False are
 # not tested as they produces (expected!) warnings
+
+if __name__ == '__main__':
+    unittest.main()
