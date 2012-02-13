@@ -25,6 +25,19 @@ or alternatively if you have pip installed::
 or you can get the `source code from github
 <https://github.com/SimonSapin/Frozen-Flask>`_.
 
+Context
+-------
+
+This documentation assumes that you already have a working `Flask`_
+application. You can run it and test it with the development server::
+
+    from myapplication import app
+    app.run(debug=True)
+
+Frozen-Flask is only about deployment: instead of installing Python,
+a WGSI server and Flask on your server, you can use Frozen-Flask to *freeze*
+your application and only have static HTML files on your server.
+
 Getting started
 ---------------
 
@@ -54,26 +67,12 @@ static files.
 This build will be most likely be partial since Frozen-Flask can only guess
 so much about your application.
 
-Testing your frozen application
--------------------------------
-
-You can open the newly generated static HTML files in a web browser, but
-links probably won’t work. To work around this, use the :meth:`~Freezer.serve`
-method to start an HTTP server on the build result,
-so you can check that everything is fine before uploading::
-
-    if __name__ == '__main__':
-        freezer.freeze()
-        freezer.serve()
-
-`Flask-Script <http://packages.python.org/Flask-Script/>`_ may come in handy
-here.
-
 Finding URLs
 ------------
 
-Frozen-Flask works by finding which URLs exist in your application, simulating
-requests at the WSGI level and writing the responses to aptly named files.
+Frozen-Flask works by simulating requests at the WSGI level and writing the
+responses to aptly named files. So it needs to find out which URLs exist
+in your application.
 
 The following URLs can be found automatically:
 
@@ -165,6 +164,26 @@ only once. Having different functions with the same name is generally a bad
 practice, but still work here as they are only used by their decorators.
 In practice you will probably have a module for you views and another one
 for the freezer and URL generators, so having the same name is not a problem.
+
+Testing URL generators
+----------------------
+
+The idea behind Frozen-Flask is that you can `use Flask directly
+<#context>`_ to develop and test your application. However, it is
+also useful to test your *URL generators* and see that nothing is missing,
+before deploying to a production server.
+
+You can open the newly generated static HTML files in a web browser, but
+links probably won’t work. To work around this, use the :meth:`~Freezer.serve`
+method to start an HTTP server on the build result,
+so you can check that everything is fine before uploading::
+
+    if __name__ == '__main__':
+        freezer.freeze()
+        freezer.serve()
+
+`Flask-Script <http://packages.python.org/Flask-Script/>`_ may come in handy
+here.
 
 Configuration
 -------------
