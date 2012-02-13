@@ -100,7 +100,7 @@ exclude_patterns = ['_build']
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'flask_small'
+html_theme = 'flask'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -109,7 +109,7 @@ html_theme = 'flask_small'
 html_theme_options = {
      'index_logo': 'artwork/frozen-flask.png',
      'index_logo_height': '156px',
-     'github_fork': 'SimonSapin/Frozen-Flask'
+#     'github_fork': 'SimonSapin/Frozen-Flask'
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
@@ -145,7 +145,7 @@ html_static_path = ['_static']
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
+html_sidebars = {'**': ['sidebarintro.html', 'localtoc.html']}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.

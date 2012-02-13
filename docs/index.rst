@@ -303,8 +303,10 @@ API reference
 Changelog
 ---------
 
-Version 0.8, released on 2012-01-17
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Version 0.8
+~~~~~~~~~~~
+
+Released on 2012-01-17.
 
 * Remove query strings from URLs to build a file names.
   (Should we add configuration to disable this?)
@@ -313,8 +315,10 @@ Version 0.8, released on 2012-01-17
   configuration.
 
 
-Version 0.7, released on 2011-10-20
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Version 0.7
+~~~~~~~~~~~
+
+Released on 2011-10-20.
 
 * **Backward incompatible change:** Moved the ``flaskext.frozen`` package
   to ``flask_frozen``. You should change your imports either to that or
@@ -325,14 +329,18 @@ Version 0.7, released on 2011-10-20
 * Switch to tox for testing in multiple Python versions
 
 
-Version 0.6.1, released on 2011-07-29
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Version 0.6.1
+~~~~~~~~~~~~~
+
+Released on 2011-07-29.
 
 Re-release of 0.6 with the artwork included.
 
 
-Version 0.6, released on 2011-07-29
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Version 0.6
+~~~~~~~~~~~
+
+Released on 2011-07-29.
 
 * Thanks to Glwadys Fayolle for the new logo!
 * **Frozen-Flask now requires Flask 0.7 or later**. Please use previous
@@ -343,8 +351,10 @@ Version 0.6, released on 2011-07-29
 * Bug fixes.
 
 
-Version 0.5, released on 2011-07-24
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Version 0.5
+~~~~~~~~~~~
+
+Released on 2011-07-24.
 
 * You can now construct a Freezer and add URL generators without an app, and
   register the app later with :meth:`Freezer.init_app`.
@@ -357,8 +367,10 @@ Version 0.5, released on 2011-07-24
 * Bug fixes.
 
 
-Version 0.4, released on 2011-06-02
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Version 0.4
+~~~~~~~~~~~
+
+Released on 2011-06-02.
 
 * Bugfix: correctly unquote URLs to build filenames. Spaces and non-ASCII
   characters should be %-encoded in URLs but not in frozen filenames. (Web
@@ -366,8 +378,10 @@ Version 0.4, released on 2011-06-02
 * Add a documentation section about character encodings.
 
 
-Version 0.3, released on 2011-05-28
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Version 0.3
+~~~~~~~~~~~
+
+Released on 2011-05-28.
 
 * URL generators can omit the endpoint and just yield ``values`` dictionaries.
   In that case, the name of the generator function is used as the endpoint,
@@ -376,8 +390,10 @@ Version 0.3, released on 2011-05-28
   public API.
 
 
-Version 0.2, released on 2011-02-21
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Version 0.2
+~~~~~~~~~~~
+
+Released on 2011-02-21.
 
 Renamed the project from Flask-Static to Frozen-Flask. While we’re at
 breaking API compatibility, :func:`flaskext.static.StaticBuilder.build`
@@ -386,7 +402,9 @@ keys is ``FREEZER_`` instead of ``STATIC_BUILDER_``.
 Other names were left unchanged.
 
 
-Version 0.1, released on 2011-02-06
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Version 0.1
+~~~~~~~~~~~
+
+Released on 2011-02-06.
 
 First properly tagged release.
