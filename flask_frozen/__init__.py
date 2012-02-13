@@ -302,12 +302,17 @@ class Freezer(object):
     def serve(self, **options):
         """Run an HTTP server on the result of the build.
 
-        :param options: passed to ``app.run()``.
+        :param options: passed to :meth:`flask.Flask.run`.
         """
         app = self.make_static_app()
         script_name = self._script_name()
         app.wsgi_app = script_name_middleware(app.wsgi_app, script_name)
         app.run(**options)
+
+    def run(self, **options):
+        """Same as :meth:`serve` but calls :meth:`freeze` before serving."""
+        self.freeze()
+        self.serve(**options)
 
     def make_static_app(self):
         """Return a Flask application serving the build destination."""

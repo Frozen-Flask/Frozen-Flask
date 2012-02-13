@@ -174,13 +174,18 @@ also useful to test your *URL generators* and see that nothing is missing,
 before deploying to a production server.
 
 You can open the newly generated static HTML files in a web browser, but
-links probably won’t work. To work around this, use the :meth:`~Freezer.serve`
+links probably won’t work. To work around this, use the :meth:`~Freezer.run`
 method to start an HTTP server on the build result,
 so you can check that everything is fine before uploading::
 
     if __name__ == '__main__':
-        freezer.freeze()
-        freezer.serve()
+        freezer.run(debug=True)
+
+:meth:`Freezer.run` will freeze you application before serving and when
+the reloader kicks in. But the reloader only watches Python files, not
+templates or static files. Because of that, you probably want to use
+:meth:`Freezer.run` only for testing the URL generators. For everything
+else use the usual :meth:`flask.Flask.run`.
 
 `Flask-Script <http://packages.python.org/Flask-Script/>`_ may come in handy
 here.
@@ -296,12 +301,18 @@ API reference
 -------------
 
 .. autoclass:: Freezer
-    :members: init_app, register_generator, all_urls, freeze, serve
+    :members: init_app, register_generator, all_urls, freeze, serve, run
 
 .. autofunction:: walk_directory
 
 Changelog
 ---------
+
+Version 0.9
+~~~~~~~~~~~
+
+Add :meth:`Freezer.run`
+
 
 Version 0.8
 ~~~~~~~~~~~
