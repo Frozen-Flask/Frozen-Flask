@@ -111,7 +111,10 @@ class Freezer(object):
 
     @property
     def root(self):
-        """The build destination."""
+        """
+        Absolute path to the directory Frozen-Flask writes to,
+        ie. resolved value for the ``FREEZER_DESTINATION`` configuration_.
+        """
         # unicode() will raise if the path is not ASCII or already unicode.
         return os.path.join(
             unicode(self.app.root_path),
