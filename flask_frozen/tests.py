@@ -1,4 +1,15 @@
 # coding: utf8
+"""
+    flask_frozen.tests
+    ~~~~~~~~~~~~~~~~~~
+
+    Automated test suite for Frozen-Flask
+
+    :copyright: (c) 2010-2012 by Simon Sapin.
+    :license: BSD, see LICENSE for more details.
+
+"""
+
 from __future__ import with_statement
 
 import unittest

@@ -1,7 +1,20 @@
 # coding: utf8
+"""
+    flask_frozen.test_app
+    ~~~~~~~~~~~~~~~~~~~~~
+
+    Test application Frozen-Flask
+
+    :copyright: (c) 2010-2012 by Simon Sapin.
+    :license: BSD, see LICENSE for more details.
+
+"""
+
 from __future__ import with_statement
+
 import os.path
 from functools import partial
+
 from flask import Flask, url_for
 from flask_frozen import Freezer
 

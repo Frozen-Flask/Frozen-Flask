@@ -1,14 +1,15 @@
 """
-    flaskext.frozen
-    ~~~~~~~~~~~~~~~
+    flask_frozen
+    ~~~~~~~~~~~~
 
     Frozen-Flask freezes a Flask application into a set of static files.
     The result can be hosted without any server-side software other than a
     traditional web server.
 
 
-    :copyright: (c) 2010 by Simon Sapin.
+    :copyright: (c) 2010-2012 by Simon Sapin.
     :license: BSD, see LICENSE for more details.
+
 """
 
 from __future__ import with_statement
