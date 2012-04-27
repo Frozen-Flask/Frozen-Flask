@@ -15,7 +15,7 @@ from flask_frozen import test_app
 
 
 try:
-    # Since Python
+    # Python 2.6+
     from warnings import catch_warnings
 except ImportError:
     # Python 2.5
@@ -41,8 +41,6 @@ except ImportError:
         finally:
             warnings.filters = _filters
             warnings.showwarning = _showwarning
-
-binary = object()  # sentinel value
 
 
 @contextmanager
@@ -128,20 +126,21 @@ class TestFreezer(unittest.TestCase):
         u'/': 'Main index /product_5/?revision=b12ef20',
         u'/admin/': 'Admin index',
         u'/robots.txt': 'User-agent: *\nDisallow: /',
-        u'/favicon.ico': binary,
+        u'/favicon.ico': test_app.FAVICON_BYTES,
         u'/product_0/': 'Product num 0',
         u'/product_1/': 'Product num 1',
         u'/product_2/': 'Product num 2',
         u'/product_3/': 'Product num 3',
         u'/product_4/': 'Product num 4',
         u'/product_5/': 'Product num 5',
-        u'/static/favicon.ico': binary,
+        u'/static/favicon.ico': test_app.FAVICON_BYTES,
         u'/static/style.css': '/* Main CSS */\n',
         u'/admin/css/style.css': '/* Admin CSS */\n',
         u'/where_am_i/': '/where_am_i/ http://localhost/where_am_i/',
         u'/page/I løvë Unicode/':
             u'Hello\xa0World! I løvë Unicode'.encode('utf8'),
     }
+
     # URL -> path to the generated file, relative to the build destination root
     filenames = {
         u'/': u'index.html',
@@ -160,6 +159,8 @@ class TestFreezer(unittest.TestCase):
         u'/where_am_i/': u'where_am_i/index.html',
         u'/page/I løvë Unicode/': u'page/I løvë Unicode/index.html',
     }
+
+    assert set(expected_output.keys()) == set(filenames.keys())
     generated_by_url_for = [u'/product_3/', u'/product_4/', u'/product_5/']
     defer_init_app = True
     freezer_kwargs = None
@@ -214,12 +215,7 @@ class TestFreezer(unittest.TestCase):
             for url, filename in self.filenames.iteritems():
                 filename = os.path.join(freezer.root, *filename.split('/'))
                 content = read_file(filename)
-                expected = self.expected_output[url]
-                if expected is binary:
-                    self.assertRaises(UnicodeDecodeError,
-                        lambda: content.decode('utf-8'))
-                else:
-                    self.assertEquals(content, expected)
+                self.assertEquals(content, self.expected_output[url])
 
     def test_nothing_else_matters(self):
         self._extra_files(remove=True)

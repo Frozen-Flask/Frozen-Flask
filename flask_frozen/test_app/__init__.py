@@ -1,9 +1,17 @@
 # coding: utf8
+from __future__ import with_statement
+import os.path
 from functools import partial
 from flask import Flask, url_for
 from flask_frozen import Freezer
 
 from .admin import admin_blueprint
+
+
+with open(os.path.join(os.path.dirname(__file__), 'static', 'favicon.ico'),
+         'rb') as fd:
+    FAVICON_BYTES = fd.read()
+del fd
 
 
 def create_app(defer_init_app=False, freezer_kwargs=None):
