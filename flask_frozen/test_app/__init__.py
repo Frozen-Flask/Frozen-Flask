@@ -1,4 +1,5 @@
 # coding: utf8
+from functools import partial
 from flask import Flask, url_for
 from flask_frozen import Freezer
 
@@ -35,6 +36,11 @@ def create_app(defer_init_app=False, freezer_kwargs=None):
     def robots_txt():
         content = 'User-agent: *\nDisallow: /'
         return app.response_class(content, mimetype='text/plain')
+
+    for asset in ("favicon.ico",):
+        url = "/" + asset
+        name = asset.replace(".", "_")
+        app.add_url_rule(url, name, partial(app.send_static_file, filename=asset))
 
     @app.route('/product_<int:product_id>/')
     def product(product_id):

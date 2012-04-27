@@ -42,6 +42,8 @@ except ImportError:
             warnings.filters = _filters
             warnings.showwarning = _showwarning
 
+binary = object()  # sentinel value
+
 
 @contextmanager
 def temp_directory():
@@ -115,7 +117,7 @@ class TestWalkDirectory(unittest.TestCase):
         self.assertEquals(
             set(f for f in walk_directory(os.path.dirname(test_app.__file__))
                 if not f.endswith(('.pyc', '.pyo'))),
-            set(['__init__.py', 'static/style.css',
+            set(['__init__.py', 'static/style.css', 'static/favicon.ico',
                  'admin/__init__.py', 'admin/admin_static/style.css'])
         )
 
@@ -125,12 +127,14 @@ class TestFreezer(unittest.TestCase):
         u'/': 'Main index /product_5/?revision=b12ef20',
         u'/admin/': 'Admin index',
         u'/robots.txt': 'User-agent: *\nDisallow: /',
+        u'/favicon.ico': binary,
         u'/product_0/': 'Product num 0',
         u'/product_1/': 'Product num 1',
         u'/product_2/': 'Product num 2',
         u'/product_3/': 'Product num 3',
         u'/product_4/': 'Product num 4',
         u'/product_5/': 'Product num 5',
+        u'/static/favicon.ico': binary,
         u'/static/style.css': '/* Main CSS */\n',
         u'/admin/css/style.css': '/* Admin CSS */\n',
         u'/where_am_i/': '/where_am_i/ http://localhost/where_am_i/',
@@ -141,6 +145,7 @@ class TestFreezer(unittest.TestCase):
         u'/': u'index.html',
         u'/admin/': u'admin/index.html',
         u'/robots.txt': u'robots.txt',
+        u'/favicon.ico': u'static/favicon.ico',
         u'/product_0/': u'product_0/index.html',
         u'/product_1/': u'product_1/index.html',
         u'/product_2/': u'product_2/index.html',
@@ -148,6 +153,7 @@ class TestFreezer(unittest.TestCase):
         u'/product_4/': u'product_4/index.html',
         u'/product_5/': u'product_5/index.html',
         u'/static/style.css': u'static/style.css',
+        u'/static/favicon.ico': u'static/favicon.ico',
         u'/admin/css/style.css': u'admin/css/style.css',
         u'/where_am_i/': u'where_am_i/index.html',
         u'/page/I løvë Unicode/': u'page/I løvë Unicode/index.html',
@@ -206,7 +212,12 @@ class TestFreezer(unittest.TestCase):
             for url, filename in self.filenames.iteritems():
                 filename = os.path.join(freezer.root, *filename.split('/'))
                 content = read_file(filename)
-                self.assertEquals(content, self.expected_output[url])
+                expected = self.expected_output[url]
+                if expected is binary:
+                    self.assertRaises(UnicodeDecodeError,
+                        lambda: content.decode('utf-8'))
+                else:
+                    self.assertEquals(content, expected)
 
     def test_nothing_else_matters(self):
         self._extra_files(remove=True)
