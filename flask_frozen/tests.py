@@ -123,6 +123,7 @@ class TestWalkDirectory(unittest.TestCase):
 
 
 class TestFreezer(unittest.TestCase):
+    # URL -> expected bytes content of the generated file
     expected_output = {
         u'/': 'Main index /product_5/?revision=b12ef20',
         u'/admin/': 'Admin index',
@@ -141,11 +142,12 @@ class TestFreezer(unittest.TestCase):
         u'/page/I løvë Unicode/':
             u'Hello\xa0World! I løvë Unicode'.encode('utf8'),
     }
+    # URL -> path to the generated file, relative to the build destination root
     filenames = {
         u'/': u'index.html',
         u'/admin/': u'admin/index.html',
         u'/robots.txt': u'robots.txt',
-        u'/favicon.ico': u'static/favicon.ico',
+        u'/favicon.ico': u'favicon.ico',
         u'/product_0/': u'product_0/index.html',
         u'/product_1/': u'product_1/index.html',
         u'/product_2/': u'product_2/index.html',
