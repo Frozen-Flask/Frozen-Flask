@@ -96,6 +96,7 @@ class Freezer(object):
             app.config.setdefault('FREEZER_DEFAULT_MIMETYPE',
                                   'application/octet-stream')
             app.config.setdefault('FREEZER_IGNORE_MIMETYPE_WARNINGS', False)
+            app.config.setdefault('FREEZER_REWRITE_HTML_AS_FOLDER', False)
 
     def register_generator(self, function):
         """Register a function as an URL generator.
@@ -267,11 +268,15 @@ class Freezer(object):
                 guessed_type = self.app.config['FREEZER_DEFAULT_MIMETYPE']
 
             if not guessed_type == response.mimetype:
-                warnings.warn(
-                    'Filename extension of %r (type %s) does not match Content-'
-                    'Type: %s' % (basename, guessed_type, response.content_type),
-                    MimetypeMismatchWarning,
-                    stacklevel=3)
+                if response.mimetype == 'text/html' and \
+                        self.app.config['FREEZER_REWRITE_HTML_AS_FOLDER']:
+                    filename = os.path.join(filename, 'index.html')
+                else:
+                    warnings.warn(
+                        'Filename extension of %r (type %s) does not match Content-'
+                        'Type: %s' % (basename, guessed_type, response.content_type),
+                        MimetypeMismatchWarning,
+                        stacklevel=3)
 
         # Create directories as needed
         dirname = os.path.dirname(filename)
