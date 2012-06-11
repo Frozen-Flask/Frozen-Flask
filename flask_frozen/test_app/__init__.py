@@ -67,6 +67,10 @@ def create_app(defer_init_app=False, freezer_kwargs=None):
     def product(product_id):
         return 'Product num %i' % product_id
 
+    @app.route('/add/', methods=['POST'])
+    def add_something(product_id):
+        return 'This view should be ignored as it does not accept GET.'
+
     @freezer.register_generator
     def product():
         # endpoint, values

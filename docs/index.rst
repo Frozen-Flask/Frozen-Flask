@@ -78,7 +78,7 @@ The following URLs can be found automatically:
 
 * Static files handled by Flask for your application or any of its
   `blueprints <http://flask.pocoo.org/docs/blueprints/>`_.
-* Views with no variable parts in the URL.
+* Views with no variable parts in the URL, if they accept the ``GET`` method.
 * *New in version 0.6:* Results of calls to :func:`flask.url_for` made by your
   application in the request for another URL.
   In other words, if you use :func:`~flask.url_for` to create links in your

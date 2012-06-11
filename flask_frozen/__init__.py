@@ -221,9 +221,10 @@ class Freezer(object):
         """
         Warn if some of the app's enpoints are not in seen_endpoints.
         """
-        all_endpoints = set(
-            rule.endpoint for rule in self.app.url_map.iter_rules())
-        not_generated_endpoints = all_endpoints - seen_endpoints
+        get_endpoints = set(
+            rule.endpoint for rule in self.app.url_map.iter_rules()
+            if 'GET' in rule.methods)
+        not_generated_endpoints = get_endpoints - seen_endpoints
 
         if self.static_files_urls in self.url_generators:
             # Special case: do not warn when there is no static file
@@ -373,7 +374,7 @@ class Freezer(object):
     def no_argument_rules_urls(self):
         """URL generator for URL rules that take no arguments."""
         for rule in self.app.url_map.iter_rules():
-            if not rule.arguments:
+            if not rule.arguments and 'GET' in rule.methods:
                 yield rule.endpoint, {}
 
 
