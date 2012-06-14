@@ -1,0 +1,12 @@
+language: python
+
+python:
+  - "2.5"
+  - "2.6"
+  - "2.7"
+  - "pypy"
+
+install:
+  - pip install --use-mirrors -e .
+
+script: python -m flask_frozen.tests
