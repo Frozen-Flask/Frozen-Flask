@@ -20,9 +20,9 @@ import urlparse
 import urllib
 import warnings
 import collections
+import hashlib
 from unicodedata import normalize
 from threading import Lock
-
 from werkzeug.exceptions import HTTPException
 from flask import (Flask, Blueprint, url_for, request, send_from_directory,
                    redirect)
@@ -48,6 +48,27 @@ class MissingURLGeneratorWarning(Warning):
 
 class MimetypeMismatchWarning(Warning):
     pass
+
+
+class FreezerTarget(object):
+
+    def __init__(self, values={}, endpoint=None, headers=None, url=None, filename=None):
+        self.values = values
+        self.endpoint = endpoint
+        self.headers = headers
+        self.url = url
+        self.filename = filename
+
+    @property
+    def context_url(self):
+        context = ""
+        if self.headers:
+            for key in sorted(self.headers.iterkeys()):
+                context = context + "%s:%s\n" % (key.lower(), self.headers[key])
+            context = hashlib.sha1(context).hexdigest()
+            return '%s|%s' % (self.url, context)
+
+        return self.url
 
 
 class Freezer(object):
@@ -135,13 +156,19 @@ class Freezer(object):
         seen_urls = set()
         seen_endpoints = set()
         built_files = set()
-        for url, endpoint in self._generate_all_urls():
+        for freezer_target in self._generate_all_urls():
+            url = freezer_target.url
+            endpoint = freezer_target.endpoint
             seen_endpoints.add(endpoint)
-            if url in seen_urls:
+            if freezer_target.context_url in seen_urls:
                 # Don't build the same URL more than once
                 continue
-            seen_urls.add(url)
-            new_filename = self._build_one(url)
+            seen_urls.add(freezer_target.context_url)
+            # if freezer_target.filename:
+            #     self._build_one(url, filename=freezer_target.filename, headers=freezer_target.headers)
+            # else:
+            #     new_filename = self._build_one(url, headers=freezer_target.headers)
+            new_filename = self._build_one(url, filename=freezer_target.filename, headers=freezer_target.headers)
             built_files.add(normalize('NFC', new_filename))
         self._check_endpoints(seen_endpoints)
         if remove_extra:
@@ -164,7 +191,9 @@ class Freezer(object):
             generated from :func:`~flask.url_for` calls will not be included
             here.
         """
-        for url, _endpoint in self._generate_all_urls():
+        for freezer_target in self._generate_all_urls():
+            url = freezer_target.url
+            #_endpoint = freezer_target.endpoint
             yield url
 
     def _script_name(self):
@@ -186,26 +215,45 @@ class Freezer(object):
         with self.app.test_request_context(base_url=script_name):
             for generator in url_generators:
                 for generated in generator():
+                    freezer_target = FreezerTarget()
+
                     if isinstance(generated, basestring):
+                        freezer_target.url = generated
                         url = generated
-                        endpoint = None
+                        freezer_target.url
+                        freezer_target.endpoint = None
+                        ###endpoint = None
                     else:
                         if is_mapping(generated):
-                            values = generated
+                            freezer_target.values = generated
                             # The endpoint defaults to the name of the
                             # generator function, just like with Flask views.
-                            endpoint = generator.__name__
+                            freezer_target.endpoint = generator.__name__
+                            ###values = generated
+                            # The endpoint defaults to the name of the
+                            # generator function, just like with Flask views.
+                            ###endpoint = generator.__name__
+                        elif isinstance(generated, FreezerTarget):
+                            freezer_target = generated
+                            if freezer_target.url is None and \
+                                freezer_target.endpoint is None:
+                                freezer_target.endpoint = generator.__name__
                         else:
                             # Assume a tuple.
                             endpoint, values = generated
-                        url = url_for(endpoint, **values)
+                            freezer_target.endpoint = endpoint
+                            freezer_target.values = values
+                        url = url_for(freezer_target.endpoint,
+                                            **freezer_target.values)
                         assert url.startswith(script_name), (
                             'url_for returned an URL %r not starting with '
                             'script_name %r. Bug in Werkzeug?'
                             % (url, script_name)
                         )
-                        url = url[len(script_name):]
+                        ###url = url[len(script_name):]
+                        freezer_target.url = url[len(script_name):]
                     # flask.url_for "quotes" URLs, eg. a space becomes %20
+                    url = freezer_target.url
                     url = urllib.unquote(url)
                     parsed_url = urlparse.urlsplit(url)
                     if parsed_url.scheme or parsed_url.netloc:
@@ -215,7 +263,9 @@ class Freezer(object):
                     url = parsed_url.path
                     if not isinstance(url, unicode):
                         url = url.decode(url_encoding)
-                    yield url, endpoint
+                    freezer_target.url = url
+                    ###yield url, endpoint
+                    yield freezer_target
 
     def _check_endpoints(self, seen_endpoints):
         """
@@ -238,7 +288,7 @@ class Freezer(object):
                 MissingURLGeneratorWarning,
                 stacklevel=3)
 
-    def _build_one(self, url):
+    def _build_one(self, url, filename=None, **kwargs):
         """Get the given ``url`` from the app and write the matching file.
         """
         client = self.app.test_client()
@@ -246,7 +296,7 @@ class Freezer(object):
 
         with self.url_for_logger:
             response = client.get(url, follow_redirects=True,
-                                  base_url=base_url)
+                                  base_url=base_url, **kwargs)
 
         # The client follows redirects by itself
         # Any other status code is probably an error
@@ -255,7 +305,14 @@ class Freezer(object):
                 % (response.status, url))
 
         destination_path = self.urlpath_to_filepath(url)
-        filename = os.path.join(self.root, *destination_path.split('/'))
+
+        if filename:
+            name, ext = os.path.basename(destination_path).split('.')
+            parts = destination_path.split('/')[:-1]
+            parts.append('%s.%s' % (filename, ext))
+            filename = os.path.join(self.root, *parts)
+        else:
+            filename = os.path.join(self.root, *destination_path.split('/'))
 
         if not self.app.config['FREEZER_IGNORE_MIMETYPE_WARNINGS']:
             # Most web servers guess the mime type of static files by their
