@@ -20,6 +20,7 @@ import urlparse
 import urllib
 import warnings
 import collections
+import posixpath
 from unicodedata import normalize
 from threading import Lock
 
@@ -96,6 +97,7 @@ class Freezer(object):
             app.config.setdefault('FREEZER_DEFAULT_MIMETYPE',
                                   'application/octet-stream')
             app.config.setdefault('FREEZER_IGNORE_MIMETYPE_WARNINGS', False)
+            app.config.setdefault('FREEZER_RELATIVE_URLS', False)
 
     def register_generator(self, function):
         """Register a function as an URL generator.
@@ -125,6 +127,7 @@ class Freezer(object):
     def freeze(self):
         """Clean the destination and build all URLs from generators."""
         remove_extra = self.app.config['FREEZER_REMOVE_EXTRA_FILES']
+        use_relative_urls = self.app.config['FREEZER_RELATIVE_URLS']        
         if not os.path.isdir(self.root):
             os.makedirs(self.root)
         previous_files = set(
@@ -135,6 +138,10 @@ class Freezer(object):
         seen_urls = set()
         seen_endpoints = set()
         built_files = set()
+
+        if use_relative_urls:
+            self.app.jinja_env.globals['url_for'] = relative_url_for
+        
         for url, endpoint in self._generate_all_urls():
             seen_endpoints.add(endpoint)
             if url in seen_urls:
@@ -143,6 +150,10 @@ class Freezer(object):
             seen_urls.add(url)
             new_filename = self._build_one(url)
             built_files.add(normalize('NFC', new_filename))
+
+        if use_relative_urls:
+            self.app.jinja_env.globals['url_for'] = url_for
+
         self._check_endpoints(seen_endpoints)
         if remove_extra:
             # Remove files from the previous build that are not here anymore.
@@ -383,7 +394,7 @@ def walk_directory(root):
     Recursively walk the `root` directory and yield slash-separated paths
     relative to the root.
 
-    Used to implement the URL genertor for static files.
+    Used to implement the URL generator for static files.
     """
     for name in os.listdir(root):
         full_name = os.path.join(root, name)
@@ -392,6 +403,32 @@ def walk_directory(root):
                 yield name + '/' + filename
         elif os.path.isfile(full_name):
             yield name
+
+
+def relative_url_for(endpoint, **values):
+    """
+    Like :func:`~flask.url_for`, but generates relative paths
+    for each request.
+
+    .. note::
+        This function is not safe for general use in a Flask
+        application, only when freezing, since Flask distinguishes
+        between routes such as `/` and `/index.html`.
+    """
+    url = url_for(endpoint, **values)
+
+    # absolute URLs in http://... (with subdomains or _external=True)
+    if not url.startswith('/'):
+        return url
+
+    if url.endswith('/'):
+        url += 'index.html'
+
+    request_path = request.path
+    if not request_path.endswith('/'):
+        request_path = posixpath.dirname(request_path)
+
+    return posixpath.relpath(url, request_path)
 
 
 def unwrap_method(method):
