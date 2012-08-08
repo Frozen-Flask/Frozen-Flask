@@ -394,7 +394,7 @@ def walk_directory(root):
     Recursively walk the `root` directory and yield slash-separated paths
     relative to the root.
 
-    Used to implement the URL genertor for static files.
+    Used to implement the URL generator for static files.
     """
     for name in os.listdir(root):
         full_name = os.path.join(root, name)
@@ -407,7 +407,13 @@ def walk_directory(root):
 
 def relative_url_for(endpoint, **values):
     """
-    Like url_for, but generates relative paths for each request.
+    Like :func:`~flask.url_for`, but generates relative paths
+    for each request.
+
+    .. note::
+        This function is not safe for general use in a Flask
+        application, only when freezing, since Flask distinguishes
+        between routes such as `/` and `/index.html`.
     """
     url = url_for(endpoint, **values)
 

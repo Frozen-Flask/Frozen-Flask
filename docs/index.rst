@@ -232,6 +232,9 @@ are accepted:
 
     .. versionadded:: 0.8
 
+``FREEZER_RELATIVE_URLS``
+    If set to ``True``, Frozen-Flask will generate relative urls for each
+    call made by the site to :func:`flask.url_for`. Defaults to ``False``.
 
 .. _mime-types:
 
@@ -304,6 +307,8 @@ API reference
     :members: init_app, root, register_generator, all_urls, freeze, serve, run
 
 .. autofunction:: walk_directory
+
+.. autofunction:: relative_url_for
 
 Changelog
 ---------
