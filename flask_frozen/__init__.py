@@ -22,6 +22,7 @@ import warnings
 import collections
 from unicodedata import normalize
 from threading import Lock
+from contextlib import contextmanager
 
 from werkzeug.exceptions import HTTPException
 from flask import (Flask, Blueprint, url_for, request, send_from_directory,
@@ -39,7 +40,7 @@ except ImportError:
 
 __all__ = ['Freezer']
 
-VERSION = '0.9'
+VERSION = '0.10'
 
 
 class MissingURLGeneratorWarning(Warning):
@@ -87,9 +88,7 @@ class Freezer(object):
         """
         self.app = app
         if app:
-            logger_class = (UrlForLogger if self.log_url_for
-                            else DummyUrlForLogger)
-            self.url_for_logger = logger_class(app)
+            self.url_for_logger = UrlForLogger(app)
             app.config.setdefault('FREEZER_DESTINATION', 'build')
             app.config.setdefault('FREEZER_BASE_URL', 'http://localhost/')
             app.config.setdefault('FREEZER_REMOVE_EXTRA_FILES', True)
@@ -244,7 +243,7 @@ class Freezer(object):
         client = self.app.test_client()
         base_url = self.app.config['FREEZER_BASE_URL']
 
-        with self.url_for_logger:
+        with conditional_context(self.url_for_logger, self.log_url_for):
             response = client.get(url, follow_redirects=True,
                                   base_url=base_url)
 
@@ -418,6 +417,16 @@ def method_self(method):
         return method.__self__
 
 
+@contextmanager
+def conditional_context(context, condition):
+    """Wrap a context manager but only enter/exit it if condition is true."""
+    if condition:
+        with context:
+            yield
+    else:
+        yield
+
+
 class UrlForLogger(object):
     """
     Log all calls to url_for() for this app made inside the with block.
@@ -457,23 +466,6 @@ class UrlForLogger(object):
         # "Iterate" on the call deque while it is still being appended to.
         while self.logged_calls:
             yield self.logged_calls.popleft()
-
-
-class DummyUrlForLogger(object):
-    """
-    Gives the same API as UrlForLogger, but does not actually log anything.
-    """
-    def __init__(self, app):
-        pass
-
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        pass
-
-    def iter_calls(self):
-        return iter([])
 
 
 def script_name_middleware(application, script_name):
