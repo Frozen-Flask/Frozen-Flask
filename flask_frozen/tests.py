@@ -356,8 +356,8 @@ class TestBaseURL(TestFreezer):
     expected_output['/'] = 'Main index /myapp/product_5/?revision=b12ef20'
     expected_output['/where_am_i/'] = \
         '/myapp/where_am_i/ http://example/myapp/where_am_i/'
-    expected_output['/admin/'] = expected_output['/admin/'].replace(
-        'href="/page', 'href="/myapp/page')
+    expected_output['/admin/'] = ('Admin index\n'
+        '<a href="/myapp/page/I%20l%C3%B8v%C3%AB%20Unicode/">Unicode test</a>')
 
     def do_extra_config(self, app, freezer):
         app.config['FREEZER_BASE_URL'] = 'http://example/myapp/'
@@ -379,6 +379,16 @@ class TestWithoutUrlForLog(TestFreezer):
     for url in TestFreezer.generated_by_url_for:
         del expected_output[url]
         del filenames[url]
+
+
+class TestRelativeUrlFor(TestFreezer):
+    def do_extra_config(self, app, freezer):
+        app.config['FREEZER_RELATIVE_URLS'] = True
+
+    expected_output = TestFreezer.expected_output.copy()
+    expected_output['/admin/'] = ('Admin index\n<a href="'
+        '../page/I%20l%C3%B8v%C3%AB%20Unicode/index.html">Unicode test</a>')
+
 
 # with_no_argument_rules=False and with_static_files=False are
 # not tested as they produces (expected!) warnings
