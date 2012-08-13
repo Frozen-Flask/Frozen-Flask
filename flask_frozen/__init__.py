@@ -38,6 +38,23 @@ except ImportError:
     def is_mapping(obj):
         return hasattr(obj, 'keys')
 
+try:
+    from posixpath import relpath as posix_relpath
+except ImportError:
+    # Python 2.5
+    def posix_relpath(path, start):
+        sep = posixpath.sep
+        start_list = [x for x in posixpath.abspath(start).split(sep) if x]
+        path_list = [x for x in posixpath.abspath(path).split(sep) if x]
+
+        # Work out how much of the filepath is shared by start and path.
+        i = len(posixpath.commonprefix([start_list, path_list]))
+
+        rel_list = [posixpath.pardir] * (len(start_list)-i) + path_list[i:]
+        if not rel_list:
+            return posixpath.curdir
+        return posixpath.join(*rel_list)
+
 
 __all__ = ['Freezer']
 
@@ -437,7 +454,7 @@ def relative_url_for(endpoint, **values):
     if not request_path.endswith('/'):
         request_path = posixpath.dirname(request_path)
 
-    return posixpath.relpath(url, request_path)
+    return posix_relpath(url, request_path)
 
 
 def unwrap_method(method):
