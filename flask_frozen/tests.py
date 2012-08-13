@@ -349,6 +349,25 @@ class TestFreezer(unittest.TestCase):
                 self.assertEquals(logged_warnings[0].category,
                                   MimetypeMismatchWarning)
 
+    def test_no_extension_path(self):
+        with self.make_app() as (temp, app, freezer):
+            @app.route(u'/no-file-extension')
+            def default_path():
+                return '42', 200, {'Content-Type': 'text/html'}
+            freezer.freeze()
+            dest = unicode(app.config['FREEZER_DESTINATION'])
+            assert os.path.exists(os.path.join(dest, 'no-file-extension'))
+
+    def test_rewrite_html_as_folder(self):
+        with self.make_app() as (temp, app, freezer):
+            app.config['FREEZER_REWRITE_HTML_AS_FOLDER'] = True
+            @app.route(u'/no-file-extension')
+            def default_path():
+                return '42', 200, {'Content-Type': 'text/html'}
+            freezer.freeze()
+            dest = unicode(app.config['FREEZER_DESTINATION'])
+            assert os.path.isdir(os.path.join(dest, 'no-file-extension'))
+            assert os.path.exists(os.path.join(dest, 'no-file-extension', 'index.html'))
 
 class TestInitApp(TestFreezer):
     defer_init_app = True
