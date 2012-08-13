@@ -2,4 +2,4 @@ include LICENSE artwork/*
 recursive-include docs *
 prune docs/_build
 prune docs/_themes/.git
-recursive-include flask_frozen/test_app *.css *.ico
+recursive-include flask_frozen/test_app *.css *.ico *.html

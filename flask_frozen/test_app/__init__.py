@@ -21,10 +21,7 @@ from flask_frozen import Freezer
 from .admin import admin_blueprint
 
 
-with open(os.path.join(os.path.dirname(__file__), 'static', 'favicon.ico'),
-         'rb') as fd:
-    FAVICON_BYTES = fd.read()
-del fd
+FAVICON = os.path.join(os.path.dirname(__file__), 'static', 'favicon.ico')
 
 
 def create_app(defer_init_app=False, freezer_kwargs=None):
@@ -75,13 +72,12 @@ def create_app(defer_init_app=False, freezer_kwargs=None):
     def product():
         # endpoint, values
         yield 'product', {'product_id': 0}
+        yield 'page', {'name': 'foo'}
         # Just a `values` dict. The endpoint defaults to the name of the
         # generator function, just like with Flask views
         yield {'product_id': 1}
         # single string: url
         yield '/product_2/'
-
-        yield 'page', {'name': u'I løvë Unicode'}
 
     if defer_init_app:
         freezer.init_app(app)

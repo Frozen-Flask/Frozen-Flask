@@ -17,6 +17,7 @@ import tempfile
 import shutil
 import os.path
 import warnings
+import hashlib
 from contextlib import contextmanager
 from unicodedata import normalize
 
@@ -68,21 +69,17 @@ def temp_directory():
 
 def read_file(filename):
     with open(filename, 'rb') as fd:
-        return fd.read()
+        content = fd.read()
+        if len(content) < 200:
+            return content
+        else:
+            return hashlib.md5(content).hexdigest()
 
 
-def diff(dir1, dir2):
-    """Return the set of filenames that are not identical in dir1 and dir2"""
-    files1 = set(walk_directory(dir1))
-    files2 = set(walk_directory(dir2))
-    # Files that are in 2 but not in 1
-    different = set(files2 - files1)
-    for filename in files1:
-        name1 = os.path.join(dir1, *filename.split('/'))
-        name2 = os.path.join(dir2, *filename.split('/'))
-        if filename not in files2 or read_file(name1) != read_file(name2):
-            different.add(filename)
-    return different
+def read_all(directory):
+    return set(
+        (filename, read_file(os.path.join(directory, *filename.split('/'))))
+        for filename in walk_directory(directory))
 
 
 class TestTempDirectory(unittest.TestCase):
@@ -113,21 +110,14 @@ class TestTempDirectory(unittest.TestCase):
         assert not os.path.exists(filename)
 
 
-class TestDiff(unittest.TestCase):
-    def test_sanity(self):
-        this_dir = os.path.dirname(__file__)
-        other_dir = os.path.join(this_dir, 'test_app')
-        self.assert_(not diff(this_dir, this_dir))
-        self.assert_(diff(this_dir, other_dir))
-
-
 class TestWalkDirectory(unittest.TestCase):
     def test_walk_directory(self):
         self.assertEquals(
             set(f for f in walk_directory(os.path.dirname(test_app.__file__))
                 if not f.endswith(('.pyc', '.pyo'))),
             set(['__init__.py', 'static/style.css', 'static/favicon.ico',
-                 'admin/__init__.py', 'admin/admin_static/style.css'])
+                 'admin/__init__.py', 'admin/admin_static/style.css',
+                 'admin/templates/admin.html'])
         )
 
 
@@ -135,19 +125,21 @@ class TestFreezer(unittest.TestCase):
     # URL -> expected bytes content of the generated file
     expected_output = {
         u'/': 'Main index /product_5/?revision=b12ef20',
-        u'/admin/': 'Admin index',
+        u'/admin/': 'Admin index\n'
+            '<a href="/page/I%20l%C3%B8v%C3%AB%20Unicode/">Unicode test</a>',
         u'/robots.txt': 'User-agent: *\nDisallow: /',
-        u'/favicon.ico': test_app.FAVICON_BYTES,
+        u'/favicon.ico': read_file(test_app.FAVICON),
         u'/product_0/': 'Product num 0',
         u'/product_1/': 'Product num 1',
         u'/product_2/': 'Product num 2',
         u'/product_3/': 'Product num 3',
         u'/product_4/': 'Product num 4',
         u'/product_5/': 'Product num 5',
-        u'/static/favicon.ico': test_app.FAVICON_BYTES,
+        u'/static/favicon.ico': read_file(test_app.FAVICON),
         u'/static/style.css': '/* Main CSS */\n',
         u'/admin/css/style.css': '/* Admin CSS */\n',
         u'/where_am_i/': '/where_am_i/ http://localhost/where_am_i/',
+        u'/page/foo/': u'Hello\xa0World! foo'.encode('utf8'),
         u'/page/I løvë Unicode/':
             u'Hello\xa0World! I løvë Unicode'.encode('utf8'),
     }
@@ -168,13 +160,17 @@ class TestFreezer(unittest.TestCase):
         u'/static/favicon.ico': u'static/favicon.ico',
         u'/admin/css/style.css': u'admin/css/style.css',
         u'/where_am_i/': u'where_am_i/index.html',
+        u'/page/foo/': u'page/foo/index.html',
         u'/page/I løvë Unicode/': u'page/I løvë Unicode/index.html',
     }
 
     assert set(expected_output.keys()) == set(filenames.keys())
-    generated_by_url_for = [u'/product_3/', u'/product_4/', u'/product_5/']
+    generated_by_url_for = [u'/product_3/', u'/product_4/', u'/product_5/',
+                            u'/page/I løvë Unicode/']
     defer_init_app = True
     freezer_kwargs = None
+
+    maxDiff = None
 
     def do_extra_config(self, app, freezer):
         pass # To be overriden
@@ -185,6 +181,7 @@ class TestFreezer(unittest.TestCase):
             app, freezer = test_app.create_app(self.defer_init_app,
                                                self.freezer_kwargs)
             app.config['FREEZER_DESTINATION'] = temp
+            app.debug = True
             self.do_extra_config(app, freezer)
             yield temp, app, freezer
 
@@ -270,7 +267,7 @@ class TestFreezer(unittest.TestCase):
                 freezer2.register_generator(self.filenames.iterkeys)
                 freezer2.freeze()
                 destination = app.config['FREEZER_DESTINATION']
-                self.assertEquals(diff(destination, temp2), set())
+                self.assertEquals(read_all(destination), read_all(temp2))
 
     def test_error_on_external_url(self):
         for url in ['http://example.com/foo', '//example.com/foo',
@@ -359,6 +356,8 @@ class TestBaseURL(TestFreezer):
     expected_output['/'] = 'Main index /myapp/product_5/?revision=b12ef20'
     expected_output['/where_am_i/'] = \
         '/myapp/where_am_i/ http://example/myapp/where_am_i/'
+    expected_output['/admin/'] = expected_output['/admin/'].replace(
+        'href="/page', 'href="/myapp/page')
 
     def do_extra_config(self, app, freezer):
         app.config['FREEZER_BASE_URL'] = 'http://example/myapp/'

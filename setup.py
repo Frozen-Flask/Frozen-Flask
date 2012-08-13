@@ -35,7 +35,7 @@ setup(
     long_description=__doc__,
     packages=find_packages(),
     # static files for the test app
-    package_data={'': ['static/*', 'admin_static/*']},
+    package_data={'': ['static/*', 'admin_static/*', 'templates/*']},
     test_suite='flask_frozen.tests',
     zip_safe=False,
     platforms='any',

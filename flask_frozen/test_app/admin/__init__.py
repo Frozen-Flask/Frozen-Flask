@@ -9,12 +9,13 @@
 
 """
 
-from flask import Blueprint
+from flask import Blueprint, render_template
 
 admin_blueprint = Blueprint('admin', __name__,
-    static_folder='admin_static', static_url_path='/css')
+    static_folder='admin_static', static_url_path='/css',
+    template_folder='templates')
 
 
 @admin_blueprint.route('/')
 def index():
-    return 'Admin index'
+    return render_template('admin.html')
