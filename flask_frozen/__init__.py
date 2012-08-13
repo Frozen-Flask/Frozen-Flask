@@ -126,7 +126,6 @@ class Freezer(object):
     def freeze(self):
         """Clean the destination and build all URLs from generators."""
         remove_extra = self.app.config['FREEZER_REMOVE_EXTRA_FILES']
-        use_relative_urls = self.app.config['FREEZER_RELATIVE_URLS']        
         if not os.path.isdir(self.root):
             os.makedirs(self.root)
         previous_files = set(
@@ -138,9 +137,6 @@ class Freezer(object):
         seen_endpoints = set()
         built_files = set()
 
-        if use_relative_urls:
-            self.app.jinja_env.globals['url_for'] = relative_url_for
-        
         for url, endpoint in self._generate_all_urls():
             seen_endpoints.add(endpoint)
             if url in seen_urls:
@@ -149,9 +145,6 @@ class Freezer(object):
             seen_urls.add(url)
             new_filename = self._build_one(url)
             built_files.add(normalize('NFC', new_filename))
-
-        if use_relative_urls:
-            self.app.jinja_env.globals['url_for'] = url_for
 
         self._check_endpoints(seen_endpoints)
         if remove_extra:
@@ -255,8 +248,10 @@ class Freezer(object):
         base_url = self.app.config['FREEZER_BASE_URL']
 
         with conditional_context(self.url_for_logger, self.log_url_for):
-            response = client.get(url, follow_redirects=True,
-                                  base_url=base_url)
+            with conditional_context(patch_url_for(self.app),
+                                     self.app.config['FREEZER_RELATIVE_URLS']):
+                response = client.get(url, follow_redirects=True,
+                                      base_url=base_url)
 
         # The client follows redirects by itself
         # Any other status code is probably an error
@@ -395,13 +390,28 @@ def walk_directory(root):
 
     Used to implement the URL generator for static files.
     """
-    for name in os.listdir(root):
+    for name in sorted(os.listdir(root)):
         full_name = os.path.join(root, name)
         if os.path.isdir(full_name):
             for filename in walk_directory(full_name):
                 yield name + '/' + filename
         elif os.path.isfile(full_name):
             yield name
+
+
+@contextmanager
+def patch_url_for(app):
+    """Patche ``url_for`` in Jinja globals to use :func:`relative_url_for`.
+
+    This is a context manager, to use in a ``with`` statement.
+
+    """
+    previous_url_for = app.jinja_env.globals['url_for']
+    app.jinja_env.globals['url_for'] = relative_url_for
+    try:
+        yield
+    finally:
+        app.jinja_env.globals['url_for'] = previous_url_for
 
 
 def relative_url_for(endpoint, **values):
