@@ -58,7 +58,7 @@ except ImportError:
 
 __all__ = ['Freezer']
 
-VERSION = '0.10'
+VERSION = '0.10a0'
 
 
 class MissingURLGeneratorWarning(Warning):
@@ -433,13 +433,22 @@ def patch_url_for(app):
 
 def relative_url_for(endpoint, **values):
     """
-    Like :func:`~flask.url_for`, but generates relative paths
-    for each request.
+    Like :func:`~flask.url_for`, but returns relative URLs if possible.
 
-    .. note::
-        This function is not safe for general use in a Flask
-        application, only when freezing, since Flask distinguishes
-        between routes such as `/` and `/index.html`.
+    Absolute URLs (with ``_external=True`` or to a different subdomain) are
+    unchanged, but eg. ``/foo/bar`` becomes ``../bar``, depending on the
+    current request context's path. (This, of course, requires a Flask
+    :ref:`request context <flask:request-context>`.)
+
+    URLs that would otherwise end with ``/`` get ``index.html`` appended,
+    as Frozen-Flask does in filenames. Because of this behavior, this function
+    should only with Frozen-Flask, not when running the application in
+    :meth:`app.run() <flask.Flask.run>` or another WSGI sever.
+
+    If the ``FREEZER_RELATIVE_URLS`` `configuration`_ is True, Frozen-Flask
+    will automatically patch the application's Jinja environment so that
+    ``url_for`` in templates is this function.
+
     """
     url = url_for(endpoint, **values)
 

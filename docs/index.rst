@@ -174,7 +174,9 @@ also useful to test your *URL generators* and see that nothing is missing,
 before deploying to a production server.
 
 You can open the newly generated static HTML files in a web browser, but
-links probably won’t work. To work around this, use the :meth:`~Freezer.run`
+links probably won’t work. The ``FREEZER_RELATIVE_URLS`` `configuration`_
+can fix this, but adds a visible ``index.html`` to the links.
+Alternatively, use the :meth:`~Freezer.run`
 method to start an HTTP server on the build result,
 so you can check that everything is fine before uploading::
 
@@ -185,7 +187,7 @@ so you can check that everything is fine before uploading::
 the reloader kicks in. But the reloader only watches Python files, not
 templates or static files. Because of that, you probably want to use
 :meth:`Freezer.run` only for testing the URL generators. For everything
-else use the usual :meth:`flask.Flask.run`.
+else use the usual :meth:`app.run() <flask.Flask.run>`.
 
 `Flask-Script <http://packages.python.org/Flask-Script/>`_ may come in handy
 here.
@@ -233,8 +235,15 @@ are accepted:
     .. versionadded:: 0.8
 
 ``FREEZER_RELATIVE_URLS``
-    If set to ``True``, Frozen-Flask will generate relative urls for each
-    call made by the site to :func:`flask.url_for`. Defaults to ``False``.
+    If set to ``True``, Frozen-Flask will patch the Jinja environment so that
+    ``url_for()`` returns relative URLs. Defaults to ``False``.
+    Python code is not affected unless you use :func:`relative_url_for`
+    explicitly. This enable the frozen site to be browsed without a web server
+    (opening the files directly in a browser) but appends a visible
+    ``index.html`` to URLs that would otherwise end with ``/``.
+
+    .. versionadded:: 0.10
+
 
 .. _mime-types:
 
@@ -312,6 +321,15 @@ API reference
 
 Changelog
 ---------
+
+Version 0.10
+~~~~~~~~~~~~
+
+Not released yet.
+
+Add the ``FREEZER_RELATIVE_URLS`` config and the :func:`relative_url_for`
+function.
+
 
 Version 0.9
 ~~~~~~~~~~~
