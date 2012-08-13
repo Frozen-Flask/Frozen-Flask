@@ -83,6 +83,12 @@ def create_app(defer_init_app=False, freezer_kwargs=None):
 
         yield 'page', {'name': u'I løvë Unicode'}
 
+    @app.errorhandler(404)
+    def not_found(e):
+        return "Page not found", 404
+
+    freezer.error_handler_spec[None] = {404: "/404.html"}
+
     if defer_init_app:
         freezer.init_app(app)
 

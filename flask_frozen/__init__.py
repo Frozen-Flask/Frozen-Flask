@@ -72,6 +72,7 @@ class Freezer(object):
     def __init__(self, app=None, with_static_files=True,
                  with_no_argument_rules=True, log_url_for=True):
         self.url_generators = []
+        self.error_handler_spec = {None: {}}
         self.log_url_for = log_url_for
         if with_static_files:
             self.register_generator(self.static_files_urls)
@@ -135,13 +136,13 @@ class Freezer(object):
         seen_urls = set()
         seen_endpoints = set()
         built_files = set()
-        for url, endpoint in self._generate_all_urls():
+        for url, endpoint, status_code in self._generate_all_urls():
             seen_endpoints.add(endpoint)
             if url in seen_urls:
                 # Don't build the same URL more than once
                 continue
             seen_urls.add(url)
-            new_filename = self._build_one(url)
+            new_filename = self._build_one(url, status_code)
             built_files.add(normalize('NFC', new_filename))
         self._check_endpoints(seen_endpoints)
         if remove_extra:
@@ -164,7 +165,7 @@ class Freezer(object):
             generated from :func:`~flask.url_for` calls will not be included
             here.
         """
-        for url, _endpoint in self._generate_all_urls():
+        for url, _endpoint, _status_code in self._generate_all_urls():
             yield url
 
     def _script_name(self):
@@ -215,7 +216,11 @@ class Freezer(object):
                     url = parsed_url.path
                     if not isinstance(url, unicode):
                         url = url.decode(url_encoding)
-                    yield url, endpoint
+                    yield url, endpoint, 200
+
+            for blueprint, exception_map in self.error_handler_spec.iteritems():
+                for status_code, url in exception_map.iteritems():
+                    yield url, None, status_code
 
     def _check_endpoints(self, seen_endpoints):
         """
@@ -238,7 +243,7 @@ class Freezer(object):
                 MissingURLGeneratorWarning,
                 stacklevel=3)
 
-    def _build_one(self, url):
+    def _build_one(self, url, status_code=200):
         """Get the given ``url`` from the app and write the matching file.
         """
         client = self.app.test_client()
@@ -250,9 +255,9 @@ class Freezer(object):
 
         # The client follows redirects by itself
         # Any other status code is probably an error
-        if not(response.status_code == 200):
-            raise ValueError('Unexpected status %r on URL %s' \
-                % (response.status, url))
+        if not(response.status_code == status_code):
+            raise ValueError('Unexpected status %r on URL %s (expected status %r)' \
+                % (response.status, url, status_code))
 
         destination_path = self.urlpath_to_filepath(url)
         filename = os.path.join(self.root, *destination_path.split('/'))
