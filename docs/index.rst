@@ -41,7 +41,7 @@ your application and only have static HTML files on your server.
 Getting started
 ---------------
 
-Create a :class:`Freezer` instance with you ``app`` object and call its
+Create a :class:`Freezer` instance with your ``app`` object and call its
 :meth:`~Freezer.freeze` method. Put that in a ``freeze.py`` script
 (or call it whatever you like)::
 
