@@ -409,6 +409,8 @@ def walk_directory(root):
     """
     for name in sorted(os.listdir(root)):
         full_name = os.path.join(root, name)
+        if '.git' in full_name:
+            continue
         if os.path.isdir(full_name):
             for filename in walk_directory(full_name):
                 yield name + '/' + filename
