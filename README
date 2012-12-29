@@ -5,9 +5,3 @@ Freezes a Flask application into a set of static files. The result can be hosted
 without any server-side software other than a traditional web server.
 
 See documentation: http://packages.python.org/Frozen-Flask
-
-------------
-
-I've modified this version for use with Git. The build process will ignore your .git folder and .gitignore files. This makes it easier to deploy via a Git-based process, e.g. for use with Github Pages.
-
--- Jim Gray
