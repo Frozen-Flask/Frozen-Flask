@@ -21,6 +21,7 @@ import urllib
 import warnings
 import collections
 import posixpath
+import fnmatch
 from unicodedata import normalize
 from threading import Lock
 from contextlib import contextmanager
@@ -110,6 +111,7 @@ class Freezer(object):
             app.config.setdefault('FREEZER_DESTINATION', 'build')
             app.config.setdefault('FREEZER_BASE_URL', 'http://localhost/')
             app.config.setdefault('FREEZER_REMOVE_EXTRA_FILES', True)
+            app.config.setdefault('FREEZER_IGNORED_FILES', [])
             app.config.setdefault('FREEZER_DEFAULT_MIMETYPE',
                                   'application/octet-stream')
             app.config.setdefault('FREEZER_IGNORE_MIMETYPE_WARNINGS', False)
@@ -143,6 +145,7 @@ class Freezer(object):
     def freeze(self):
         """Clean the destination and build all URLs from generators."""
         remove_extra = self.app.config['FREEZER_REMOVE_EXTRA_FILES']
+        ignored_files = self.app.config['FREEZER_IGNORED_FILES']
         if not os.path.isdir(self.root):
             os.makedirs(self.root)
         previous_files = set(
@@ -166,7 +169,12 @@ class Freezer(object):
         self._check_endpoints(seen_endpoints)
         if remove_extra:
             # Remove files from the previous build that are not here anymore.
-            for extra_file in previous_files - built_files:
+            extra_files = previous_files - built_files
+            if len(ignored_files):
+                # If there are ignored file strings, remove matches from extra_files
+                for pattern in ignored_files:
+                    extra_files -= set(fnmatch.filter(extra_files, pattern))
+            for extra_file in extra_files:
                 os.remove(extra_file)
                 parent = os.path.dirname(extra_file)
                 if not os.listdir(parent):
@@ -409,8 +417,6 @@ def walk_directory(root):
     """
     for name in sorted(os.listdir(root)):
         full_name = os.path.join(root, name)
-        if '.git' in full_name:
-            continue
         if os.path.isdir(full_name):
             for filename in walk_directory(full_name):
                 yield name + '/' + filename
