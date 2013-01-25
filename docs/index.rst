@@ -244,6 +244,13 @@ are accepted:
 
     .. versionadded:: 0.10
 
+``FREEZER_IGNORED_FILES``
+    A list of files and directories relative to the destination directory that
+    are to be ignored during freezing. This prevents files and directories that were not built durring the current freeze from being removed or overwritten. Defaults to ``[]``.
+
+    .. versionadded:: 0.10
+
+
 
 .. _mime-types:
 

@@ -114,6 +114,7 @@ class Freezer(object):
                                   'application/octet-stream')
             app.config.setdefault('FREEZER_IGNORE_MIMETYPE_WARNINGS', False)
             app.config.setdefault('FREEZER_RELATIVE_URLS', False)
+            app.config.setdefault('FREEZER_IGNORED_FILES', [])
 
     def register_generator(self, function):
         """Register a function as an URL generator.
@@ -150,6 +151,14 @@ class Freezer(object):
             normalize('NFC', os.path.join(self.root, *name.split('/')))
             for name in walk_directory(self.root)
         )
+        ignored_files = set()
+        for name in self.app.config['FREEZER_IGNORED_FILES']:
+            fullname = os.path.join(self.root, *name.split('/'))
+            if os.path.isdir(fullname):
+                for path in walk_directory(fullname):
+                    ignored_files.add(normalize('NFC', os.path.join(fullname, *path.split('/'))))
+            else:
+                ignored_files.add(normalize('NFC', fullname))
         seen_urls = set()
         seen_endpoints = set()
         built_files = set()
@@ -166,7 +175,7 @@ class Freezer(object):
         self._check_endpoints(seen_endpoints)
         if remove_extra:
             # Remove files from the previous build that are not here anymore.
-            for extra_file in previous_files - built_files:
+            for extra_file in previous_files - built_files - ignored_files:
                 os.remove(extra_file)
                 parent = os.path.dirname(extra_file)
                 if not os.listdir(parent):
