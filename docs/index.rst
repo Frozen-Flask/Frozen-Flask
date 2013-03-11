@@ -219,6 +219,16 @@ are accepted:
 
     .. versionadded:: 0.5
 
+``FREEZER_IGNORED_FILES``
+    A list of `fnmatch <http://docs.python.org/2/library/fnmatch.html>`_ pattern
+    strings to ignore when removing extra files (if ``FREEZER_REMOVE_EXTRA_FILES``
+    is ``True``). For example, setting
+    ``FREEZER_IGNORED_FILES = ['*/'+FREEZER_DESTINATION+'/*.git*','*/.git/*']``
+    would cause Frozen-Flask to avoid removing git-related files from the destination
+    directory. Defaults to []. 
+
+    .. versionadded:: 0.10
+
 ``FREEZER_DEFAULT_MIMETYPE``
     The MIME type that is assumed when it can not be determined from the
     filename extension. If you’re using the Apache web server, this should
@@ -329,6 +339,8 @@ Not released yet.
 
 Add the ``FREEZER_RELATIVE_URLS`` config and the :func:`relative_url_for`
 function.
+
+Add the ``FREEZER_IGNORED_FILES`` config.
 
 
 Version 0.9
