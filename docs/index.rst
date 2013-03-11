@@ -343,7 +343,7 @@ Changelog
 Version 0.10
 ~~~~~~~~~~~~
 
-Not released yet.
+Released on 2013-03-11.
 
 * Add the ``FREEZER_DESTINATION_IGNORE`` configuration
   (Thanks to Jim Gray and Christopher Roach.)

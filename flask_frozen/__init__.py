@@ -16,7 +16,7 @@ from __future__ import with_statement
 
 __all__ = ['Freezer', 'walk_directory', 'relative_url_for']
 
-VERSION = '0.10a0'
+VERSION = '0.10'
 
 
 import os.path
