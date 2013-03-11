@@ -226,14 +226,19 @@ class TestFreezer(unittest.TestCase):
                 self.assertEquals(content, self.expected_output[url])
 
     def test_nothing_else_matters(self):
-        self._extra_files(remove=True)
+        self._extra_files(removed=True)
 
     def test_something_else_matters(self):
-        self._extra_files(remove=False)
+        self._extra_files(remove_extra=False, removed=False)
 
-    def _extra_files(self, remove):
+    def test_ignore_pattern(self):
+        self._extra_files(ignore=['extraa'], removed=True)   # Not a match
+        self._extra_files(ignore=['extr*'], removed=False)   # Match
+
+    def _extra_files(self, removed, remove_extra=True, ignore=()):
         with self.built_app() as (temp, app, freezer, urls):
-            app.config['FREEZER_REMOVE_EXTRA_FILES'] = remove
+            app.config['FREEZER_REMOVE_EXTRA_FILES'] = remove_extra
+            app.config['FREEZER_DESTINATION_IGNORE'] = ignore
             dest = unicode(app.config['FREEZER_DESTINATION'])
             expected_files = set(self.filenames.itervalues())
 
@@ -243,18 +248,17 @@ class TestFreezer(unittest.TestCase):
             # create an empty file
             os.mkdir(os.path.join(dest, 'extra'))
             open(os.path.join(dest, 'extra', 'extra.txt'), 'wb').close()
-            if not remove:
-                expected_files.add(u'extra/extra.txt')
 
             # Verify that files in destination persist.
             freezer.freeze()
-            self.assertFilenamesEqual(walk_directory(dest), expected_files)
 
             exists = os.path.exists(os.path.join(dest, 'extra'))
-            if remove:
+            if removed:
                 self.assert_(not exists)
             else:
                 self.assert_(exists)
+                expected_files.add(u'extra/extra.txt')
+            self.assertFilenamesEqual(walk_directory(dest), expected_files)
 
     def test_transitivity(self):
         with self.built_app() as (temp, app, freezer, urls):

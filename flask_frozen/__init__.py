@@ -14,6 +14,11 @@
 
 from __future__ import with_statement
 
+__all__ = ['Freezer', 'walk_directory', 'relative_url_for']
+
+VERSION = '0.10a0'
+
+
 import os.path
 import mimetypes
 import urlparse
@@ -21,6 +26,7 @@ import urllib
 import warnings
 import collections
 import posixpath
+from fnmatch import fnmatch
 from unicodedata import normalize
 from threading import Lock
 from contextlib import contextmanager
@@ -54,11 +60,6 @@ except ImportError:
         if not rel_list:
             return posixpath.curdir
         return posixpath.join(*rel_list)
-
-
-__all__ = ['Freezer']
-
-VERSION = '0.10a0'
 
 
 class MissingURLGeneratorWarning(Warning):
@@ -108,6 +109,7 @@ class Freezer(object):
         if app:
             self.url_for_logger = UrlForLogger(app)
             app.config.setdefault('FREEZER_DESTINATION', 'build')
+            app.config.setdefault('FREEZER_DESTINATION_IGNORE', [])
             app.config.setdefault('FREEZER_BASE_URL', 'http://localhost/')
             app.config.setdefault('FREEZER_REMOVE_EXTRA_FILES', True)
             app.config.setdefault('FREEZER_DEFAULT_MIMETYPE',
@@ -145,11 +147,12 @@ class Freezer(object):
         remove_extra = self.app.config['FREEZER_REMOVE_EXTRA_FILES']
         if not os.path.isdir(self.root):
             os.makedirs(self.root)
-        previous_files = set(
-            # See https://github.com/SimonSapin/Frozen-Flask/issues/5
-            normalize('NFC', os.path.join(self.root, *name.split('/')))
-            for name in walk_directory(self.root)
-        )
+        if remove_extra:
+            ignore = self.app.config['FREEZER_DESTINATION_IGNORE']
+            previous_files = set(
+                # See https://github.com/SimonSapin/Frozen-Flask/issues/5
+                normalize('NFC', os.path.join(self.root, *name.split('/')))
+                for name in walk_directory(self.root, ignore=ignore))
         seen_urls = set()
         seen_endpoints = set()
         built_files = set()
@@ -400,20 +403,37 @@ class Freezer(object):
                 yield rule.endpoint, {}
 
 
-def walk_directory(root):
+def walk_directory(root, ignore=()):
     """
     Recursively walk the `root` directory and yield slash-separated paths
     relative to the root.
 
     Used to implement the URL generator for static files.
+
+    :param ignore:
+        A list of :mod:`fnmatch` patterns.
+        As in ``.gitignore`` files,
+        patterns that contains a slash are matched against the whole path,
+        others against individual slash-separated parts.
+
     """
-    for name in sorted(os.listdir(root)):
-        full_name = os.path.join(root, name)
-        if os.path.isdir(full_name):
-            for filename in walk_directory(full_name):
-                yield name + '/' + filename
-        elif os.path.isfile(full_name):
-            yield name
+    path_ignore = [n.strip('/') for n in ignore if '/' in n]
+    basename_ignore = [n for n in ignore if '/'  not in n]
+
+    def walk(directory, path_so_far):
+        for name in sorted(os.listdir(directory)):
+            if any(fnmatch(name, pattern) for pattern in basename_ignore):
+                continue
+            path = path_so_far + '/' + name if path_so_far else name
+            if any(fnmatch(path, pattern) for pattern in path_ignore):
+                continue
+            full_name = os.path.join(directory, name)
+            if os.path.isdir(full_name):
+                for file_path in walk(full_name, path):
+                    yield file_path
+            elif os.path.isfile(full_name):
+                yield path
+    return walk(root, '')
 
 
 @contextmanager
