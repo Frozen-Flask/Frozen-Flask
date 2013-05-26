@@ -438,9 +438,9 @@ def walk_directory(root, ignore=()):
 
 @contextmanager
 def patch_url_for(app):
-    """Patche ``url_for`` in Jinja globals to use :func:`relative_url_for`.
+    """Patches ``url_for`` in Jinja globals to use :func:`relative_url_for`.
 
-    This is a context manager, to use in a ``with`` statement.
+    This is a context manager, to be used in a ``with`` statement.
 
     """
     previous_url_for = app.jinja_env.globals['url_for']
@@ -462,7 +462,7 @@ def relative_url_for(endpoint, **values):
 
     URLs that would otherwise end with ``/`` get ``index.html`` appended,
     as Frozen-Flask does in filenames. Because of this behavior, this function
-    should only with Frozen-Flask, not when running the application in
+    should only be used with Frozen-Flask, not when running the application in
     :meth:`app.run() <flask.Flask.run>` or another WSGI sever.
 
     If the ``FREEZER_RELATIVE_URLS`` `configuration`_ is True, Frozen-Flask
