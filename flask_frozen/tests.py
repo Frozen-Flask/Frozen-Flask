@@ -126,7 +126,8 @@ class TestFreezer(unittest.TestCase):
     expected_output = {
         u'/': 'Main index /product_5/?revision=b12ef20',
         u'/admin/': 'Admin index\n'
-            '<a href="/page/I%20l%C3%B8v%C3%AB%20Unicode/">Unicode test</a>',
+            '<a href="/page/I%20l%C3%B8v%C3%AB%20Unicode/">Unicode test</a>\n'
+            '<a href="/page/octothorp/#introduction">anchor test</a>',
         u'/robots.txt': 'User-agent: *\nDisallow: /',
         u'/favicon.ico': read_file(test_app.FAVICON),
         u'/product_0/': 'Product num 0',
@@ -142,6 +143,8 @@ class TestFreezer(unittest.TestCase):
         u'/page/foo/': u'Hello\xa0World! foo'.encode('utf8'),
         u'/page/I løvë Unicode/':
             u'Hello\xa0World! I løvë Unicode'.encode('utf8'),
+        u'/page/octothorp/#introduction':
+            u'Hello\xa0World! octothorp'.encode('utf8'),
     }
 
     # URL -> path to the generated file, relative to the build destination root
@@ -162,11 +165,13 @@ class TestFreezer(unittest.TestCase):
         u'/where_am_i/': u'where_am_i/index.html',
         u'/page/foo/': u'page/foo/index.html',
         u'/page/I løvë Unicode/': u'page/I løvë Unicode/index.html',
+        u'/page/octothorp/#introduction': u'page/octothorp/index.html',
     }
 
     assert set(expected_output.keys()) == set(filenames.keys())
     generated_by_url_for = [u'/product_3/', u'/product_4/', u'/product_5/',
-                            u'/page/I løvë Unicode/']
+                            u'/page/I løvë Unicode/',
+                            u'/page/octothorp/#introduction']
     defer_init_app = True
     freezer_kwargs = None
 
@@ -361,7 +366,8 @@ class TestBaseURL(TestFreezer):
     expected_output['/where_am_i/'] = \
         '/myapp/where_am_i/ http://example/myapp/where_am_i/'
     expected_output['/admin/'] = ('Admin index\n'
-        '<a href="/myapp/page/I%20l%C3%B8v%C3%AB%20Unicode/">Unicode test</a>')
+        '<a href="/myapp/page/I%20l%C3%B8v%C3%AB%20Unicode/">Unicode test</a>\n'
+        '<a href="/myapp/page/octothorp/#introduction">anchor test</a>')
 
     def do_extra_config(self, app, freezer):
         app.config['FREEZER_BASE_URL'] = 'http://example/myapp/'
@@ -391,7 +397,8 @@ class TestRelativeUrlFor(TestFreezer):
 
     expected_output = TestFreezer.expected_output.copy()
     expected_output['/admin/'] = ('Admin index\n<a href="'
-        '../page/I%20l%C3%B8v%C3%AB%20Unicode/index.html">Unicode test</a>')
+        '../page/I%20l%C3%B8v%C3%AB%20Unicode/index.html">Unicode test</a>\n<a href="'
+        '../page/octothorp/index.html#introduction">anchor test</a>')
 
 
 # with_no_argument_rules=False and with_static_files=False are
