@@ -193,6 +193,16 @@ else use the usual :meth:`app.run() <flask.Flask.run>`.
 `Flask-Script <http://packages.python.org/Flask-Script/>`_ may come in handy
 here.
 
+Controlling What Is Followed
+----------------------------
+
+Frozen-Flask follows links automatically or with some help from URL generators.
+If you want to control what gets followed, then URL generators should be used
+with the Freezer's ``with_no_argument_rules`` and ``log_url_for`` flags.
+Disabling these flags will force Frozen-Flask to use URL generators only. The
+combination of these three elements determines how much Frozen-Flask will
+follow.
+
 Configuration
 -------------
 
