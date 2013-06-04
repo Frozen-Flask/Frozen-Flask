@@ -476,8 +476,11 @@ def relative_url_for(endpoint, **values):
     if not url.startswith('/'):
         return url
 
-    if url.endswith('/'):
-        url += 'index.html'
+    url_without_anchor, anchor = url.partition('#')[::2]
+    if url_without_anchor.endswith('/'):
+        url = url_without_anchor + 'index.html'
+        if anchor:
+            url += '#' + anchor
 
     request_path = request.path
     if not request_path.endswith('/'):
