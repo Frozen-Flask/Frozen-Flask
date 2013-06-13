@@ -12,17 +12,13 @@
 
 """
 
-from __future__ import with_statement
-
 __all__ = ['Freezer', 'walk_directory', 'relative_url_for']
 
-VERSION = '0.10'
+VERSION = '0.11'
 
 
 import os.path
 import mimetypes
-import urlparse
-import urllib
 import warnings
 import collections
 import posixpath
@@ -30,36 +26,23 @@ from fnmatch import fnmatch
 from unicodedata import normalize
 from threading import Lock
 from contextlib import contextmanager
+from collections import Mapping
+from posixpath import relpath as posix_relpath
+try:
+    from urllib import unquote
+    from urlparse import urlsplit
+except ImportError:  # Python 3
+    from urllib.parse import urlsplit, unquote
 
 from werkzeug.exceptions import HTTPException
 from flask import (Flask, Blueprint, url_for, request, send_from_directory,
                    redirect)
 
 try:
-    from collections import Mapping
-    def is_mapping(obj):
-        return isinstance(obj, Mapping)
-except ImportError:
-    # Python 2.5, no Abstract Base Classes. Default to duck-typing.
-    def is_mapping(obj):
-        return hasattr(obj, 'keys')
-
-try:
-    from posixpath import relpath as posix_relpath
-except ImportError:
-    # Python 2.5
-    def posix_relpath(path, start):
-        sep = posixpath.sep
-        start_list = [x for x in posixpath.abspath(start).split(sep) if x]
-        path_list = [x for x in posixpath.abspath(path).split(sep) if x]
-
-        # Work out how much of the filepath is shared by start and path.
-        i = len(posixpath.commonprefix([start_list, path_list]))
-
-        rel_list = [posixpath.pardir] * (len(start_list)-i) + path_list[i:]
-        if not rel_list:
-            return posixpath.curdir
-        return posixpath.join(*rel_list)
+    unicode
+except NameError:  # Python 3
+    unicode = str
+    basestring = str
 
 
 class MissingURLGeneratorWarning(Warning):
@@ -195,7 +178,7 @@ class Freezer(object):
         Return the path part of FREEZER_BASE_URL, without trailing slash.
         """
         base_url = self.app.config['FREEZER_BASE_URL']
-        return urlparse.urlsplit(base_url).path.rstrip('/')
+        return urlsplit(base_url).path.rstrip('/')
 
     def _generate_all_urls(self):
         """
@@ -213,7 +196,7 @@ class Freezer(object):
                         url = generated
                         endpoint = None
                     else:
-                        if is_mapping(generated):
+                        if isinstance(generated, Mapping):
                             values = generated
                             # The endpoint defaults to the name of the
                             # generator function, just like with Flask views.
@@ -229,8 +212,8 @@ class Freezer(object):
                         )
                         url = url[len(script_name):]
                     # flask.url_for "quotes" URLs, eg. a space becomes %20
-                    url = urllib.unquote(url)
-                    parsed_url = urlparse.urlsplit(url)
+                    url = unquote(url)
+                    parsed_url = urlsplit(url)
                     if parsed_url.scheme or parsed_url.netloc:
                         raise ValueError('External URLs not supported: ' + url)
 
@@ -317,6 +300,7 @@ class Freezer(object):
             with open(filename, 'wb') as fd:
                 fd.write(content)
 
+        response.close()
         return filename
 
     def urlpath_to_filepath(self, path):
