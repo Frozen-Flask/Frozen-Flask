@@ -340,6 +340,17 @@ API reference
 Changelog
 ---------
 
+Version 0.11
+~~~~~~~~~~~~
+
+Released on 2013-06-13.
+
+* Add Python 3.3 support (requires Flask >= 0.10 and Werkzeug >= 0.9)
+* Drop Python 2.5 support
+* Fix `#30 <https://github.com/SimonSapin/Frozen-Flask/issues/30>`_:
+  :func:`relative_url_for` with a query string or URL fragment.
+
+
 Version 0.10
 ~~~~~~~~~~~~
 
