@@ -93,7 +93,7 @@ class Freezer(object):
             self.url_for_logger = UrlForLogger(app)
             app.config.setdefault('FREEZER_DESTINATION', 'build')
             app.config.setdefault('FREEZER_DESTINATION_IGNORE', [])
-            app.config.setdefault('FREEZER_BASE_URL', 'http://localhost/')
+            app.config.setdefault('FREEZER_BASE_URL', None)
             app.config.setdefault('FREEZER_REMOVE_EXTRA_FILES', True)
             app.config.setdefault('FREEZER_DEFAULT_MIMETYPE',
                                   'application/octet-stream')
@@ -178,7 +178,7 @@ class Freezer(object):
         Return the path part of FREEZER_BASE_URL, without trailing slash.
         """
         base_url = self.app.config['FREEZER_BASE_URL']
-        return urlsplit(base_url).path.rstrip('/')
+        return urlsplit(base_url or '').path.rstrip('/')
 
     def _generate_all_urls(self):
         """
@@ -189,7 +189,7 @@ class Freezer(object):
         url_generators = list(self.url_generators)
         url_generators += [self.url_for_logger.iter_calls]
         # A request context is required to use url_for
-        with self.app.test_request_context(base_url=script_name):
+        with self.app.test_request_context(base_url=script_name or None):
             for generator in url_generators:
                 for generated in generator():
                     if isinstance(generated, basestring):
@@ -258,7 +258,7 @@ class Freezer(object):
 
         # The client follows redirects by itself
         # Any other status code is probably an error
-        if not(response.status_code == 200):
+        if response.status_code != 200:
             raise ValueError('Unexpected status %r on URL %s' \
                 % (response.status, url))
 
