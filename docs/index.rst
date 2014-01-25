@@ -262,6 +262,17 @@ are accepted:
 
     .. versionadded:: 0.10
 
+``FREEZER_STATIC_IGNORE``
+    A list (defaults empty) of :mod:`fnmatch` patterns.
+    Files served by send_static_file that match any of the patterns
+    are not coppied to the build directory.
+    As in ``.gitignore`` files,
+    patterns apply to the whole path if they contain a slash ``/``,
+    to each slash-separated part otherwise.
+    For example, this could be set to ``['*.scss']``
+    to stop all SASS files from being frozen.
+
+    .. versionadded:: 0.12
 
 .. _mime-types:
 

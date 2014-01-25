@@ -91,8 +91,8 @@ class TestWalkDirectory(unittest.TestCase):
             set(f for f in walk_directory(os.path.dirname(test_app.__file__))
                 if not f.endswith(('.pyc', '.pyo'))),
             set(['__init__.py', 'static/style.css', 'static/favicon.ico',
-                 'admin/__init__.py', 'admin/admin_static/style.css',
-                 'admin/templates/admin.html'])
+                 'static/main.js', 'admin/__init__.py',
+                 'admin/admin_static/style.css', 'admin/templates/admin.html'])
         )
 
 
@@ -114,6 +114,7 @@ class TestFreezer(unittest.TestCase):
         u'/product_5/': b'Product num 5',
         u'/static/favicon.ico': read_file(test_app.FAVICON),
         u'/static/style.css': b'/* Main CSS */\n',
+        u'/static/main.js': b'/* Main JS */\n',
         u'/admin/css/style.css': b'/* Admin CSS */\n',
         u'/where_am_i/': b'/where_am_i/ http://localhost/where_am_i/',
         u'/page/foo/': u'Hello\xa0World! foo'.encode('utf8'),
@@ -136,6 +137,7 @@ class TestFreezer(unittest.TestCase):
         u'/product_4/': u'product_4/index.html',
         u'/product_5/': u'product_5/index.html',
         u'/static/style.css': u'static/style.css',
+        u'/static/main.js': u'static/main.js',
         u'/static/favicon.ico': u'static/favicon.ico',
         u'/admin/css/style.css': u'admin/css/style.css',
         u'/where_am_i/': u'where_am_i/index.html',
@@ -183,14 +185,14 @@ class TestFreezer(unittest.TestCase):
         self.assertRaises(Exception, freezer.freeze)
 
     def test_all_urls_method(self):
-        app, freezer = test_app.create_app(freezer_kwargs=self.freezer_kwargs)
-        expected = sorted(self.expected_output)
-        # url_for() calls are not logged when just calling .all_urls()
-        for url in self.generated_by_url_for:
-            if url in expected:
-                expected.remove(url)
-        # Do not use set() here: also test that URLs are not duplicated.
-        self.assertEqual(sorted(freezer.all_urls()), expected)
+        with self.built_app() as (temp, app, freezer, urls):
+            expected = sorted(self.expected_output)
+            # url_for() calls are not logged when just calling .all_urls()
+            for url in self.generated_by_url_for:
+                if url in expected:
+                    expected.remove(url)
+            # Do not use set() here: also test that URLs are not duplicated.
+            self.assertEqual(sorted(freezer.all_urls()), expected)
 
     def test_built_urls(self):
         with self.built_app() as (temp, app, freezer, urls):
@@ -390,6 +392,15 @@ class TestRelativeUrlFor(TestFreezer):
         b'<a href="../page/octothorp/index.html?query_foo=bar#introduction">'
         b'URL parsing test</a>')
 
+
+class TestStaticIgnore(TestFreezer):
+    def do_extra_config(self, app, freezer):
+        app.config['FREEZER_STATIC_IGNORE'] = ['*.js',]
+
+    expected_output = TestFreezer.expected_output.copy()
+    filenames = TestFreezer.filenames.copy()
+    del expected_output[u'/static/main.js']
+    del filenames[u'/static/main.js']
 
 # with_no_argument_rules=False and with_static_files=False are
 # not tested as they produces (expected!) warnings
