@@ -93,6 +93,7 @@ class Freezer(object):
             self.url_for_logger = UrlForLogger(app)
             app.config.setdefault('FREEZER_DESTINATION', 'build')
             app.config.setdefault('FREEZER_DESTINATION_IGNORE', [])
+            app.config.setdefault('FREEZER_STATIC_IGNORE', [])
             app.config.setdefault('FREEZER_BASE_URL', None)
             app.config.setdefault('FREEZER_REMOVE_EXTRA_FILES', True)
             app.config.setdefault('FREEZER_DEFAULT_MIMETYPE',
@@ -374,10 +375,11 @@ class Freezer(object):
             view = self.app.view_functions[endpoint]
             app_or_blueprint = method_self(view)
             root = app_or_blueprint.static_folder
+            ignore = self.app.config['FREEZER_STATIC_IGNORE']
             if root is None or not os.path.isdir(root):
                 # No 'static' directory for this app/blueprint.
                 continue
-            for filename in walk_directory(root):
+            for filename in walk_directory(root, ignore=ignore):
                 yield endpoint, {'filename': filename}
 
     def no_argument_rules_urls(self):
