@@ -21,7 +21,7 @@ from unicodedata import normalize
 from warnings import catch_warnings
 
 from flask_frozen import (Freezer, walk_directory,
-    MissingURLGeneratorWarning, MimetypeMismatchWarning)
+    MissingURLGeneratorWarning, MimetypeMismatchWarning, NotFoundWarning)
 from flask_frozen import test_app
 
 try:
@@ -169,6 +169,15 @@ class TestFreezer(unittest.TestCase):
             yield temp, app, freezer
 
     @contextmanager
+    def make_app_with_404(self):
+        # Build an app with a link to a non-existent route
+        with self.make_app() as (temp, app, freezer):
+            @freezer.register_generator
+            def non_existent_url():
+                yield '/404/'
+            yield temp, app, freezer
+
+    @contextmanager
     def built_app(self):
         with self.make_app() as (temp, app, freezer):
             urls = freezer.freeze()
@@ -270,6 +279,29 @@ class TestFreezer(unittest.TestCase):
                     assert 'External URLs not supported' in e.args[0]
                 else:
                     assert False, 'Expected ValueError'
+
+    def test_error_on_internal_404(self):
+        with self.make_app_with_404() as (temp, app, freezer):
+            # Test standard behaviour with 404 errors (freeze failure)
+            try:
+                freezer.freeze()
+            except ValueError as e:
+                error_msg = "Unexpected status '404 NOT FOUND' on URL /404/"
+                assert error_msg in e.args[0]
+            else:
+                assert False, 'Expected ValueError'
+
+    def test_warn_on_internal_404(self):
+        with self.make_app_with_404() as (temp, app, freezer):
+            # Enable 404 erros ignoring
+            app.config['FREEZER_IGNORE_404_NOT_FOUND'] = True
+            # Test warning with 404 errors when we choose to ignore them
+            with catch_warnings(record=True) as logged_warnings:
+                warnings.simplefilter("always")
+                freezer.freeze()
+                self.assertEqual(len(logged_warnings), 1)
+                self.assertEqual(logged_warnings[0].category,
+                                  NotFoundWarning)
 
     def test_warn_on_missing_generator(self):
         with self.make_app() as (temp, app, freezer):

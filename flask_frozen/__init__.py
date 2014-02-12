@@ -52,6 +52,8 @@ class MissingURLGeneratorWarning(Warning):
 class MimetypeMismatchWarning(Warning):
     pass
 
+class NotFoundWarning(Warning):
+    pass
 
 class Freezer(object):
     """
@@ -100,6 +102,7 @@ class Freezer(object):
                                   'application/octet-stream')
             app.config.setdefault('FREEZER_IGNORE_MIMETYPE_WARNINGS', False)
             app.config.setdefault('FREEZER_RELATIVE_URLS', False)
+            app.config.setdefault('FREEZER_IGNORE_404_NOT_FOUND', False)
 
     def register_generator(self, function):
         """Register a function as an URL generator.
@@ -259,9 +262,17 @@ class Freezer(object):
 
         # The client follows redirects by itself
         # Any other status code is probably an error
+        # except we explictly want 404 errors to be skipped
+        # (eg. while application is in development)
+        ignore_404 = self.app.config['FREEZER_IGNORE_404_NOT_FOUND']
         if response.status_code != 200:
-            raise ValueError('Unexpected status %r on URL %s' \
-                % (response.status, url))
+            if response.status_code == 404 and ignore_404:
+                warnings.warn('Ignored %r on URL %s' % (response.status, url),
+                              NotFoundWarning,
+                              stacklevel=3)
+            else:
+                raise ValueError('Unexpected status %r on URL %s' \
+                    % (response.status, url))
 
         destination_path = self.urlpath_to_filepath(url)
         filename = os.path.join(self.root, *destination_path.split('/'))
