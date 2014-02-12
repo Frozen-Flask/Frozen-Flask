@@ -274,6 +274,16 @@ are accepted:
 
     .. versionadded:: 0.12
 
+``FREEZER_IGNORE_404_NOT_FOUND``
+    If set to ``True`` (defaults False), Frozen-Flask won't stop freezing when
+    404 error is returned by your application.
+    In this case, a warning will be printed on stdout and the static page will
+    be generated using your 404 error page handler or flask's default one.
+    This can be usefull during development phase if you have already referenced
+    pages wich aren't written yet.
+
+    .. versionadded:: 0.12
+
 .. _mime-types:
 
 Filenames and MIME types
