@@ -78,6 +78,7 @@ class Freezer(object):
                  with_no_argument_rules=True, log_url_for=True):
         self.url_generators = []
         self.log_url_for = log_url_for
+        self.ignore_endpoints = []
         if with_static_files:
             self.register_generator(self.static_files_urls)
         if with_no_argument_rules:
@@ -101,6 +102,7 @@ class Freezer(object):
             app.config.setdefault('FREEZER_DEFAULT_MIMETYPE',
                                   'application/octet-stream')
             app.config.setdefault('FREEZER_IGNORE_MIMETYPE_WARNINGS', False)
+            app.config.setdefault('FREEZER_IGNORE_ENDPOINTS', [])
             app.config.setdefault('FREEZER_RELATIVE_URLS', False)
             app.config.setdefault('FREEZER_IGNORE_404_NOT_FOUND', False)
 
@@ -114,6 +116,15 @@ class Freezer(object):
         :Returns: the function, so that it can be used as a decorator
         """
         self.url_generators.append(function)
+        # Allow use as a decorator
+        return function
+
+    def ignore(self, function):
+        """Register a function as ignored endpoint.
+
+        :Returns: the function, so that it can be used as a decorator
+        """
+        self.ignore_endpoints.append(function.__name__)
         # Allow use as a decorator
         return function
 
@@ -132,6 +143,7 @@ class Freezer(object):
     def freeze(self):
         """Clean the destination and build all URLs from generators."""
         remove_extra = self.app.config['FREEZER_REMOVE_EXTRA_FILES']
+        ignore_endpoints = self.ignore_endpoints + self.app.config['FREEZER_IGNORE_ENDPOINTS']
         if not os.path.isdir(self.root):
             os.makedirs(self.root)
         if remove_extra:
@@ -141,7 +153,7 @@ class Freezer(object):
                 normalize('NFC', os.path.join(self.root, *name.split('/')))
                 for name in walk_directory(self.root, ignore=ignore))
         seen_urls = set()
-        seen_endpoints = set()
+        seen_endpoints = set(ignore_endpoints)
         built_files = set()
 
         for url, endpoint in self._generate_all_urls():
@@ -188,6 +200,7 @@ class Freezer(object):
         """
         Run all generators and yield (url, enpoint) tuples.
         """
+        ignore_endpoints = self.ignore_endpoints + self.app.config['FREEZER_IGNORE_ENDPOINTS']
         script_name = self._script_name()
         url_encoding = self.app.url_map.charset
         url_generators = list(self.url_generators)
@@ -225,7 +238,8 @@ class Freezer(object):
                     url = parsed_url.path
                     if not isinstance(url, unicode):
                         url = url.decode(url_encoding)
-                    yield url, endpoint
+                    if endpoint not in ignore_endpoints:
+                        yield url, endpoint
 
     def _check_endpoints(self, seen_endpoints):
         """

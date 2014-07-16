@@ -62,6 +62,11 @@ def create_app(defer_init_app=False, freezer_kwargs=None):
     def product(product_id):
         return 'Product num %i' % product_id
 
+    @app.route('/ignorance_test/')
+    @freezer.ignore
+    def ignore_me():
+        return 'This shouldn\'t be build as static'
+
     @app.route('/add/', methods=['POST'])
     def add_something(product_id):
         return 'This view should be ignored as it does not accept GET.'
