@@ -45,7 +45,7 @@ Create a :class:`Freezer` instance with your ``app`` object and call its
 :meth:`~Freezer.freeze` method. Put that in a ``freeze.py`` script
 (or call it whatever you like)::
 
-    from flask.ext.frozen import Freezer
+    from flask_frozen import Freezer
     from myapplication import app
 
     freezer = Freezer(app)
