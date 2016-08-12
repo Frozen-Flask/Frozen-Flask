@@ -7,6 +7,6 @@ python:
   - "pypy"
 
 install:
-  - pip install --use-mirrors -e .
+  - pip install -e .
 
 script: python -m flask_frozen.tests
