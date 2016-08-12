@@ -13,7 +13,7 @@
 import os.path
 from functools import partial
 
-from flask import Flask, url_for
+from flask import Flask, url_for, redirect
 from flask_frozen import Freezer
 
 from .admin import admin_blueprint
@@ -36,6 +36,10 @@ def create_app(defer_init_app=False, freezer_kwargs=None):
     def index():
         return ('Main index ' +
                 url_for('product', product_id='5', revision='b12ef20'))
+
+    @app.route('/redirect/')
+    def redirected_page():
+        return redirect('/')
 
     @app.route('/page/<name>/')
     def page(name):
