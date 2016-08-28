@@ -242,7 +242,7 @@ class Freezer(object):
 
         if not_generated_endpoints:
             warnings.warn(
-                'Nothing frozen for endpoints %s. Did you forget an URL '
+                'Nothing frozen for endpoints %s. Did you forget a URL '
                 'generator?' % ', '.join(
                     unicode(e) for e in not_generated_endpoints),
                 MissingURLGeneratorWarning,
