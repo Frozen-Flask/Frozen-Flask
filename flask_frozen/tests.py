@@ -21,7 +21,8 @@ from unicodedata import normalize
 from warnings import catch_warnings
 
 from flask_frozen import (Freezer, walk_directory,
-    MissingURLGeneratorWarning, MimetypeMismatchWarning, NotFoundWarning)
+    MissingURLGeneratorWarning, MimetypeMismatchWarning, NotFoundWarning,
+    RedirectWarning)
 from flask_frozen import test_app
 
 try:
@@ -100,6 +101,7 @@ class TestFreezer(unittest.TestCase):
     # URL -> expected bytes content of the generated file
     expected_output = {
         u'/': b'Main index /product_5/?revision=b12ef20',
+        u'/redirect/': b'Main index /product_5/?revision=b12ef20',
         u'/admin/': b'Admin index\n'
             b'<a href="/page/I%20l%C3%B8v%C3%AB%20Unicode/">Unicode test</a>\n'
             b'<a href="/page/octothorp/?query_foo=bar#introduction">'
@@ -127,6 +129,7 @@ class TestFreezer(unittest.TestCase):
     # URL -> path to the generated file, relative to the build destination root
     filenames = {
         u'/': u'index.html',
+        u'/redirect/': u'redirect/index.html',
         u'/admin/': u'admin/index.html',
         u'/robots.txt': u'robots.txt',
         u'/favicon.ico': u'favicon.ico',
@@ -293,7 +296,7 @@ class TestFreezer(unittest.TestCase):
 
     def test_warn_on_internal_404(self):
         with self.make_app_with_404() as (temp, app, freezer):
-            # Enable 404 erros ignoring
+            # Enable 404 errors ignoring
             app.config['FREEZER_IGNORE_404_NOT_FOUND'] = True
             # Test warning with 404 errors when we choose to ignore them
             with catch_warnings(record=True) as logged_warnings:
@@ -302,6 +305,30 @@ class TestFreezer(unittest.TestCase):
                 self.assertEqual(len(logged_warnings), 1)
                 self.assertEqual(logged_warnings[0].category,
                                   NotFoundWarning)
+
+    def test_error_on_redirect(self):
+        with self.make_app() as (temp, app, freezer):
+            # Enable errors on redirects.
+            app.config['FREEZER_REDIRECT_POLICY'] = 'error'
+            try:
+                freezer.freeze()
+            except ValueError as e:
+                error_msg = "Unexpected status '302 FOUND' on URL /redirect/"
+                assert error_msg in e.args[0]
+            else:
+                assert False, 'Expected ValueError'
+
+    def test_warn_on_redirect(self):
+        with self.make_app() as (temp, app, freezer):
+            # Enable ignoring redirects.
+            app.config['FREEZER_REDIRECT_POLICY'] = 'ignore'
+            # Test warning with 302 errors when we choose to ignore them
+            with catch_warnings(record=True) as logged_warnings:
+                warnings.simplefilter("always")
+                freezer.freeze()
+                self.assertEqual(len(logged_warnings), 1)
+                self.assertEqual(logged_warnings[0].category,
+                                  RedirectWarning)
 
     def test_warn_on_missing_generator(self):
         with self.make_app() as (temp, app, freezer):

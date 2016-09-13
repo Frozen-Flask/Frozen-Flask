@@ -14,7 +14,7 @@
 
 __all__ = ['Freezer', 'walk_directory', 'relative_url_for']
 
-VERSION = '0.12'
+VERSION = '0.13'
 
 
 import os.path
@@ -53,6 +53,9 @@ class MimetypeMismatchWarning(Warning):
     pass
 
 class NotFoundWarning(Warning):
+    pass
+
+class RedirectWarning(Warning):
     pass
 
 class Freezer(object):
@@ -103,6 +106,7 @@ class Freezer(object):
             app.config.setdefault('FREEZER_IGNORE_MIMETYPE_WARNINGS', False)
             app.config.setdefault('FREEZER_RELATIVE_URLS', False)
             app.config.setdefault('FREEZER_IGNORE_404_NOT_FOUND', False)
+            app.config.setdefault('FREEZER_REDIRECT_POLICY', 'follow')
 
     def register_generator(self, function):
         """Register a function as an URL generator.
@@ -253,11 +257,14 @@ class Freezer(object):
         """
         client = self.app.test_client()
         base_url = self.app.config['FREEZER_BASE_URL']
+        redirect_policy = self.app.config['FREEZER_REDIRECT_POLICY']
+        follow_redirects = redirect_policy == 'follow'
+        ignore_redirect = redirect_policy == 'ignore'
 
         with conditional_context(self.url_for_logger, self.log_url_for):
             with conditional_context(patch_url_for(self.app),
                                      self.app.config['FREEZER_RELATIVE_URLS']):
-                response = client.get(url, follow_redirects=True,
+                response = client.get(url, follow_redirects=follow_redirects,
                                       base_url=base_url)
 
         # The client follows redirects by itself
@@ -269,6 +276,10 @@ class Freezer(object):
             if response.status_code == 404 and ignore_404:
                 warnings.warn('Ignored %r on URL %s' % (response.status, url),
                               NotFoundWarning,
+                              stacklevel=3)
+            elif response.status_code in (301, 302) and ignore_redirect:
+                warnings.warn('Ignored %r on URL %s' % (response.status, url),
+                              RedirectWarning,
                               stacklevel=3)
             else:
                 raise ValueError('Unexpected status %r on URL %s' \
