@@ -23,7 +23,7 @@ or alternatively if you have pip installed::
     $ pip install Frozen-Flask
 
 or you can get the `source code from github
-<https://github.com/SimonSapin/Frozen-Flask>`_.
+<https://github.com/Frozen-Flask/Frozen-Flask>`_.
 
 Context
 -------
@@ -380,6 +380,25 @@ API reference
 Changelog
 ---------
 
+Version 0.13
+~~~~~~~~~~~~
+
+Released on 2016-09-30
+
+* Add the ``FREEZER_REDIRECT_POLICY`` configuration
+
+Version 0.12
+~~~~~~~~~~~~
+
+Released on 2015-11-05
+
+* Add the ``FREEZER_IGNORE_404_NOT_FOUND`` configuration
+  (Thanks to Thomas Sarboni.)
+* Add the ``FREEZER_STATIC_IGNORE`` configuration
+  (Thanks to Alex Guerra.)
+* Fix `#36 <https://github.com/Frozen-Flask/Frozen-Flask/issues/36>`_:
+  Support non-default app.config['SERVER_NAME'].
+
 Version 0.11
 ~~~~~~~~~~~~
 
@@ -387,7 +406,7 @@ Released on 2013-06-13.
 
 * Add Python 3.3 support (requires Flask >= 0.10 and Werkzeug >= 0.9)
 * Drop Python 2.5 support
-* Fix `#30 <https://github.com/SimonSapin/Frozen-Flask/issues/30>`_:
+* Fix `#30 <https://github.com/Frozen-Flask/Frozen-Flask/issues/30>`_:
   :func:`relative_url_for` with a query string or URL fragment.
 
 
