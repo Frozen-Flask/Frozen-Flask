@@ -8,9 +8,9 @@ without any server-side software other than a traditional web server.
 Links
 `````
 
-* `documentation <http://packages.python.org/Frozen-Flask>`_
+* `documentation <http://pythonhosted.org/Frozen-Flask/>`_
 * `development version
-  <http://github.com/SimonSapin/Frozen-Flask/zipball/master#egg=Frozen-Flask-dev>`_
+  <http://github.com/Frozen-Flask/Frozen-Flask/zipball/master#egg=Frozen-Flask-dev>`_
 """
 
 import re
@@ -26,7 +26,7 @@ with open(os.path.join(os.path.dirname(__file__),
 setup(
     name='Frozen-Flask',
     version=VERSION,
-    url='https://github.com/SimonSapin/Frozen-Flask',
+    url='https://github.com/Frozen-Flask/Frozen-Flask',
     license='BSD',
     author='Simon Sapin',
     author_email='simon.sapin@exyr.org',
