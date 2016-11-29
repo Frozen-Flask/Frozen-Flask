@@ -65,8 +65,8 @@ static files.
     The `configuration`_ allows you to change the destination directory,
     or control what files are removed if at all.
 
-This build will be most likely be partial since Frozen-Flask can only guess
-so much about your application.
+This build will most likely be partial since Frozen-Flask can only guess so
+much about your application.
 
 Finding URLs
 ------------
@@ -163,7 +163,7 @@ All of these are thus equivalent::
 Generating the same URL more than once is okay, Frozen-Flask will build it
 only once. Having different functions with the same name is generally a bad
 practice, but still work here as they are only used by their decorators.
-In practice you will probably have a module for you views and another one
+In practice you will probably have a module for your views and another one
 for the freezer and URL generators, so having the same name is not a problem.
 
 Testing URL generators
@@ -184,7 +184,7 @@ so you can check that everything is fine before uploading::
     if __name__ == '__main__':
         freezer.run(debug=True)
 
-:meth:`Freezer.run` will freeze you application before serving and when
+:meth:`Freezer.run` will freeze your application before serving and when
 the reloader kicks in. But the reloader only watches Python files, not
 templates or static files. Because of that, you probably want to use
 :meth:`Freezer.run` only for testing the URL generators. For everything
@@ -211,7 +211,7 @@ Frozen-Flask can be configured using Flask’s `configuration system
 are accepted:
 
 ``FREEZER_BASE_URL``
-    Full URL you application is supposed to be installed at. This affects
+    Full URL your application is supposed to be installed at. This affects
     the output of :func:`flask.url_for` for absolute URLs (with
     ``_external=True``) or if your application is not at the root of its
     domain name.
@@ -221,7 +221,7 @@ are accepted:
     If set to ``True``, Frozen-Flask will patch the Jinja environment so that
     ``url_for()`` returns relative URLs. Defaults to ``False``.
     Python code is not affected unless you use :func:`relative_url_for`
-    explicitly. This enable the frozen site to be browsed without a web server
+    explicitly. This enables the frozen site to be browsed without a web server
     (opening the files directly in a browser) but appends a visible
     ``index.html`` to URLs that would otherwise end with ``/``.
 
@@ -275,7 +275,7 @@ are accepted:
 ``FREEZER_STATIC_IGNORE``
     A list (defaults empty) of :mod:`fnmatch` patterns.
     Files served by send_static_file that match any of the patterns
-    are not coppied to the build directory.
+    are not copied to the build directory.
     As in ``.gitignore`` files,
     patterns apply to the whole path if they contain a slash ``/``,
     to each slash-separated part otherwise.
@@ -308,7 +308,7 @@ are accepted:
 Filenames and MIME types
 ------------------------
 
-For each generated URL, Frozen-Flask simulates a request and save the content
+For each generated URL, Frozen-Flask simulates a request and saves the content
 in a file in the ``FREEZER_DESTINATION`` directory. The filename is
 built from the URL. URLs with a trailing slash are interpreted as a directory
 name and the content is saved in ``index.html``.
@@ -319,7 +319,7 @@ different by their query strings are considered the same, and they should
 return the same response. Otherwise, the behavior is undefined.
 
 Additionally, the extension checks that the filename has an extension that
-match the MIME type given in the ``Content-Type`` HTTP response header.
+matches the MIME type given in the ``Content-Type`` HTTP response header.
 In case of mismatch, the Content-Type that a static web server will send
 will probably not be the one you expect, so Frozen-Flask issues a warning.
 
@@ -356,7 +356,7 @@ Character encodings
 
 Flask uses Unicode everywhere internally, and defaults to UTF-8 for I/O.
 It will send the right ``Content-Type`` header with both a MIME type and
-and encoding (eg. ``text/html; charset=utf-8``). Frozen-Flask will try to
+encoding (eg. ``text/html; charset=utf-8``). Frozen-Flask will try to
 `preserve MIME types <#mime-types>`_ through file extensions, but it can not
 preserve the encoding meta-data. You may need to add the right
 ``<meta>`` tag to your HTML. (You should anyway).

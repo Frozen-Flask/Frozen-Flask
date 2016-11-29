@@ -421,7 +421,7 @@ def walk_directory(root, ignore=()):
     :param ignore:
         A list of :mod:`fnmatch` patterns.
         As in ``.gitignore`` files,
-        patterns that contains a slash are matched against the whole path,
+        patterns that contain a slash are matched against the whole path,
         others against individual slash-separated parts.
 
     """
