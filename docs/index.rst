@@ -285,8 +285,8 @@ are accepted:
     .. versionadded:: 0.12
 
 ``FREEZER_IGNORE_404_NOT_FOUND``
-    If set to ``True`` (defaults False), Frozen-Flask won't stop freezing when
-    404 error is returned by your application.
+    If set to ``True`` (defaults ``False``), Frozen-Flask won't stop freezing
+    when a 404 error is returned by your application.
     In this case, a warning will be printed on stdout and the static page will
     be generated using your 404 error page handler or flask's default one.
     This can be useful during development phase if you have already referenced
@@ -302,6 +302,14 @@ are accepted:
     raise an exception if a redirect is encountered.
 
     .. versionadded:: 0.13
+
+``FREEZER_SKIP_EXISTING``
+    If set to ``True`` (defaults ``False``), Frozen-Flask will skip the
+    generation of files that already exist in the build directory,
+    even if the contents would have been different. Useful if your generation
+    takes up a very long time and you only want to generate new files.
+
+    .. versionadded:: 0.14
 
 .. _mime-types:
 

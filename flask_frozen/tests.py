@@ -4,6 +4,8 @@
     ~~~~~~~~~~~~~~~~~~
 
     Automated test suite for Frozen-Flask
+    Run with :
+        $ python -m flask_frozen.tests
 
     :copyright: (c) 2010-2012 by Simon Sapin.
     :license: BSD, see LICENSE for more details.
@@ -159,7 +161,7 @@ class TestFreezer(unittest.TestCase):
     maxDiff = None
 
     def do_extra_config(self, app, freezer):
-        pass # To be overriden
+        pass  # To be overridden
 
     @contextmanager
     def make_app(self):
@@ -209,7 +211,7 @@ class TestFreezer(unittest.TestCase):
     def test_built_urls(self):
         with self.built_app() as (temp, app, freezer, urls):
             self.assertEqual(set(urls), set(self.expected_output))
-            # Make sure it was not accidently used as a destination
+            # Make sure it was not accidentally used as a destination
             default = os.path.join(os.path.dirname(__file__), 'build')
             self.assertTrue(not os.path.exists(default))
 
@@ -304,7 +306,7 @@ class TestFreezer(unittest.TestCase):
                 freezer.freeze()
                 self.assertEqual(len(logged_warnings), 1)
                 self.assertEqual(logged_warnings[0].category,
-                                  NotFoundWarning)
+                                 NotFoundWarning)
 
     def test_error_on_redirect(self):
         with self.make_app() as (temp, app, freezer):
@@ -328,7 +330,7 @@ class TestFreezer(unittest.TestCase):
                 freezer.freeze()
                 self.assertEqual(len(logged_warnings), 1)
                 self.assertEqual(logged_warnings[0].category,
-                                  RedirectWarning)
+                                 RedirectWarning)
 
     def test_warn_on_missing_generator(self):
         with self.make_app() as (temp, app, freezer):
@@ -342,7 +344,7 @@ class TestFreezer(unittest.TestCase):
                 freezer.freeze()
                 self.assertEqual(len(logged_warnings), 1)
                 self.assertEqual(logged_warnings[0].category,
-                                  MissingURLGeneratorWarning)
+                                 MissingURLGeneratorWarning)
 
     def test_wrong_default_mimetype(self):
         with self.make_app() as (temp, app, freezer):
@@ -355,7 +357,7 @@ class TestFreezer(unittest.TestCase):
                 freezer.freeze()
                 self.assertEqual(len(logged_warnings), 1)
                 self.assertEqual(logged_warnings[0].category,
-                                  MimetypeMismatchWarning)
+                                 MimetypeMismatchWarning)
 
     def test_default_mimetype(self):
         with self.make_app() as (temp, app, freezer):
@@ -366,7 +368,7 @@ class TestFreezer(unittest.TestCase):
 
     def test_unknown_extension(self):
         with self.make_app() as (temp, app, freezer):
-            @app.route(u'/unkown-extension.fuu')
+            @app.route(u'/unknown-extension.fuu')
             def no_extension():
                 return '42', 200, {'Content-Type': 'application/octet-stream'}
             freezer.freeze()
@@ -390,7 +392,19 @@ class TestFreezer(unittest.TestCase):
                 freezer.freeze()
                 self.assertEqual(len(logged_warnings), 1)
                 self.assertEqual(logged_warnings[0].category,
-                                  MimetypeMismatchWarning)
+                                 MimetypeMismatchWarning)
+
+    def test_skip_existing_files(self):
+        with self.make_app() as (temp, app, freezer):
+            app.config['FREEZER_SKIP_EXISTING'] = True
+            with open(os.path.join(temp, 'skipped.html'), 'w') as f:
+                f.write("6*9")
+            @app.route(u'/skipped.html')
+            def skipped():
+                return '42'
+            freezer.freeze()
+            with open(os.path.join(temp, 'skipped.html')) as f:
+                self.assertEqual(f.read(), '6*9')
 
 
 class TestInitApp(TestFreezer):
@@ -414,7 +428,7 @@ class TestBaseURL(TestFreezer):
 
 class TestNonexsistentDestination(TestFreezer):
     def do_extra_config(self, app, freezer):
-        # frozen/htdocs does not exsist in the newly created temp directory,
+        # frozen/htdocs does not exist in the newly created temp directory,
         # the Freezer has to create it.
         app.config['FREEZER_DESTINATION'] = os.path.join(
             app.config['FREEZER_DESTINATION'], 'frozen', 'htdocs')
@@ -426,7 +440,6 @@ class TestServerName(TestFreezer):
     expected_output = TestFreezer.expected_output.copy()
     expected_output[u'/where_am_i/'] = (
         b'/where_am_i/ http://example.net/where_am_i/')
-
 
 
 class TestWithoutUrlForLog(TestFreezer):

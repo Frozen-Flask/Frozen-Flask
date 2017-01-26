@@ -52,11 +52,14 @@ class MissingURLGeneratorWarning(Warning):
 class MimetypeMismatchWarning(Warning):
     pass
 
+
 class NotFoundWarning(Warning):
     pass
 
+
 class RedirectWarning(Warning):
     pass
+
 
 class Freezer(object):
     """
@@ -107,9 +110,11 @@ class Freezer(object):
             app.config.setdefault('FREEZER_RELATIVE_URLS', False)
             app.config.setdefault('FREEZER_IGNORE_404_NOT_FOUND', False)
             app.config.setdefault('FREEZER_REDIRECT_POLICY', 'follow')
+            app.config.setdefault('FREEZER_SKIP_EXISTING', False)
 
     def register_generator(self, function):
-        """Register a function as an URL generator.
+        """
+        Register a function as an URL generator.
 
         The function should return an iterable of URL paths or
         ``(endpoint, values)`` tuples to be used as
@@ -190,7 +195,7 @@ class Freezer(object):
 
     def _generate_all_urls(self):
         """
-        Run all generators and yield (url, enpoint) tuples.
+        Run all generators and yield (url, endpoint) tuples.
         """
         script_name = self._script_name()
         url_encoding = self.app.url_map.charset
@@ -233,7 +238,7 @@ class Freezer(object):
 
     def _check_endpoints(self, seen_endpoints):
         """
-        Warn if some of the app's enpoints are not in seen_endpoints.
+        Warn if some of the app's endpoints are not in seen_endpoints.
         """
         get_endpoints = set(
             rule.endpoint for rule in self.app.url_map.iter_rules()
@@ -253,13 +258,19 @@ class Freezer(object):
                 stacklevel=3)
 
     def _build_one(self, url):
-        """Get the given ``url`` from the app and write the matching file.
-        """
+        """Get the given ``url`` from the app and write the matching file."""
         client = self.app.test_client()
         base_url = self.app.config['FREEZER_BASE_URL']
         redirect_policy = self.app.config['FREEZER_REDIRECT_POLICY']
         follow_redirects = redirect_policy == 'follow'
         ignore_redirect = redirect_policy == 'ignore'
+
+        destination_path = self.urlpath_to_filepath(url)
+        filename = os.path.join(self.root, *destination_path.split('/'))
+
+        skip = self.app.config['FREEZER_SKIP_EXISTING']
+        if skip and os.path.isfile(filename):
+            return filename
 
         with conditional_context(self.url_for_logger, self.log_url_for):
             with conditional_context(patch_url_for(self.app),
@@ -269,7 +280,7 @@ class Freezer(object):
 
         # The client follows redirects by itself
         # Any other status code is probably an error
-        # except we explictly want 404 errors to be skipped
+        # except we explicitly want 404 errors to be skipped
         # (eg. while application is in development)
         ignore_404 = self.app.config['FREEZER_IGNORE_404_NOT_FOUND']
         if response.status_code != 200:
@@ -284,9 +295,6 @@ class Freezer(object):
             else:
                 raise ValueError('Unexpected status %r on URL %s' \
                     % (response.status, url))
-
-        destination_path = self.urlpath_to_filepath(url)
-        filename = os.path.join(self.root, *destination_path.split('/'))
 
         if not self.app.config['FREEZER_IGNORE_MIMETYPE_WARNINGS']:
             # Most web servers guess the mime type of static files by their
@@ -337,7 +345,8 @@ class Freezer(object):
         return path[1:]
 
     def serve(self, **options):
-        """Run an HTTP server on the result of the build.
+        """
+        Run an HTTP server on the result of the build.
 
         :param options: passed to :meth:`flask.Flask.run`.
         """
@@ -446,10 +455,10 @@ def walk_directory(root, ignore=()):
 
 @contextmanager
 def patch_url_for(app):
-    """Patches ``url_for`` in Jinja globals to use :func:`relative_url_for`.
+    """
+    Patches ``url_for`` in Jinja globals to use :func:`relative_url_for`.
 
     This is a context manager, to be used in a ``with`` statement.
-
     """
     previous_url_for = app.jinja_env.globals['url_for']
     app.jinja_env.globals['url_for'] = relative_url_for
@@ -476,7 +485,6 @@ def relative_url_for(endpoint, **values):
     If the ``FREEZER_RELATIVE_URLS`` `configuration`_ is True, Frozen-Flask
     will automatically patch the application's Jinja environment so that
     ``url_for`` in templates is this function.
-
     """
     url = url_for(endpoint, **values)
 
