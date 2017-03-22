@@ -395,7 +395,7 @@ Released on 2017-03-22.
 
 * Add the ``FREEZER_SKIP_EXISTING`` configuration to skip generation
   of files already in the build directory. (Thanks to Antoine Goutenoir.)
-* Add shared superclass for all ``FrozenFlaskWarning``s. 
+* Add shared superclass ``FrozenFlaskWarning`` for all warnings. 
   (Thanks to Miro Hrončok.)
 
 Version 0.13
