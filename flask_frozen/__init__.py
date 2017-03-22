@@ -45,19 +45,23 @@ except NameError:  # Python 3
     basestring = str
 
 
-class MissingURLGeneratorWarning(Warning):
+class FrozenFlaskWarning(Warning):
     pass
 
 
-class MimetypeMismatchWarning(Warning):
+class MissingURLGeneratorWarning(FrozenFlaskWarning):
     pass
 
 
-class NotFoundWarning(Warning):
+class MimetypeMismatchWarning(FrozenFlaskWarning):
     pass
 
 
-class RedirectWarning(Warning):
+class NotFoundWarning(FrozenFlaskWarning):
+    pass
+
+
+class RedirectWarning(FrozenFlaskWarning):
     pass
 
 

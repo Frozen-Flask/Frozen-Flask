@@ -23,8 +23,8 @@ from unicodedata import normalize
 from warnings import catch_warnings
 
 from flask_frozen import (Freezer, walk_directory,
-    MissingURLGeneratorWarning, MimetypeMismatchWarning, NotFoundWarning,
-    RedirectWarning)
+    FrozenFlaskWarning, MissingURLGeneratorWarning, MimetypeMismatchWarning,
+    NotFoundWarning, RedirectWarning)
 from flask_frozen import test_app
 
 try:
@@ -405,6 +405,25 @@ class TestFreezer(unittest.TestCase):
             freezer.freeze()
             with open(os.path.join(temp, 'skipped.html')) as f:
                 self.assertEqual(f.read(), '6*9')
+
+
+class TestWarnings(unittest.TestCase):
+    def test_warnings_share_common_superclass(self):
+        with catch_warnings(record=True) as logged_warnings:
+            # ignore all warnings:
+            warnings.simplefilter('ignore')
+            # but don't ignore FrozenFlaskWarning
+            warnings.filterwarnings('always', category=FrozenFlaskWarning)
+            # warn each of our warnings:
+            warnings_frozen_flask = (MissingURLGeneratorWarning,
+                                     MimetypeMismatchWarning,
+                                     NotFoundWarning,
+                                     RedirectWarning)
+            for warning in warnings_frozen_flask:
+                warnings.warn('test', warning)
+            # warn something different:
+            warnings.warn('test', PendingDeprecationWarning)
+            self.assertEqual(len(logged_warnings), len(warnings_frozen_flask))
 
 
 class TestInitApp(TestFreezer):
