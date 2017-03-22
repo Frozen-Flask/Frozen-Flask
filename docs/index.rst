@@ -388,21 +388,31 @@ API reference
 Changelog
 ---------
 
+Version 0.14
+~~~~~~~~~~~~
+
+Released on 2017-03-22.
+
+* Add the ``FREEZER_SKIP_EXISTING`` configuration to skip generation
+  of files already in the build directory. (Thanks to Antoine Goutenoir.)
+* Add shared superclass for all ``FrozenFlaskWarning``s. 
+  (Thanks to Miro Hrončok.)
+
 Version 0.13
 ~~~~~~~~~~~~
 
-Released on 2016-09-30
+Released on 2016-09-30.
 
-* Add the ``FREEZER_REDIRECT_POLICY`` configuration
+* Add the ``FREEZER_REDIRECT_POLICY`` configuration.
 
 Version 0.12
 ~~~~~~~~~~~~
 
-Released on 2015-11-05
+Released on 2015-11-05.
 
-* Add the ``FREEZER_IGNORE_404_NOT_FOUND`` configuration
+* Add the ``FREEZER_IGNORE_404_NOT_FOUND`` configuration.
   (Thanks to Thomas Sarboni.)
-* Add the ``FREEZER_STATIC_IGNORE`` configuration
+* Add the ``FREEZER_STATIC_IGNORE`` configuration.
   (Thanks to Alex Guerra.)
 * Fix `#36 <https://github.com/Frozen-Flask/Frozen-Flask/issues/36>`_:
   Support non-default app.config['SERVER_NAME'].
