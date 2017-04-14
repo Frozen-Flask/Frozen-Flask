@@ -211,7 +211,9 @@ class Freezer(object):
                 for generated in generator():
                     if isinstance(generated, basestring):
                         url = generated
-                        endpoint = None
+                        # The endpoint defaults to the name of the
+                        # generator function, just like with Flask views.
+                        endpoint = generator.__name__
                     else:
                         if isinstance(generated, Mapping):
                             values = generated
