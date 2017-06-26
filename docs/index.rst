@@ -379,7 +379,8 @@ API reference
 -------------
 
 .. autoclass:: Freezer
-    :members: init_app, root, register_generator, all_urls, freeze, serve, run
+    :members: init_app, root, register_generator, all_urls, freeze,
+              freeze_yield, serve, run
 
 .. autofunction:: walk_directory
 

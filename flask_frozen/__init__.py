@@ -26,7 +26,7 @@ from fnmatch import fnmatch
 from unicodedata import normalize
 from threading import Lock
 from contextlib import contextmanager
-from collections import Mapping
+from collections import Mapping, namedtuple
 from posixpath import relpath as posix_relpath
 try:
     from urllib import unquote
@@ -63,6 +63,9 @@ class NotFoundWarning(FrozenFlaskWarning):
 
 class RedirectWarning(FrozenFlaskWarning):
     pass
+
+
+Page = namedtuple('Page', 'url path')
 
 
 class Freezer(object):
@@ -142,8 +145,22 @@ class Freezer(object):
             unicode(self.app.config['FREEZER_DESTINATION'])
         )
 
-    def freeze(self):
-        """Clean the destination and build all URLs from generators."""
+    def freeze_yield(self):
+        """Like :meth:`freeze`, but yields information about pages as they are
+        being processed. Yields :func:`namedtuples <collections.namedtuple>`
+        ``(url, path)``. This can be used to display progress information,
+        such as printing the information to standard output, or even more
+        sophisticated, e.g. with a :func:`progressbar <click.progressbar>`::
+
+            import click
+
+            with click.progressbar(
+                    freezer.freeze_yield(),
+                    item_show_func=lambda p: p.url if p else 'Done!') as urls:
+                for url in urls:
+                    # everything is already happening, just pass
+                    pass
+        """
         remove_extra = self.app.config['FREEZER_REMOVE_EXTRA_FILES']
         if not os.path.isdir(self.root):
             os.makedirs(self.root)
@@ -165,6 +182,7 @@ class Freezer(object):
             seen_urls.add(url)
             new_filename = self._build_one(url)
             built_files.add(normalize('NFC', new_filename))
+            yield Page(url, os.path.relpath(new_filename, self.root))
 
         self._check_endpoints(seen_endpoints)
         if remove_extra:
@@ -175,7 +193,10 @@ class Freezer(object):
                 if not os.listdir(parent):
                     # The directory is now empty, remove it.
                     os.removedirs(parent)
-        return seen_urls
+
+    def freeze(self):
+        """Clean the destination and build all URLs from generators."""
+        return set(page.url for page in self.freeze_yield())
 
     def all_urls(self):
         """
