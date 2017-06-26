@@ -389,6 +389,14 @@ API reference
 Changelog
 ---------
 
+Version 0.15
+~~~~~~~~~~~~
+
+Released on 2017-06-27.
+
+* Add ``Freezer.freeze_yield()`` method to make progress reporting easier.
+  (Thanks to Miro Hrončok.)
+
 Version 0.14
 ~~~~~~~~~~~~
 
