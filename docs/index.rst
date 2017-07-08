@@ -102,7 +102,7 @@ Let’s say that your application looks like this::
         return render_template('index.html', products=models.Product.all())
 
     @app.route('/product_<int:product_id>/')
-    def product_details():
+    def product_details(product_id):
         product = models.Product.get_or_404(id=product_id)
         return render_template('product.html', product=product)
 
