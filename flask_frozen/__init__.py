@@ -16,7 +16,6 @@ __all__ = ['Freezer', 'walk_directory', 'relative_url_for']
 
 VERSION = '0.16'
 
-
 import os.path
 import mimetypes
 import warnings
@@ -28,6 +27,8 @@ from threading import Lock
 from contextlib import contextmanager
 from collections import Mapping, namedtuple
 from posixpath import relpath as posix_relpath
+import datetime
+
 try:
     from urllib import unquote
     from urlparse import urlsplit
@@ -174,13 +175,13 @@ class Freezer(object):
         seen_endpoints = set()
         built_files = set()
 
-        for url, endpoint in self._generate_all_urls():
+        for url, endpoint, last_modified in self._generate_all_urls():
             seen_endpoints.add(endpoint)
             if url in seen_urls:
                 # Don't build the same URL more than once
                 continue
             seen_urls.add(url)
-            new_filename = self._build_one(url)
+            new_filename = self._build_one(url, last_modified)
             built_files.add(normalize('NFC', new_filename))
             yield Page(url, os.path.relpath(new_filename, self.root))
 
@@ -208,7 +209,7 @@ class Freezer(object):
             generated from :func:`~flask.url_for` calls will not be included
             here.
         """
-        for url, _endpoint in self._generate_all_urls():
+        for url, _endpoint, last_modified in self._generate_all_urls():
             yield url
 
     def _script_name(self):
@@ -233,15 +234,21 @@ class Freezer(object):
                     if isinstance(generated, basestring):
                         url = generated
                         endpoint = None
+                        last_modified = None
                     else:
                         if isinstance(generated, Mapping):
                             values = generated
                             # The endpoint defaults to the name of the
                             # generator function, just like with Flask views.
                             endpoint = generator.__name__
+                            last_modified = None
                         else:
                             # Assume a tuple.
-                            endpoint, values = generated
+                            if len(generated)==2:
+                                endpoint, values = generated
+                                last_modified = None
+                            else:
+                                endpoint, values, last_modified = generated
                         url = url_for(endpoint, **values)
                         assert url.startswith(script_name), (
                             'url_for returned an URL %r not starting with '
@@ -259,7 +266,7 @@ class Freezer(object):
                     url = parsed_url.path
                     if not isinstance(url, unicode):
                         url = url.decode(url_encoding)
-                    yield url, endpoint
+                    yield url, endpoint, last_modified
 
     def _check_endpoints(self, seen_endpoints):
         """
@@ -282,7 +289,7 @@ class Freezer(object):
                 MissingURLGeneratorWarning,
                 stacklevel=3)
 
-    def _build_one(self, url):
+    def _build_one(self, url, last_modified=None):
         """Get the given ``url`` from the app and write the matching file."""
         client = self.app.test_client()
         base_url = self.app.config['FREEZER_BASE_URL']
@@ -294,8 +301,10 @@ class Freezer(object):
         filename = os.path.join(self.root, *destination_path.split('/'))
 
         skip = self.app.config['FREEZER_SKIP_EXISTING']
-        if skip and os.path.isfile(filename):
-            return filename
+        if os.path.isfile(filename):
+            mtime = datetime.datetime.fromtimestamp(os.path.getmtime(filename))
+            if (last_modified is not None and mtime>=last_modified) or skip:
+                return filename
 
         with conditional_context(self.url_for_logger, self.log_url_for):
             with conditional_context(patch_url_for(self.app),
