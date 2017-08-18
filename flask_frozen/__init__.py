@@ -16,6 +16,7 @@ __all__ = ['Freezer', 'walk_directory', 'relative_url_for']
 
 VERSION = '0.16'
 
+import datetime
 import os.path
 import mimetypes
 import warnings
@@ -27,7 +28,6 @@ from threading import Lock
 from contextlib import contextmanager
 from collections import Mapping, namedtuple
 from posixpath import relpath as posix_relpath
-import datetime
 
 try:
     from urllib import unquote
