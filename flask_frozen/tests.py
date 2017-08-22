@@ -12,6 +12,8 @@
 
 """
 
+import datetime
+import time
 import unittest
 import tempfile
 import shutil
@@ -406,7 +408,6 @@ class TestFreezer(unittest.TestCase):
             with open(os.path.join(temp, 'skipped.html')) as f:
                 self.assertEqual(f.read(), '6*9')
 
-
 class TestWarnings(unittest.TestCase):
     def test_warnings_share_common_superclass(self):
         with catch_warnings(record=True) as logged_warnings:
@@ -492,6 +493,36 @@ class TestStaticIgnore(TestFreezer):
     filenames = TestFreezer.filenames.copy()
     del expected_output[u'/static/main.js']
     del filenames[u'/static/main.js']
+
+class TestLastModifiedGenerator(TestFreezer):
+    def test_generate_last_modified(self):
+        """
+            Yield two pages. One is last_modified in the past, and one is last_modified now.
+            The first page should only be written on the first run.
+            The second page should be written on both runs.
+        """
+        with self.make_app() as (temp, app, freezer):
+            @app.route(u'/time/<when>/')
+            def show_time(when):
+                return when+datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+            @freezer.register_generator
+            def view_post():
+                yield 'show_time', {'when': 'epoch'}, datetime.datetime.fromtimestamp(0)
+                yield 'show_time', {'when': 'now'}, datetime.datetime.now()
+
+            freezer.freeze()
+
+            first_mtimes = {k:os.path.getmtime(os.path.join(temp,'time',k,'index.html')) for k in ['epoch', 'now']}
+
+            time.sleep(2)
+
+            freezer.freeze()
+
+            second_mtimes = {k:os.path.getmtime(os.path.join(temp,'time',k,'index.html')) for k in ['epoch', 'now']}
+
+            self.assertEqual(first_mtimes['epoch'],second_mtimes['epoch'])
+            self.assertNotEqual(first_mtimes['now'],second_mtimes['now'])
 
 # with_no_argument_rules=False and with_static_files=False are
 # not tested as they produces (expected!) warnings
