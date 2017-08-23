@@ -508,18 +508,18 @@ class TestLastModifiedGenerator(TestFreezer):
 
             @freezer.register_generator
             def view_post():
-                yield 'show_time', {'when': 'epoch'}, datetime.datetime.fromtimestamp(0)
+                yield 'show_time', {'when': 'epoch'}, datetime.datetime.fromtimestamp(100000)
                 yield 'show_time', {'when': 'now'}, datetime.datetime.now()
 
             freezer.freeze()
 
-            first_mtimes = {k:os.path.getmtime(os.path.join(temp,'time',k,'index.html')) for k in ['epoch', 'now']}
+            first_mtimes = dict((k,os.path.getmtime(os.path.join(temp,'time',k,'index.html'))) for k in ['epoch', 'now'])
 
             time.sleep(2)
 
             freezer.freeze()
 
-            second_mtimes = {k:os.path.getmtime(os.path.join(temp,'time',k,'index.html')) for k in ['epoch', 'now']}
+            second_mtimes = dict((k,os.path.getmtime(os.path.join(temp,'time',k,'index.html'))) for k in ['epoch', 'now'])
 
             self.assertEqual(first_mtimes['epoch'],second_mtimes['epoch'])
             self.assertNotEqual(first_mtimes['now'],second_mtimes['now'])
