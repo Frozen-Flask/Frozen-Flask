@@ -127,6 +127,11 @@ You can specify a different endpoint by yielding a ``(endpoint, values)``
 tuple instead of just ``values``, or you can by-pass ``url_for`` and simply
 yield URLs as strings.
 
+You can avoid re-freezing URLs by yielding a tuple ``(endpoint, values, time)``, 
+where ``time`` is a ``datetime.datetime`` object. The URL will only be frozen
+if the corresponding output file doesn't exist, or was last modified earlier 
+than ``time``.
+
 Also, generator functions do not have to be `Python generators
 <http://docs.python.org/glossary.html#term-generator>`_ using ``yield``,
 they can be any callable and return any iterable object.
