@@ -301,6 +301,8 @@ class Freezer(object):
         filename = os.path.join(self.root, *destination_path.split('/'))
 
         skip = self.app.config['FREEZER_SKIP_EXISTING']
+        if callable(skip):
+            skip = skip(url, filename)
         if os.path.isfile(filename):
             mtime = datetime.datetime.fromtimestamp(os.path.getmtime(filename))
             if (last_modified is not None and mtime>=last_modified) or skip:

@@ -127,9 +127,9 @@ You can specify a different endpoint by yielding a ``(endpoint, values)``
 tuple instead of just ``values``, or you can by-pass ``url_for`` and simply
 yield URLs as strings.
 
-You can avoid re-freezing URLs by yielding a tuple ``(endpoint, values, time)``, 
+You can avoid re-freezing URLs by yielding a tuple ``(endpoint, values, time)``,
 where ``time`` is a ``datetime.datetime`` object. The URL will only be frozen
-if the corresponding output file doesn't exist, or was last modified earlier 
+if the corresponding output file doesn't exist, or was last modified earlier
 than ``time``.
 
 Also, generator functions do not have to be `Python generators
@@ -310,11 +310,17 @@ are accepted:
 
 ``FREEZER_SKIP_EXISTING``
     If set to ``True`` (defaults ``False``), Frozen-Flask will skip the
-    generation of files that already exist in the build directory,
-    even if the contents would have been different. Useful if your generation
-    takes up a very long time and you only want to generate new files.
+    generation of files that already exist in the build directory, even if the
+    contents would have been different. If set to a function that takes two
+    arguments ``url`` and ``filename`` and returns a ``bool``, a file is
+    skipped only if the return value of the function is ``True`` when passed
+    the URL and on-disk path of the file. Useful if your generation takes up a
+    very long time and you want to skip some or all of the existing files.
 
     .. versionadded:: 0.14
+
+    .. versionadded:: 0.16
+       ``FREEZER_SKIP_EXISTING`` now accepts function values.
 
 .. _mime-types:
 
@@ -409,7 +415,7 @@ Released on 2017-03-22.
 
 * Add the ``FREEZER_SKIP_EXISTING`` configuration to skip generation
   of files already in the build directory. (Thanks to Antoine Goutenoir.)
-* Add shared superclass ``FrozenFlaskWarning`` for all warnings. 
+* Add shared superclass ``FrozenFlaskWarning`` for all warnings.
   (Thanks to Miro Hrončok.)
 
 Version 0.13
