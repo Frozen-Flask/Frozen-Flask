@@ -397,6 +397,17 @@ API reference
 
 .. autofunction:: relative_url_for
 
+Building documentation locally
+------------------------------
+
+To build documentation locally, you'll have to install sphinx and the Flask sphinx theme::
+
+  python -m pip install sphinx Flask-Sphinx-Themes
+
+Then, use the setuptools command to build the documentation, which will be generated in `docs/_build/`::
+
+  python setup.py build_sphinx
+
 Changelog
 ---------
 
