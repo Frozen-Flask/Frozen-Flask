@@ -356,6 +356,9 @@ class Freezer(object):
 
         # Write the file, but only if its content has changed
         content = response.data
+
+        self.process_page_content(url, content)
+
         if os.path.isfile(filename):
             with open(filename, 'rb') as fd:
                 previous_content = fd.read()
@@ -369,6 +372,11 @@ class Freezer(object):
 
         response.close()
         return filename
+
+    def process_page_content(self, url, content):
+        """
+        Can be used to access rendered content while freezing.
+        """
 
     def urlpath_to_filepath(self, path):
         """

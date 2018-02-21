@@ -391,11 +391,22 @@ API reference
 
 .. autoclass:: Freezer
     :members: init_app, root, register_generator, all_urls, freeze,
-              freeze_yield, serve, run
+              freeze_yield, serve, run, process_page_content
 
 .. autofunction:: walk_directory
 
 .. autofunction:: relative_url_for
+
+Building documentation locally
+------------------------------
+
+To build documentation locally, you'll have to install sphinx and the Flask sphinx theme::
+
+  python -m pip install sphinx Flask-Sphinx-Themes
+
+Then, use the setuptools command to build the documentation, which will be generated in `docs/_build/`::
+
+  python setup.py build_sphinx
 
 Changelog
 ---------
