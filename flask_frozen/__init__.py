@@ -430,6 +430,12 @@ class Freezer(object):
         assert unwrap_method(Blueprint.send_static_file) is send_static_file
 
         for rule in self.app.url_map.iter_rules():
+            # static rules should have exactly one argument, the filename
+            # however, additional arguments can be happen because of
+            # url_prefixes, or url_defaults. We skip those.
+            if len(rule.arguments) != 1:
+                continue
+
             view = self.app.view_functions[rule.endpoint]
             if unwrap_method(view) is send_static_file:
                 yield rule.endpoint
