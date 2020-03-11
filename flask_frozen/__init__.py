@@ -26,8 +26,13 @@ from fnmatch import fnmatch
 from unicodedata import normalize
 from threading import Lock
 from contextlib import contextmanager
-from collections import Mapping, namedtuple
+from collections import namedtuple
 from posixpath import relpath as posix_relpath
+
+try:
+    from collections.abc import Mapping  # Python 3.3+
+except ImportError:
+    from collections import Mapping, namedtuple
 
 try:
     from urllib import unquote
