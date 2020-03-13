@@ -527,8 +527,6 @@ class TestLastModifiedGenerator(TestFreezer):
             self.assertNotEqual(first_mtimes['now'],second_mtimes['now'])
 
 class TestPythonCompatibilityWarnings(unittest.TestCase):
-    # see https://stackoverflow.com/a/684186/325365
-
     def test_importing_collections(self):
         ps = subprocess.check_output([sys.executable, 'flask_frozen/__init__.py'],
                                      stderr=subprocess.STDOUT)
