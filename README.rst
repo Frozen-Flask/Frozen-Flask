@@ -15,9 +15,20 @@ Build Status
 .. image:: https://img.shields.io/travis/Frozen-Flask/Frozen-Flask.svg?maxAge=2592000
    :target: https://travis-ci.org/Frozen-Flask/Frozen-Flask
 
+Contributing
+------------
+
+* Fork the upstream repository and clone your fork
+* Create a feature branch for the thing you want to work on
+* Create a virtual environment and activate it
+* Run ``pip install -e .`` to install dependencies
+* Use ``tox`` or ``python -m flask_frozen.tests`` to run tests
+* Do your changes, make sure tests pass
+* Send a Pull Request to the upstream repository
+
 License
 -------
 
-Frozen-Flask is uses a BSD 3-clause license. See LICENSE_.
+Frozen-Flask uses a BSD 3-clause license. See LICENSE_.
 
 .. _LICENSE: LICENSE
