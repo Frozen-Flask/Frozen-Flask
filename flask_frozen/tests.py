@@ -23,6 +23,8 @@ import hashlib
 from contextlib import contextmanager
 from unicodedata import normalize
 from warnings import catch_warnings
+import sys
+import subprocess
 
 from flask_frozen import (Freezer, walk_directory,
     FrozenFlaskWarning, MissingURLGeneratorWarning, MimetypeMismatchWarning,
@@ -523,6 +525,14 @@ class TestLastModifiedGenerator(TestFreezer):
 
             self.assertEqual(first_mtimes['epoch'],second_mtimes['epoch'])
             self.assertNotEqual(first_mtimes['now'],second_mtimes['now'])
+
+class TestPythonCompatibilityWarnings(unittest.TestCase):
+    def test_importing_collections(self):
+        ps = subprocess.check_output([sys.executable, 'flask_frozen/__init__.py'],
+                                     stderr=subprocess.STDOUT)
+        stderr = ps.decode('utf-8').lower()
+        assert 'deprecationwarning' not in stderr
+        assert 'using or importing the abcs' not in stderr
 
 # with_no_argument_rules=False and with_static_files=False are
 # not tested as they produces (expected!) warnings
