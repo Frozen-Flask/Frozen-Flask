@@ -12,8 +12,8 @@ See documentation: http://pythonhosted.org/Frozen-Flask/
 Build Status
 ------------
 
-.. image:: https://img.shields.io/travis/Frozen-Flask/Frozen-Flask.svg?maxAge=2592000
-   :target: https://travis-ci.org/Frozen-Flask/Frozen-Flask
+.. image:: https://github.com/Frozen-Flask/Frozen-Flask/workflows/CI/badge.svg?branch=master
+   :target: https://github.com/Frozen-Flask/Frozen-Flask/actions
 
 Contributing
 ------------
