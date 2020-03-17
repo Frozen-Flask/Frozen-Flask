@@ -8,9 +8,9 @@ without any server-side software other than a traditional web server.
 Links
 `````
 
-* `documentation <http://pythonhosted.org/Frozen-Flask/>`_
+* `documentation <https://pythonhosted.org/Frozen-Flask/>`_
 * `development version
-  <http://github.com/Frozen-Flask/Frozen-Flask/zipball/master#egg=Frozen-Flask-dev>`_
+  <https://github.com/Frozen-Flask/Frozen-Flask/zipball/master#egg=Frozen-Flask-dev>`_
 """
 
 import re

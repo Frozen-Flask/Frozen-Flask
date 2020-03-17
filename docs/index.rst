@@ -7,7 +7,7 @@ Frozen-Flask freezes a `Flask`_ application into a set of static files.
 The result can be hosted without any server-side software other than a
 traditional web server.
 
-.. _Flask: http://flask.pocoo.org/
+.. _Flask: https://palletsprojects.com/p/flask/
 
 **Note:** This project used to be called Flask-Static.
 
@@ -78,7 +78,7 @@ in your application.
 The following URLs can be found automatically:
 
 * Static files handled by Flask for your application or any of its
-  `blueprints <http://flask.pocoo.org/docs/blueprints/>`_.
+  `blueprints <https://flask.palletsprojects.com/blueprints/>`_.
 * Views with no variable parts in the URL, if they accept the ``GET`` method.
 * *New in version 0.6:* Results of calls to :func:`flask.url_for` made by your
   application in the request for another URL.
@@ -133,7 +133,7 @@ if the corresponding output file doesn't exist, or was last modified earlier
 than ``time``.
 
 Also, generator functions do not have to be `Python generators
-<http://docs.python.org/glossary.html#term-generator>`_ using ``yield``,
+<https://docs.python.org/glossary.html#term-generator>`_ using ``yield``,
 they can be any callable and return any iterable object.
 
 All of these are thus equivalent::
@@ -195,7 +195,7 @@ templates or static files. Because of that, you probably want to use
 :meth:`Freezer.run` only for testing the URL generators. For everything
 else use the usual :meth:`app.run() <flask.Flask.run>`.
 
-`Flask-Script <http://packages.python.org/Flask-Script/>`_ may come in handy
+`Flask-Script <https://flask-script.readthedocs.io/>`_ may come in handy
 here.
 
 Controlling What Is Followed
@@ -212,7 +212,7 @@ Configuration
 -------------
 
 Frozen-Flask can be configured using Flask’s `configuration system
-<http://flask.pocoo.org/docs/config/>`_. The following configuration values
+<https://flask.palletsprojects.com/config/>`_. The following configuration values
 are accepted:
 
 ``FREEZER_BASE_URL``
@@ -487,7 +487,7 @@ Released on 2011-10-20.
 * **Backward incompatible change:** Moved the ``flaskext.frozen`` package
   to ``flask_frozen``. You should change your imports either to that or
   to ``flask.ext.frozen`` if you’re using Flask 0.8 or more recent.
-  See `Flask’s documentation <http://flask.pocoo.org/docs/extensions/>`_
+  See `Flask’s documentation <https://flask.palletsprojects.com/extensions/>`_
   for details.
 * Added FREEZER_DEFAULT_MIMETYPE
 * Switch to tox for testing in multiple Python versions
