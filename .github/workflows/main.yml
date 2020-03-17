@@ -1,0 +1,22 @@
+name: CI
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest    
+    strategy:
+      matrix:
+        python: [2.7, 3.7]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install Python
+      uses: actions/setup-python@v1.2.0
+      with:
+        python-version: ${{ matrix.python }}
+
+    - name: Install dependencies
+      run: pip install -e .
+
+    - name: Run tests
+      run: python -m flask_frozen.tests
