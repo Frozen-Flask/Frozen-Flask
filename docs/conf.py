@@ -28,9 +28,9 @@ sys.path.append(os.path.abspath('_themes'))
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx']
 
-intersphinx_mapping = {'flask': ('http://flask.pocoo.org/docs/', None),
+intersphinx_mapping = {'flask': ('https://flask.palletsprojects.com/', None),
                        'python': ('https://docs.python.org/3/', None),
-                       'click': ('http://click.pocoo.org/', None)}
+                       'click': ('https://click.palletsprojects.com/', None)}
 
 
 # Add any paths that contain templates here, relative to this directory.
