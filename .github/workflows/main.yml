@@ -2,10 +2,10 @@ name: CI
 on: push
 jobs:
   build:
-    runs-on: ubuntu-latest    
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: [2.7, 3.7]
+        python: [2.6, 2.7, 3.4, 3.5, 3.6, 3.7, pypy2, pypy3]
     steps:
     - name: Checkout
       uses: actions/checkout@v2
