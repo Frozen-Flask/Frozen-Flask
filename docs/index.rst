@@ -110,7 +110,7 @@ If, for some reason, some products pages are not linked from another page
 (or these links are not built by :func:`~flask.url_for`), Frozen-Flask will
 not find them.
 
-To tell Frozen-Flask about them, write an URL generator and put it after
+To tell Frozen-Flask about them, write a URL generator and put it after
 creating your :class:`Freezer` instance and before calling
 :meth:`~Freezer.freeze`::
 
@@ -524,7 +524,7 @@ Released on 2011-07-24.
   register the app later with :meth:`Freezer.init_app`.
 * The ``FREEZER_DESTINATION`` directory is created if it does not exist.
 * New configuration: ``FREEZER_REMOVE_EXTRA_FILES``
-* Warn if an URL generator seems to be missing. (ie. if no URL was generated
+* Warn if a URL generator seems to be missing. (ie. if no URL was generated
   for a given endpoint.)
 * Write Unicode filenames instead of UTF-8. Non-ASCII filenames are often
   undefined territory anyway.
