@@ -35,8 +35,8 @@ except ImportError:
     from collections import Mapping  # Python 2.7
 
 try:
-    from urllib import unquote
     from urlparse import urlsplit
+    from werkzeug.urls import url_unquote as unquote
 except ImportError:  # Python 3
     from urllib.parse import urlsplit, unquote
 
