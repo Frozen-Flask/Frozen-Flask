@@ -273,18 +273,19 @@ class Freezer(object):
                     if not isinstance(url, unicode):
                         url = url.decode(url_encoding)
                     # Skip if a blacklisted endpoint or url
-                    if any(fnmatch(url, pattern) or fnmatch(endpoint, pattern) for pattern in self.app.config['FREEZER_BLACKLIST']):
-+                        continue
+                    if any((url and fnmatch(url, pattern)) or (endpoint and fnmatch(endpoint, pattern)) for pattern in self.app.config['FREEZER_BLACKLIST']):
+                        continue
                     yield url, endpoint, last_modified
 
     def _check_endpoints(self, seen_endpoints):
         """
-        Warn if some of the app's endpoints are not in seen_endpoints.
+        Warn if some of the app's endpoints are not in seen_endpoints unless in blacklist.
         """
         get_endpoints = set(
             rule.endpoint for rule in self.app.url_map.iter_rules()
             if 'GET' in rule.methods)
-        not_generated_endpoints = get_endpoints - seen_endpoints
+        # The result of removing the seen and blacklisted endpoints from the possible endpoints
+        not_generated_endpoints = set([endpoint for endpoint in (get_endpoints - seen_endpoints) if not any([fnmatch(endpoint, pattern) for pattern in self.app.config['FREEZER_BLACKLIST']])])
 
         if self.static_files_urls in self.url_generators:
             # Special case: do not warn when there is no static file
