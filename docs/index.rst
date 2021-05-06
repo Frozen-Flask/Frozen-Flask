@@ -322,6 +322,15 @@ are accepted:
     .. versionadded:: 0.16
        ``FREEZER_SKIP_EXISTING`` now accepts function values.
 
+``FREEZER_BLACKLIST``
+    A list (defaults empty) of :mod:`fnmatch` patterns.
+    Generated urls or endpoints that match any of these patterns are blocked and
+    will not be frozen. This can be useful for libraries that you want to use
+    but not save in the build.
+
+
+    .. versionadded:: 0.16
+
 .. _mime-types:
 
 Filenames and MIME types
