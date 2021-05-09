@@ -114,7 +114,7 @@ class Freezer(object):
             self.url_for_logger = UrlForLogger(app)
             app.config.setdefault('FREEZER_DESTINATION', 'build')
             app.config.setdefault('FREEZER_DESTINATION_IGNORE', [])
-            app.config.setdefault('FREEZER_BLACKLIST', [])
+            app.config.setdefault('FREEZER_BLOCKLIST', [])
             app.config.setdefault('FREEZER_STATIC_IGNORE', [])
             app.config.setdefault('FREEZER_BASE_URL', None)
             app.config.setdefault('FREEZER_REMOVE_EXTRA_FILES', True)
@@ -272,20 +272,20 @@ class Freezer(object):
                     url = parsed_url.path
                     if not isinstance(url, unicode):
                         url = url.decode(url_encoding)
-                    # Skip if a blacklisted endpoint or url
-                    if any((url and fnmatch(url, pattern)) or (endpoint and fnmatch(endpoint, pattern)) for pattern in self.app.config['FREEZER_BLACKLIST']):
+                    # Skip if a blocked endpoint or url
+                    if any((url and fnmatch(url, pattern)) or (endpoint and fnmatch(endpoint, pattern)) for pattern in self.app.config['FREEZER_BLOCKLIST']):
                         continue
                     yield url, endpoint, last_modified
 
     def _check_endpoints(self, seen_endpoints):
         """
-        Warn if some of the app's endpoints are not in seen_endpoints unless in blacklist.
+        Warn if some of the app's endpoints are not in seen_endpoints unless in blocklist.
         """
         get_endpoints = set(
             rule.endpoint for rule in self.app.url_map.iter_rules()
             if 'GET' in rule.methods)
-        # The result of removing the seen and blacklisted endpoints from the possible endpoints
-        not_generated_endpoints = set([endpoint for endpoint in (get_endpoints - seen_endpoints) if not any([fnmatch(endpoint, pattern) for pattern in self.app.config['FREEZER_BLACKLIST']])])
+        # The result of removing the seen and blocked endpoints from the possible endpoints
+        not_generated_endpoints = set([endpoint for endpoint in (get_endpoints - seen_endpoints) if not any([fnmatch(endpoint, pattern) for pattern in self.app.config['FREEZER_BLOCKLIST']])])
 
         if self.static_files_urls in self.url_generators:
             # Special case: do not warn when there is no static file
