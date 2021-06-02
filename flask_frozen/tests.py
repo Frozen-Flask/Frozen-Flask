@@ -30,6 +30,7 @@ from flask_frozen import (Freezer, walk_directory,
     FrozenFlaskWarning, MissingURLGeneratorWarning, MimetypeMismatchWarning,
     NotFoundWarning, RedirectWarning)
 from flask_frozen import test_app
+import flask_frozen
 
 try:
     unicode
@@ -528,7 +529,8 @@ class TestLastModifiedGenerator(TestFreezer):
 
 class TestPythonCompatibilityWarnings(unittest.TestCase):
     def test_importing_collections(self):
-        ps = subprocess.check_output([sys.executable, 'flask_frozen/__init__.py'],
+        flask_script_path = flask_frozen.__file__
+        ps = subprocess.check_output([sys.executable, flask_script_path],
                                      stderr=subprocess.STDOUT)
         stderr = ps.decode('utf-8').lower()
         assert 'deprecationwarning' not in stderr
