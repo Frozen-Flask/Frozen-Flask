@@ -438,8 +438,11 @@ class Freezer(object):
             view = self.app.view_functions[rule.endpoint]
             if unwrap_method(view) is send_static_file:
                 yield rule.endpoint
-            # This check for the string literal 'static' relies on Flask
-            # implementation internals and is fragile
+            # Flask has historically always used the literal string 'static' to
+            # refer to the static file serving endpoint.  Arguably this could
+            # be considered fragile; equally it is unlikely to change.  See
+            # https://github.com/pallets/flask/discussions/4136 for some
+            # related discussion.
             elif rule.endpoint == 'static':
                 yield rule.endpoint
 
