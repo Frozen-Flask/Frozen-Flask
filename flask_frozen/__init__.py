@@ -438,6 +438,10 @@ class Freezer(object):
             view = self.app.view_functions[rule.endpoint]
             if unwrap_method(view) is send_static_file:
                 yield rule.endpoint
+            # This check for the string literal 'static' relies on Flask
+            # implementation internals and is fragile
+            elif rule.endpoint == 'static':
+                yield rule.endpoint
 
     def static_files_urls(self):
         """
@@ -445,7 +449,7 @@ class Freezer(object):
         """
         for endpoint in self._static_rules_endpoints():
             view = self.app.view_functions[endpoint]
-            app_or_blueprint = method_self(view)
+            app_or_blueprint = method_self(view) or self.app
             root = app_or_blueprint.static_folder
             ignore = self.app.config['FREEZER_STATIC_IGNORE']
             if root is None or not os.path.isdir(root):
@@ -566,8 +570,12 @@ def method_self(method):
         # Python 2
         return method.im_self
     except AttributeError:
-        # Python 3
-        return method.__self__
+        try:
+            # Python 3
+            return method.__self__
+        except AttributeError:
+            # Not a method.
+            return
 
 
 @contextmanager
