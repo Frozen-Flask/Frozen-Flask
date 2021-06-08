@@ -39,7 +39,7 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=[
-        'Flask >= 1.1.0',
+        'Flask >= 1.1.0, < 2.0',
     ],
     classifiers=[
         'Environment :: Web Environment',
