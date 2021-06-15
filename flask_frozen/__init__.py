@@ -14,7 +14,7 @@
 
 __all__ = ['Freezer', 'walk_directory', 'relative_url_for']
 
-VERSION = '0.17'
+VERSION = '0.18'
 
 import datetime
 import os.path
