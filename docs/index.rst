@@ -329,7 +329,7 @@ are accepted:
     but not save in the build.
 
 
-    .. versionadded:: 0.16
+    .. versionadded:: 0.19
 
 .. _mime-types:
 
