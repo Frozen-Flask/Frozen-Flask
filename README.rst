@@ -30,7 +30,7 @@ Maintainers
 -----------
 
 - `@honzajavorek <https://github.com/honzajavorek>`__ - Dedicates around an hour per week or less, which means just occasional PR reviews, releases and minor fixes.
-- `@tswast <https://github.com/tswast>`__ - Occasional `Deus ex machina <https://en.wikipedia.org/wiki/Deus_ex_machina>`__
+- `@tswast <https://github.com/tswast>`__ - Occasional `Deus ex machina <https://en.wikipedia.org/wiki/Deus_ex_machina>`__.
 - `@SimonSapin <https://github.com/SimonSapin>`__ - Inactive, but has his picture in our Hall of Fame for creating the project.
 
 If you want to join the list, you can generally qualify yourself by contributing to the project with a few Pull Requests (don't forget tests).
