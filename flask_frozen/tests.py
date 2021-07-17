@@ -26,6 +26,8 @@ from warnings import catch_warnings
 import sys
 import subprocess
 
+from flask import redirect
+
 from flask_frozen import (Freezer, walk_directory,
     FrozenFlaskWarning, MissingURLGeneratorWarning, MimetypeMismatchWarning,
     NotFoundWarning, RedirectWarning)
@@ -410,6 +412,17 @@ class TestFreezer(unittest.TestCase):
             freezer.freeze()
             with open(os.path.join(temp, 'skipped.html')) as f:
                 self.assertEqual(f.read(), '6*9')
+
+    def test_error_external_redirect(self):
+        with self.make_app() as (temp, app, freezer):
+            app.config['FREEZER_REDIRECT_POLICY'] = 'follow'
+            # Add a new endpoint with external redirect
+            @app.route('/redirect/ext/')
+            def external_redirected_page():
+                return redirect('https://github.com/Frozen-Flask/Frozen-Flask')
+
+            with self.assertRaises(RuntimeError):
+                freezer.freeze()
 
 class TestWarnings(unittest.TestCase):
     def test_warnings_share_common_superclass(self):
