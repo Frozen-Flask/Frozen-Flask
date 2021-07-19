@@ -300,11 +300,13 @@ are accepted:
     .. versionadded:: 0.12
 
 ``FREEZER_REDIRECT_POLICY``
-    The policy for handling redirects. The default is ``'follow'`` which means
-    that when a redirect response is encountered it will follow it to get the
-    content from the redirected location. ``'ignore'`` will not stop freezing,
-    but no content will appear in the redirected location. ``'error'`` will
-    raise an exception if a redirect is encountered.
+    The policy for handling redirects. This can be:
+    * ``'follow'`` (default): when a redirect response is encountered,
+      Frozen-Flask will follow it to get the content from the redirected
+      location. Note that redirects to external pages are not supported.
+    * ``'ignore'``: freezing will continue, but no content will appear in the
+      redirecting location.
+    * ``'error'`` : raise an exception if a redirect is encountered.
 
     .. versionadded:: 0.13
 
