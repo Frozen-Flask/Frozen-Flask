@@ -302,7 +302,7 @@ are accepted:
 ``FREEZER_REDIRECT_POLICY``
     The policy for handling redirects. This can be:
     * ``'follow'`` (default): when a redirect response is encountered,
-      Frozen-Flask it will follow it to get the content from the redirected
+      Frozen-Flask will follow it to get the content from the redirected
       location. Note that redirects to external pages are not supported.
     * ``'ignore'``: freezing will continue, but no content will appear in the
       redirecting location.
