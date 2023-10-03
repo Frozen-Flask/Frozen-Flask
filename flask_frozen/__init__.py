@@ -229,7 +229,7 @@ class Freezer(object):
         Run all generators and yield (url, endpoint) tuples.
         """
         script_name = self._script_name()
-        url_encoding = self.app.url_map.charset
+        url_encoding = getattr(self.app.url_map, 'charset', 'utf-8')
         url_generators = list(self.url_generators)
         url_generators += [self.url_for_logger.iter_calls]
         # A request context is required to use url_for
