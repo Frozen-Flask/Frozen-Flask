@@ -229,7 +229,8 @@ class Freezer(object):
         Run all generators and yield (url, endpoint) tuples.
         """
         script_name = self._script_name()
-        url_encoding = self.app.url_map.charset
+        # Charset is always set to UTF-8 since Werkzeug 2.3.0
+        url_encoding = getattr(self.app.url_map, 'charset', 'utf-8')
         url_generators = list(self.url_generators)
         url_generators += [self.url_for_logger.iter_calls]
         # A request context is required to use url_for
@@ -427,16 +428,13 @@ class Freezer(object):
         """
         Yield the 'static' URL rules for the app and all blueprints.
         """
-        send_static_file = unwrap_method(Flask.send_static_file)
-        # Assumption about a Flask internal detail:
-        # Flask and Blueprint inherit the same method.
-        # This will break loudly if the assumption isn't valid anymore in
-        # a future version of Flask
-        assert unwrap_method(Blueprint.send_static_file) is send_static_file
+        send_static_file_functions = (
+            unwrap_method(Flask.send_static_file),
+            unwrap_method(Blueprint.send_static_file))
 
         for rule in self.app.url_map.iter_rules():
             view = self.app.view_functions[rule.endpoint]
-            if unwrap_method(view) is send_static_file:
+            if unwrap_method(view) in send_static_file_functions:
                 yield rule.endpoint
             # Flask has historically always used the literal string 'static' to
             # refer to the static file serving endpoint.  Arguably this could
