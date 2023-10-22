@@ -124,9 +124,9 @@ class TestFreezer(unittest.TestCase):
         u'/product_4/': b'Product num 4',
         u'/product_5/': b'Product num 5',
         u'/static/favicon.ico': read_file(test_app.FAVICON),
-        u'/static/style.css': b'/* Main CSS */\n',
-        u'/static/main.js': b'/* Main JS */\n',
-        u'/admin/css/style.css': b'/* Admin CSS */\n',
+        u'/static/style.css': b'/* Main CSS */',
+        u'/static/main.js': b'/* Main JS */',
+        u'/admin/css/style.css': b'/* Admin CSS */',
         u'/where_am_i/': b'/where_am_i/ http://localhost/where_am_i/',
         u'/page/foo/': u'Hello\xa0World! foo'.encode('utf8'),
         u'/page/I løvë Unicode/':
