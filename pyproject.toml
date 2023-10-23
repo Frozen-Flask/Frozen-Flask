@@ -10,7 +10,7 @@ authors = [{name = 'Simon Sapin', email = 'simon.sapin@exyr.org'}]
 requires-python = '>=3.8'
 readme = {file = 'README.rst', content-type = 'text/x-rst'}
 license = {file = 'LICENSE'}
-dependencies = ['Flask >=1.1.0']
+dependencies = ['Flask >=2.0.0']
 classifiers = [
   'Environment :: Web Environment',
   'Intended Audience :: Developers',
@@ -55,3 +55,17 @@ build = 'sphinx-build docs docs/_build -a -n'
 
 [tool.hatch.envs.test.scripts]
 run = 'python -m flask_frozen.tests'
+
+[tool.tox]
+legacy_tox_ini = '''
+  [tox]
+  envlist = py38, py39, py310, py311, py312, pypy3, flask-2
+
+  [testenv]
+  commands = python -m flask_frozen.tests
+
+  [testenv:flask-2]
+  deps =
+    flask==2.0.0
+    werkzeug==2.0.0
+'''
