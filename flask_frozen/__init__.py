@@ -609,7 +609,7 @@ class UrlForLogger(object):
                 self.logged_calls.append((endpoint, values.copy()))
 
         # Do not use app.url_defaults() as we want to insert at the front
-        # of the list to get unmodifies values.
+        # of the list to get unmodified values.
         self.app.url_default_functions.setdefault(None, []).insert(0, logger)
 
     def __enter__(self):
