@@ -59,7 +59,8 @@ Page = namedtuple('Page', 'url path')
 
 
 class Freezer:
-    """
+    """Flask app freezer.
+
     :param app: your application or None if you use :meth:`init_app`
     :type app: Flask instance
 
@@ -88,8 +89,7 @@ class Freezer:
         self.init_app(app)
 
     def init_app(self, app):
-        """
-        Allow to register an app after the Freezer initialization.
+        """Allow to register an app after the Freezer initialization.
 
         :param app: your Flask application
         """
@@ -110,8 +110,7 @@ class Freezer:
             app.config.setdefault('FREEZER_SKIP_EXISTING', False)
 
     def register_generator(self, function):
-        """
-        Register a function as an URL generator.
+        """Register a function as an URL generator.
 
         The function should return an iterable of URL paths or
         ``(endpoint, values)`` tuples to be used as
@@ -125,16 +124,17 @@ class Freezer:
 
     @property
     def root(self):
-        """
-        Absolute path to the directory Frozen-Flask writes to,
-        ie. resolved value for the ``FREEZER_DESTINATION`` configuration_.
+        """Absolute path to the directory Frozen-Flask writes to.
+
+        Resolved value for the ``FREEZER_DESTINATION`` configuration_.
         """
         root = Path(self.app.root_path)
         return root / self.app.config['FREEZER_DESTINATION']
 
     def freeze_yield(self):
-        """Like :meth:`freeze`, but yields information about pages as they are
-        being processed. Yields :func:`namedtuples <collections.namedtuple>`
+        """Like :meth:`freeze` but yields info while processing pages.
+
+        Yields :func:`namedtuples <collections.namedtuple>`
         ``(url, path)``. This can be used to display progress information,
         such as printing the information to standard output, or even more
         sophisticated, e.g. with a :func:`progressbar <click.progressbar>`::
@@ -147,6 +147,7 @@ class Freezer:
                 for url in urls:
                     # everything is already happening, just pass
                     pass
+
         """
         remove_extra = self.app.config['FREEZER_REMOVE_EXTRA_FILES']
         self.root.mkdir(parents=True, exist_ok=True)
@@ -181,8 +182,8 @@ class Freezer:
         return set(page.url for page in self.freeze_yield())
 
     def all_urls(self):
-        """
-        Run all generators and yield URLs relative to the app root.
+        """Run all generators and yield URLs relative to the app root.
+
         May be useful for testing URL generators.
 
         .. note::
@@ -194,16 +195,12 @@ class Freezer:
             yield url
 
     def _script_name(self):
-        """
-        Return the path part of FREEZER_BASE_URL, without trailing slash.
-        """
+        """Return the path part of FREEZER_BASE_URL, without trailing slash."""
         base_url = self.app.config['FREEZER_BASE_URL']
         return urlsplit(base_url or '').path.rstrip('/')
 
     def _generate_all_urls(self):
-        """
-        Run all generators and yield (url, endpoint) tuples.
-        """
+        """Run all generators and yield (url, endpoint) tuples."""
         script_name = self._script_name()
         # Charset is always set to UTF-8 since Werkzeug 2.3.0
         url_encoding = getattr(self.app.url_map, 'charset', 'utf-8')
@@ -250,9 +247,7 @@ class Freezer:
                     yield url, endpoint, last_modified
 
     def _check_endpoints(self, seen_endpoints):
-        """
-        Warn if some of the app's endpoints are not in seen_endpoints.
-        """
+        """Warn if some of the app's endpoints are not in seen_endpoints."""
         get_endpoints = set(
             rule.endpoint for rule in self.app.url_map.iter_rules()
             if 'GET' in rule.methods)
@@ -345,9 +340,7 @@ class Freezer:
         return path
 
     def urlpath_to_filepath(self, path):
-        """
-        Convert a URL path like /admin/ to a file path like admin/index.html
-        """
+        """Convert URL path like /admin/ to file path like admin/index.html."""
         if path.endswith('/'):
             path += 'index.html'
         # Remove the initial slash that should always be there
@@ -355,8 +348,7 @@ class Freezer:
         return path[1:]
 
     def serve(self, **options):
-        """
-        Run an HTTP server on the result of the build.
+        """Run an HTTP server on the result of the build.
 
         :param options: passed to :meth:`flask.Flask.run`.
         """
@@ -389,9 +381,7 @@ class Freezer:
         return app
 
     def _static_rules_endpoints(self):
-        """
-        Yield the 'static' URL rules for the app and all blueprints.
-        """
+        """Yield the 'static' URL rules for the app and all blueprints."""
         send_static_file_functions = (
             unwrap_method(Flask.send_static_file),
             unwrap_method(Blueprint.send_static_file))
@@ -409,9 +399,7 @@ class Freezer:
                 yield rule.endpoint
 
     def static_files_urls(self):
-        """
-        URL generator for static files for app and all registered blueprints.
-        """
+        """URL generator for static files for app and all its blueprints."""
         for endpoint in self._static_rules_endpoints():
             view = self.app.view_functions[endpoint]
             app_or_blueprint = method_self(view) or self.app
@@ -431,9 +419,7 @@ class Freezer:
 
 
 def walk_directory(root, ignore=()):
-    """
-    Recursively walk the `root` directory and yield slash-separated paths
-    relative to the root.
+    """Walk the `root` folder and yield slash-separated paths relative to root.
 
     Used to implement the URL generator for static files.
 
@@ -457,8 +443,7 @@ def walk_directory(root, ignore=()):
 
 @contextmanager
 def patch_url_for(app):
-    """
-    Patches ``url_for`` in Jinja globals to use :func:`relative_url_for`.
+    """Patches ``url_for`` in Jinja globals to use :func:`relative_url_for`.
 
     This is a context manager, to be used in a ``with`` statement.
     """
@@ -471,8 +456,7 @@ def patch_url_for(app):
 
 
 def relative_url_for(endpoint, **values):
-    """
-    Like :func:`~flask.url_for`, but returns relative URLs if possible.
+    """Like :func:`~flask.url_for`, but returns relative URLs if possible.
 
     Absolute URLs (with ``_external=True`` or to a different subdomain) are
     unchanged, but eg. ``/foo/bar`` becomes ``../bar``, depending on the
@@ -528,8 +512,7 @@ def conditional_context(context, condition):
 
 
 class UrlForLogger:
-    """
-    Log all calls to url_for() for this app made inside the with block.
+    """Log all calls to url_for() for this app made inside the with block.
 
     Use this object as a context manager in a with block to enable logging.
     """
@@ -559,9 +542,10 @@ class UrlForLogger:
         self._lock.release()
 
     def iter_calls(self):
-        """
-        Return an iterable of (endpoint, values_dict) tuples, one for each
-        call that was made while the logger was enabled.
+        """Yield logged calls of endpoints.
+
+        Return an iterable of (endpoint, values_dict) tuples, one for each call
+        that was made while the logger was enabled.
         """
         # "Iterate" on the call deque while it is still being appended to.
         while self.logged_calls:
@@ -569,10 +553,10 @@ class UrlForLogger:
 
 
 def script_name_middleware(application, script_name):
-    """
-    Wrap a WSGI application in a middleware that moves ``script_name``
-    from the environ's PATH_INFO to SCRIPT_NAME if it is there, and
-    redirect to ``script_name`` otherwise.
+    """Wrap a WSGI app in a middleware to handle custom base URL.
+
+    The middleware moves ``script_name`` from the environ's PATH_INFO to
+    SCRIPT_NAME if it is there, and redirect to ``script_name`` otherwise.
     """
     def new_application(environ, start_response):
         path_info = environ['PATH_INFO']
