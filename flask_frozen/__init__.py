@@ -21,31 +21,16 @@ import os.path
 import posixpath
 import warnings
 from collections import namedtuple
+from collections.abc import Mapping
 from contextlib import contextmanager
 from fnmatch import fnmatch
 from posixpath import relpath as posix_relpath
 from threading import Lock
 from unicodedata import normalize
-
-try:
-    from collections.abc import Mapping  # Python 3
-except ImportError:
-    from collections import Mapping  # Python 2.7
-
-try:
-    from urlparse import urlsplit
-    from werkzeug.urls import url_unquote as unquote
-except ImportError:  # Python 3
-    from urllib.parse import urlsplit, unquote
+from urllib.parse import unquote, urlsplit
 
 from flask import (Blueprint, Flask, redirect, request, send_from_directory,
                    url_for)
-
-try:
-    unicode
-except NameError:  # Python 3
-    unicode = str
-    basestring = str
 
 VERSION = '0.18'
 
@@ -144,10 +129,10 @@ class Freezer(object):
         Absolute path to the directory Frozen-Flask writes to,
         ie. resolved value for the ``FREEZER_DESTINATION`` configuration_.
         """
-        # unicode() will raise if the path is not ASCII or already unicode.
+        # str() will raise if the path is not ASCII or already unicode.
         return os.path.join(
-            unicode(self.app.root_path),
-            unicode(self.app.config['FREEZER_DESTINATION'])
+            str(self.app.root_path),
+            str(self.app.config['FREEZER_DESTINATION'])
         )
 
     def freeze_yield(self):
@@ -236,7 +221,7 @@ class Freezer(object):
         with self.app.test_request_context(base_url=script_name or None):
             for generator in url_generators:
                 for generated in generator():
-                    if isinstance(generated, basestring):
+                    if isinstance(generated, str):
                         url = generated
                         endpoint = None
                         last_modified = None
@@ -269,7 +254,7 @@ class Freezer(object):
 
                     # Remove any query string and fragment:
                     url = parsed_url.path
-                    if not isinstance(url, unicode):
+                    if not isinstance(url, str):
                         url = url.decode(url_encoding)
                     yield url, endpoint, last_modified
 
@@ -290,7 +275,7 @@ class Freezer(object):
             warnings.warn(
                 'Nothing frozen for endpoints %s. Did you forget a URL '
                 'generator?' % ', '.join(
-                    unicode(e) for e in not_generated_endpoints),
+                    str(e) for e in not_generated_endpoints),
                 MissingURLGeneratorWarning,
                 stacklevel=3)
 
@@ -554,30 +539,12 @@ def relative_url_for(endpoint, **values):
 
 def unwrap_method(method):
     """Return the function object for the given method object."""
-    try:
-        # Python 2
-        return method.im_func
-    except AttributeError:
-        try:
-            # Python 3
-            return method.__func__
-        except AttributeError:
-            # Not a method.
-            return method
+    return getattr(method, '__func__', method)
 
 
 def method_self(method):
     """Return the instance a bound method is attached to."""
-    try:
-        # Python 2
-        return method.im_self
-    except AttributeError:
-        try:
-            # Python 3
-            return method.__self__
-        except AttributeError:
-            # Not a method.
-            return
+    return getattr(method, '__self__', None)
 
 
 @contextmanager
