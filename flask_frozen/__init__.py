@@ -233,16 +233,15 @@ class Freezer:
                                 endpoint, values, last_modified = generated
                         url = url_for(endpoint, **values)
                         assert url.startswith(script_name), (
-                            'url_for returned an URL %r not starting with '
-                            'script_name %r. Bug in Werkzeug?'
-                            % (url, script_name)
+                            f'url_for returned an URL {url} not starting with '
+                            f'script_name {script_name!r}. Bug in Werkzeug?'
                         )
                         url = url[len(script_name):]
                     # flask.url_for "quotes" URLs, eg. a space becomes %20
                     url = unquote(url)
                     parsed_url = urlsplit(url)
                     if parsed_url.scheme or parsed_url.netloc:
-                        raise ValueError('External URLs not supported: ' + url)
+                        raise ValueError(f'External URLs not supported: {url}')
 
                     # Remove any query string and fragment:
                     url = parsed_url.path
@@ -264,10 +263,10 @@ class Freezer:
             not_generated_endpoints -= set(self._static_rules_endpoints())
 
         if not_generated_endpoints:
+            endpoints = ', '.join(str(e) for e in not_generated_endpoints)
             warnings.warn(
-                'Nothing frozen for endpoints %s. Did you forget a URL '
-                'generator?' % ', '.join(
-                    str(e) for e in not_generated_endpoints),
+                f'Nothing frozen for endpoints {endpoints}. '
+                'Did you forget a URL generator?',
                 MissingURLGeneratorWarning,
                 stacklevel=3)
 
@@ -303,17 +302,16 @@ class Freezer:
         ignore_404 = self.app.config['FREEZER_IGNORE_404_NOT_FOUND']
         if response.status_code != 200:
             if response.status_code == 404 and ignore_404:
-                warnings.warn('Ignored %r on URL %s' % (response.status, url),
+                warnings.warn(f'Ignored {response.status!r} on URL {url}',
                               NotFoundWarning,
                               stacklevel=3)
             elif response.status_code in (301, 302) and ignore_redirect:
-                warnings.warn('Ignored %r on URL %s' % (response.status, url),
+                warnings.warn(f'Ignored {response.status!r} on URL {url}',
                               RedirectWarning,
                               stacklevel=3)
             else:
                 raise ValueError(
-                    'Unexpected status %r on URL %s' %
-                    (response.status, url))
+                    f'Unexpected status {response.status!r} on URL {url}')
 
         if not self.app.config['FREEZER_IGNORE_MIMETYPE_WARNINGS']:
             # Most web servers guess the mime type of static files by their
@@ -326,9 +324,9 @@ class Freezer:
 
             if not guessed_type == response.mimetype:
                 warnings.warn(
-                    'Filename extension of %r (type %s) does not match '
-                    'Content-Type: %s' %
-                    (path.name, guessed_type, response.content_type),
+                    f'Filename extension of {path.name!r} '
+                    f'(type {guessed_type}) does not match '
+                    f'Content-Type: {response.content_type}',
                     MimetypeMismatchWarning,
                     stacklevel=3)
 
