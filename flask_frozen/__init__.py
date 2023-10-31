@@ -58,7 +58,7 @@ class RedirectWarning(FrozenFlaskWarning):
 Page = namedtuple('Page', 'url path')
 
 
-class Freezer(object):
+class Freezer:
     """
     :param app: your application or None if you use :meth:`init_app`
     :type app: Flask instance
@@ -557,7 +557,7 @@ def conditional_context(context, condition):
         yield
 
 
-class UrlForLogger(object):
+class UrlForLogger:
     """
     Log all calls to url_for() for this app made inside the with block.
 
