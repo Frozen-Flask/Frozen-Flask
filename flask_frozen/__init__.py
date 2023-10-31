@@ -14,21 +14,19 @@
 
 __all__ = ['Freezer', 'walk_directory', 'relative_url_for']
 
-VERSION = '0.18'
-
-import datetime
-import os.path
-import mimetypes
-import warnings
 import collections
+import datetime
+import mimetypes
+import os.path
 import posixpath
-from fnmatch import fnmatch
-from unicodedata import normalize
-from threading import Lock
-from contextlib import contextmanager
-from posixpath import relpath as posix_relpath
-
+import warnings
 from collections import namedtuple
+from contextlib import contextmanager
+from fnmatch import fnmatch
+from posixpath import relpath as posix_relpath
+from threading import Lock
+from unicodedata import normalize
+
 try:
     from collections.abc import Mapping  # Python 3
 except ImportError:
@@ -40,15 +38,16 @@ try:
 except ImportError:  # Python 3
     from urllib.parse import urlsplit, unquote
 
-from werkzeug.exceptions import HTTPException
-from flask import (Flask, Blueprint, url_for, request, send_from_directory,
-                   redirect)
+from flask import (Blueprint, Flask, redirect, request, send_from_directory,
+                   url_for)
 
 try:
     unicode
 except NameError:  # Python 3
     unicode = str
     basestring = str
+
+VERSION = '0.18'
 
 
 class FrozenFlaskWarning(Warning):
@@ -250,7 +249,7 @@ class Freezer(object):
                             last_modified = None
                         else:
                             # Assume a tuple.
-                            if len(generated)==2:
+                            if len(generated) == 2:
                                 endpoint, values = generated
                                 last_modified = None
                             else:
@@ -311,7 +310,7 @@ class Freezer(object):
             skip = skip(url, filename)
         if os.path.isfile(filename):
             mtime = datetime.datetime.fromtimestamp(os.path.getmtime(filename))
-            if (last_modified is not None and mtime>=last_modified) or skip:
+            if (last_modified is not None and mtime >= last_modified) or skip:
                 return filename
 
         with conditional_context(self.url_for_logger, self.log_url_for):
@@ -335,8 +334,9 @@ class Freezer(object):
                               RedirectWarning,
                               stacklevel=3)
             else:
-                raise ValueError('Unexpected status %r on URL %s' \
-                    % (response.status, url))
+                raise ValueError(
+                    'Unexpected status %r on URL %s' %
+                    (response.status, url))
 
         if not self.app.config['FREEZER_IGNORE_MIMETYPE_WARNINGS']:
             # Most web servers guess the mime type of static files by their
@@ -350,8 +350,9 @@ class Freezer(object):
 
             if not guessed_type == response.mimetype:
                 warnings.warn(
-                    'Filename extension of %r (type %s) does not match Content-'
-                    'Type: %s' % (basename, guessed_type, response.content_type),
+                    'Filename extension of %r (type %s) does not match '
+                    'Content-Type: %s' %
+                    (basename, guessed_type, response.content_type),
                     MimetypeMismatchWarning,
                     stacklevel=3)
 
@@ -481,7 +482,7 @@ def walk_directory(root, ignore=()):
 
     """
     path_ignore = [n.strip('/') for n in ignore if '/' in n]
-    basename_ignore = [n for n in ignore if '/'  not in n]
+    basename_ignore = [n for n in ignore if '/' not in n]
 
     def walk(directory, path_so_far):
         for name in sorted(os.listdir(directory)):
