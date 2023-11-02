@@ -433,6 +433,8 @@ def walk_directory(root, ignore=()):
     for dir, dirs, filenames in os.walk(root):
         for filename in filenames:
             path = str((Path(dir) / filename).relative_to(root))
+            if os.sep != '/':
+                path = path.replace(os.sep, '/')
             for pattern in ignore:
                 if fnmatch(path if '/' in pattern else filename, pattern):
                     break
