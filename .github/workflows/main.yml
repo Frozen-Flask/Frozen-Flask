@@ -2,17 +2,23 @@ name: CI
 on: [push, pull_request]
 jobs:
   build:
-    name: ${{ matrix.os }} - ${{ matrix.python-version }}
+    name: ${{ matrix.os }} - Python ${{ matrix.python-version }} - Flask ${{ matrix.flask-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ['3.12']
+        flask-version: ['3']
         include:
           - os: ubuntu-latest
             python-version: '3.8'
+            flask-version: '3'
           - os: ubuntu-latest
-            python-version: 'pypy-3.8'
+            python-version: 'pypy-3.10'
+            flask-version: '3'
+          - os: ubuntu-latest
+            python-version: '3.12'
+            flask-version: '2'
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -20,10 +26,10 @@ jobs:
     - name: Install Python
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ matrix.python }}
+        python-version: ${{ matrix.python-version }}
 
-    - name: Install dependencies
-      run: pip3 install -e .[test]
+    - name: Install hatch
+      run: pip3 install hatch
 
     - name: Run tests
-      run: pytest
+      run: hatch run test.py${{ startsWith(matrix.python-version, 'pypy') && 'py3' || matrix.python-version }}-${{ matrix.flask-version }}:run
