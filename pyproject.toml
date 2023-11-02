@@ -53,8 +53,11 @@ dependencies = ['sphinx', 'flask_sphinx_themes']
 [tool.hatch.envs.docs.scripts]
 build = 'sphinx-build docs docs/_build -a -n'
 
+[tool.hatch.envs.test]
+dependencies = ['pytest']
+
 [tool.hatch.envs.test.scripts]
-run = 'python -m flask_frozen.tests'
+run = 'pytest'
 
 [tool.tox]
 legacy_tox_ini = '''
@@ -62,7 +65,8 @@ legacy_tox_ini = '''
   envlist = py38, py39, py310, py311, py312, pypy3, flask-2
 
   [testenv]
-  commands = python -m flask_frozen.tests
+  deps = pytest
+  commands = pytest
 
   [testenv:flask-2]
   deps =

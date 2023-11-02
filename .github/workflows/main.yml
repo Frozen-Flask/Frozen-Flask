@@ -23,7 +23,7 @@ jobs:
         python-version: ${{ matrix.python }}
 
     - name: Install dependencies
-      run: pip3 install -e .
+      run: pip3 install -e .[test]
 
     - name: Run tests
-      run: python3 -m flask_frozen.tests
+      run: pytest
