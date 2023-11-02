@@ -1,0 +1,71 @@
+[build-system]
+requires = ['hatchling']
+build-backend = 'hatchling.build'
+
+[project]
+name = 'Frozen-Flask'
+description = 'Freezes a Flask application into a set of static files.'
+keywords = ['flask', 'static']
+authors = [{name = 'Simon Sapin', email = 'simon.sapin@exyr.org'}]
+requires-python = '>=3.8'
+readme = {file = 'README.rst', content-type = 'text/x-rst'}
+license = {file = 'LICENSE'}
+dependencies = ['Flask >=2.0.0']
+classifiers = [
+  'Environment :: Web Environment',
+  'Intended Audience :: Developers',
+  'License :: OSI Approved :: BSD License',
+  'Operating System :: OS Independent',
+  'Programming Language :: Python',
+  'Programming Language :: Python :: Implementation :: CPython',
+  'Programming Language :: Python :: Implementation :: PyPy',
+  'Programming Language :: Python :: 3',
+  'Programming Language :: Python :: 3 :: Only',
+  'Programming Language :: Python :: 3.8',
+  'Programming Language :: Python :: 3.9',
+  'Programming Language :: Python :: 3.10',
+  'Programming Language :: Python :: 3.11',
+  'Programming Language :: Python :: 3.12',
+  'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
+  'Topic :: Software Development :: Libraries :: Python Modules',
+]
+dynamic = ['version']
+
+[project.urls]
+Homepage = 'https://github.com/Frozen-Flask/Frozen-Flask/'
+Documentation = 'https://pythonhosted.org/Frozen-Flask/'
+Code = 'https://github.com/Frozen-Flask/Frozen-Flask/'
+Issues = 'https://github.com/Frozen-Flask/Frozen-Flask/issues'
+Changelog = 'https://pythonhosted.org/Frozen-Flask/#changelog'
+
+[tool.hatch.version]
+path = 'flask_frozen/__init__.py'
+
+[tool.hatch.build]
+exclude = ['.*']
+
+[tool.hatch.build.targets.wheel]
+exclude = ['docs']
+
+[tool.hatch.envs.docs]
+dependencies = ['sphinx', 'flask_sphinx_themes']
+
+[tool.hatch.envs.docs.scripts]
+build = 'sphinx-build docs docs/_build -a -n'
+
+[tool.hatch.envs.test.scripts]
+run = 'python -m flask_frozen.tests'
+
+[tool.tox]
+legacy_tox_ini = '''
+  [tox]
+  envlist = py38, py39, py310, py311, py312, pypy3, flask-2
+
+  [testenv]
+  commands = python -m flask_frozen.tests
+
+  [testenv:flask-2]
+  deps =
+    flask==2.0.0
+    werkzeug==2.0.0
+'''
