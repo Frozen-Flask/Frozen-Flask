@@ -411,14 +411,14 @@ class TestNonexsistentDestination(TestFreezer):
 class TestServerName(TestFreezer):
     def do_extra_config(self, app, freezer):
         app.config['SERVER_NAME'] = 'example.net'
+
     expected_output = TestFreezer.expected_output.copy()
     expected_output['/where_am_i/'] = (
         b'/where_am_i/ http://example.net/where_am_i/')
 
 
 class TestWithoutUrlForLog(TestFreezer):
-    freezer_kwargs = dict(log_url_for=False)
-
+    freezer_kwargs = {'log_url_for': False}
     expected_output = TestFreezer.expected_output.copy()
     filenames = TestFreezer.filenames.copy()
     for url in TestFreezer.generated_by_url_for:
