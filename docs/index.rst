@@ -9,16 +9,10 @@ traditional web server.
 
 .. _Flask: https://palletsprojects.com/p/flask/
 
-**Note:** This project used to be called Flask-Static.
-
 Installation
 ------------
 
-Install the extension with one of the following commands::
-
-    $ easy_install Frozen-Flask
-
-or alternatively if you have pip installed::
+Install the extension with::
 
     $ pip install Frozen-Flask
 
@@ -42,7 +36,7 @@ Getting started
 ---------------
 
 Create a :class:`Freezer` instance with your ``app`` object and call its
-:meth:`~Freezer.freeze` method. Put that in a ``freeze.py`` script
+:meth:`Freezer.freeze` method. Put that in a ``freeze.py`` script
 (or call it whatever you like)::
 
     from flask_frozen import Freezer
@@ -82,12 +76,12 @@ The following URLs can be found automatically:
 * Views with no variable parts in the URL, if they accept the ``GET`` method.
 * *New in version 0.6:* Results of calls to :func:`flask.url_for` made by your
   application in the request for another URL.
-  In other words, if you use :func:`~flask.url_for` to create links in your
+  In other words, if you use :func:`flask.url_for` to create links in your
   application, these links will be “followed”.
 
 This means that if your application has an index page at the URL ``/``
 (without parameters) and every other page can be found from there by
-recursively following links built with :func:`~flask.url_for`, then
+recursively following links built with :func:`flask.url_for`, then
 Frozen-Flask can discover all URLs automatically and you’re done.
 
 Otherwise, you may need to write URL generators.
@@ -107,12 +101,12 @@ Let’s say that your application looks like this::
         return render_template('product.html', product=product)
 
 If, for some reason, some products pages are not linked from another page
-(or these links are not built by :func:`~flask.url_for`), Frozen-Flask will
+(or these links are not built by :func:`flask.url_for`), Frozen-Flask will
 not find them.
 
 To tell Frozen-Flask about them, write a URL generator and put it after
 creating your :class:`Freezer` instance and before calling
-:meth:`~Freezer.freeze`::
+:meth:`Freezer.freeze`::
 
     @freezer.register_generator
     def product_details():
@@ -182,7 +176,7 @@ before deploying to a production server.
 You can open the newly generated static HTML files in a web browser, but
 links probably won’t work. The ``FREEZER_RELATIVE_URLS`` `configuration`_
 can fix this, but adds a visible ``index.html`` to the links.
-Alternatively, use the :meth:`~Freezer.run`
+Alternatively, use the :meth:`Freezer.run`
 method to start an HTTP server on the build result,
 so you can check that everything is fine before uploading::
 
@@ -301,6 +295,7 @@ are accepted:
 
 ``FREEZER_REDIRECT_POLICY``
     The policy for handling redirects. This can be:
+
     * ``'follow'`` (default): when a redirect response is encountered,
       Frozen-Flask will follow it to get the content from the redirected
       location. Note that redirects to external pages are not supported.
@@ -512,7 +507,7 @@ Released on 2011-07-29.
 * **Frozen-Flask now requires Flask 0.7 or later**. Please use previous
   version of Frozen-Flask if you need previous versions of Flask.
 * Support for Flask Blueprints
-* Added the :obj:`log_url_for` parameter to :class:`Freezer`. This makes some
+* Added the ``log_url_for`` parameter to :class:`Freezer`. This makes some
   URL generators unnecessary since more URLs are discovered automatically.
 * Bug fixes.
 
@@ -562,8 +557,8 @@ Version 0.2
 Released on 2011-02-21.
 
 Renamed the project from Flask-Static to Frozen-Flask. While we’re at
-breaking API compatibility, :func:`flaskext.static.StaticBuilder.build`
-is now :func:`flaskext.frozen.Freezer.freeze` and the prefix for configuration
+breaking API compatibility, ``StaticBuilder.build``
+is now :func:`Freezer.freeze` and the prefix for configuration
 keys is ``FREEZER_`` instead of ``STATIC_BUILDER_``.
 Other names were left unchanged.
 

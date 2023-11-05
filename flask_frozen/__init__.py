@@ -62,21 +62,18 @@ class Freezer:
     """Flask app freezer.
 
     :param app: your application or None if you use :meth:`init_app`
-    :type app: Flask instance
+    :type app: :class:`flask.Flask`
 
-    :param with_static_files: Whether to automatically generate URLs
-                              for static files.
-    :type with_static_files: boolean
+    :param bool with_static_files: Whether to automatically generate URLs for
+        static files.
 
-    :param with_no_argument_rules: Whether to automatically generate URLs
-                                   for URL rules that take no arguments.
-    :type with_no_argument_rules: boolean
+    :param bool with_no_argument_rules: Whether to automatically generate URLs
+        for URL rules that take no arguments.
 
-    :param log_url_for: Whether to log calls your app makes to
-                        :func:`~flask.url_for` and generate URLs from that.
+    :param bool log_url_for: Whether to log calls your app makes to
+        :func:`flask.url_for` and generate URLs from that.
 
-                        .. versionadded:: 0.6
-    :type log_url_for: boolean
+        .. versionadded:: 0.6
     """
     def __init__(self, app=None, with_static_files=True,
                  with_no_argument_rules=True, log_url_for=True):
@@ -188,7 +185,7 @@ class Freezer:
 
         .. note::
             This does not generate any page, so URLs that are normally
-            generated from :func:`~flask.url_for` calls will not be included
+            generated from :func:`flask.url_for` calls will not be included
             here.
         """
         for url, _, _ in self._generate_all_urls():
@@ -458,12 +455,12 @@ def patch_url_for(app):
 
 
 def relative_url_for(endpoint, **values):
-    """Like :func:`~flask.url_for`, but returns relative URLs if possible.
+    """Like :func:`flask.url_for`, but returns relative URLs if possible.
 
     Absolute URLs (with ``_external=True`` or to a different subdomain) are
     unchanged, but eg. ``/foo/bar`` becomes ``../bar``, depending on the
     current request context's path. (This, of course, requires a Flask
-    :ref:`request context <flask:request-context>`.)
+    :doc:`request context <flask:reqcontext>`.)
 
     URLs that would otherwise end with ``/`` get ``index.html`` appended,
     as Frozen-Flask does in filenames. Because of this behavior, this function

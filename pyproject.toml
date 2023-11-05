@@ -31,7 +31,7 @@ dynamic = ['version']
 
 [project.optional-dependencies]
 test = ['pytest']
-doc = ['sphinx', 'flask_sphinx_themes']
+doc = ['sphinx', 'pallets_sphinx_themes']
 
 [project.urls]
 Homepage = 'https://github.com/Frozen-Flask/Frozen-Flask/'
