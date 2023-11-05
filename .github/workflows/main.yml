@@ -14,9 +14,6 @@ jobs:
             python-version: '3.8'
             flask-version: '3'
           - os: ubuntu-latest
-            python-version: 'pypy-3.10'
-            flask-version: '3'
-          - os: ubuntu-latest
             python-version: '3.12'
             flask-version: '2'
     steps:
@@ -32,4 +29,4 @@ jobs:
       run: pip3 install hatch
 
     - name: Run tests
-      run: hatch run test.py${{ startsWith(matrix.python-version, 'pypy') && 'py3' || matrix.python-version }}-${{ matrix.flask-version }}:run
+      run: hatch run test.py${{ matrix.python-version }}-${{ matrix.flask-version }}:run

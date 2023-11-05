@@ -17,8 +17,6 @@ classifiers = [
   'License :: OSI Approved :: BSD License',
   'Operating System :: OS Independent',
   'Programming Language :: Python',
-  'Programming Language :: Python :: Implementation :: CPython',
-  'Programming Language :: Python :: Implementation :: PyPy',
   'Programming Language :: Python :: 3',
   'Programming Language :: Python :: 3 :: Only',
   'Programming Language :: Python :: 3.8',
@@ -64,7 +62,7 @@ features = ['test']
 run = 'pytest'
 
 [[tool.hatch.envs.test.matrix]]
-python = ['3.8', '3.9', '3.10', '3.11', '3.12', 'pypy3']
+python = ['3.8', '3.9', '3.10', '3.11', '3.12']
 flask-version = ['2', '3']
 
 [tool.hatch.envs.test.overrides]
