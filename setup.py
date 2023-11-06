@@ -39,7 +39,8 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=[
-        'Flask >= 1.1.0',
+        'Flask >= 1.1.0, < 3.0',
+        'Werkzeug < 3.0',
     ],
     classifiers=[
         'Environment :: Web Environment',
