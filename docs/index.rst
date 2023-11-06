@@ -397,6 +397,57 @@ API reference
 Changelog
 ---------
 
+
+Version 1.0.0
+~~~~~~~~~~~~~
+
+**Not released yet.**
+
+* Support Flask 3.
+* Drop support of Python 2 and PyPy.
+* Test Python 3.8 to 3.12, and Flask 2 and 3.
+* Clean style guide and check it on CI.
+* Host documentation on Read the Docs.
+
+
+Version 0.19
+~~~~~~~~~~~~
+
+**Not released yet.**
+
+* Pin Flask < 3 version.
+
+
+Version 0.18
+~~~~~~~~~~~~
+
+Released on 2021-06-15.
+
+* Support Flask 2.
+* Ensure that the ``static`` endpoint is emitted by
+  ``_static_rules_endpoints`` method with Flask 2.
+
+
+Version 0.17
+~~~~~~~~~~~~
+
+Released on 2021-06-02.
+
+* Allow URL generators to include a ``last_modified`` timestamp to avoid
+  generating unmodified pages again.
+* Support functions in ``FREEZER_SKIP_EXISTING``.
+* Support Python 3.9.
+* Launch tests on GitHub Actions.
+* Support unquoting URLs that contain multi-byte unicode characters.
+* Pin Flask < 2 version.
+
+
+Version 0.16
+~~~~~~~~~~~~
+
+No changes.
+
+
 Version 0.15
 ~~~~~~~~~~~~
 
