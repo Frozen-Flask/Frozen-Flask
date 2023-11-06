@@ -21,10 +21,18 @@ Contributing
 * Fork the upstream repository and clone your fork
 * Create a feature branch for the thing you want to work on
 * Create a virtual environment and activate it
-* Run ``pip install -e .`` to install dependencies
-* Use ``tox`` or ``python -m flask_frozen.tests`` to run tests
-* Do your changes, make sure tests pass
-* Send a Pull Request to the upstream repository
+* Run ``pip install -e .[doc,test,check]`` to install dependencies
+* Add your changes
+* Make sure tests pass with ``pytest``
+* Make sure you followed the style guide with ``flake8`` and ``isort``
+* Send a pull request to the upstream repository
+
+You can also use `Hatch <https://hatch.pypa.io/>`_ to automatically install
+dependencies, launch tests, check style and build documentation::
+
+  $ hatch run test:run
+  $ hatch run check:run
+  $ hatch run doc:build
 
 Status
 ------
