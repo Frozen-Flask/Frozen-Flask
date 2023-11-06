@@ -36,10 +36,10 @@ test = ['pytest']
 
 [project.urls]
 Homepage = 'https://github.com/Frozen-Flask/Frozen-Flask/'
-Documentation = 'https://pythonhosted.org/Frozen-Flask/'
+Documentation = 'https://frozen-flask.readthedocs.io/'
 Code = 'https://github.com/Frozen-Flask/Frozen-Flask/'
 Issues = 'https://github.com/Frozen-Flask/Frozen-Flask/issues'
-Changelog = 'https://pythonhosted.org/Frozen-Flask/#changelog'
+Changelog = 'https://frozen-flask.readthedocs.io/#changelog'
 
 [tool.isort]
 known_first_party = ['test_app']
