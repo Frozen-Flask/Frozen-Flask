@@ -1,4 +1,3 @@
-# coding: utf8
 """
     flask_frozen.test_app
     ~~~~~~~~~~~~~~~~~~~~~
@@ -13,11 +12,10 @@
 import os.path
 from functools import partial
 
-from flask import Flask, url_for, redirect
+from flask import Flask, redirect, url_for
 from flask_frozen import Freezer
 
 from .admin import admin_blueprint
-
 
 FAVICON = os.path.join(os.path.dirname(__file__), 'static', 'favicon.ico')
 
@@ -60,7 +58,8 @@ def create_app(defer_init_app=False, freezer_kwargs=None):
     for asset in ("favicon.ico",):
         url = "/" + asset
         name = asset.replace(".", "_")
-        app.add_url_rule(url, name, partial(app.send_static_file, filename=asset))
+        app.add_url_rule(url, name,
+                         partial(app.send_static_file, filename=asset))
 
     @app.route('/product_<int:product_id>/')
     def product(product_id):
@@ -71,7 +70,7 @@ def create_app(defer_init_app=False, freezer_kwargs=None):
         return 'This view should be ignored as it does not accept GET.'
 
     @freezer.register_generator
-    def product():
+    def product():  # noqa: F811
         # endpoint, values
         yield 'product', {'product_id': 0}
         yield 'page', {'name': 'foo'}

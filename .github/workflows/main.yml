@@ -30,3 +30,6 @@ jobs:
 
     - name: Run tests
       run: hatch run test.py${{ matrix.python-version }}-${{ matrix.flask-version }}:run
+
+    - name: Check style
+      run: hatch run check:run

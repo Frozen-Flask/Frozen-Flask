@@ -30,8 +30,9 @@ classifiers = [
 dynamic = ['version']
 
 [project.optional-dependencies]
-test = ['pytest']
+check = ['isort', 'flake8']
 doc = ['sphinx', 'pallets_sphinx_themes']
+test = ['pytest']
 
 [project.urls]
 Homepage = 'https://github.com/Frozen-Flask/Frozen-Flask/'
@@ -39,6 +40,10 @@ Documentation = 'https://pythonhosted.org/Frozen-Flask/'
 Code = 'https://github.com/Frozen-Flask/Frozen-Flask/'
 Issues = 'https://github.com/Frozen-Flask/Frozen-Flask/issues'
 Changelog = 'https://pythonhosted.org/Frozen-Flask/#changelog'
+
+[tool.isort]
+known_first_party = ['test_app']
+known_third_party = ['flask_frozen']
 
 [tool.hatch.version]
 path = 'flask_frozen/__init__.py'
@@ -60,6 +65,15 @@ features = ['test']
 
 [tool.hatch.envs.test.scripts]
 run = 'pytest'
+
+[tool.hatch.envs.check]
+features = ['check']
+
+[tool.hatch.envs.check.scripts]
+run = [
+  'python -m flake8 docs tests flask_frozen',
+  'python -m isort docs tests flask_frozen --check --diff',
+]
 
 [[tool.hatch.envs.test.matrix]]
 python = ['3.8', '3.9', '3.10', '3.11', '3.12']
