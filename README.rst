@@ -29,11 +29,22 @@ Contributing
 Status
 ------
 
-**The project doesn't have an active maintainer as of now.** If you want to become one, please contact `@honzajavorek <https://github.com/honzajavorek>`__ and `@tswast <https://github.com/tswast>`__. `@SimonSapin <https://github.com/SimonSapin>`__ is pretty much inactive, but has his picture in our Hall of Fame for creating the project.
+This project is currently maintained by
+`CourtBouillon <https://www.courtbouillon.org/>`_.
+
+It’s been previously maintained by
+`@honzajavorek <https://github.com/honzajavorek>`_ and
+`@tswast <https://github.com/tswast>`_,
+and has been originally created by
+`@SimonSapin <https://github.com/SimonSapin>`_.
 
 License
 -------
 
-Frozen-Flask uses a BSD 3-clause license. See LICENSE_.
+Frozen-Flask uses a BSD 3-clause license. See LICENSE.
 
-.. _LICENSE: LICENSE
+Copyrights are retained by their contributors, no copyright assignment is
+required to contribute to Frozen-Flask. Unless explicitly stated otherwise, any
+contribution intentionally submitted for inclusion is licensed under the BSD
+3-clause license, without any additional terms or conditions. For full
+authorship information, see the version control history.
