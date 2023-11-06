@@ -402,6 +402,44 @@ API reference
 Changelog
 ---------
 
+Version 0.19
+~~~~~~~~~~~~
+
+Released on 2023-11-06.
+
+* Pin Flask < 3 version.
+
+
+Version 0.18
+~~~~~~~~~~~~
+
+Released on 2021-06-15.
+
+* Support Flask 2.
+* Ensure that the ``static`` endpoint is emitted by
+  ``_static_rules_endpoints`` method with Flask 2.
+
+
+Version 0.17
+~~~~~~~~~~~~
+
+Released on 2021-06-02.
+
+* Allow URL generators to include a ``last_modified`` timestamp to avoid
+  generating unmodified pages again.
+* Support functions in ``FREEZER_SKIP_EXISTING``.
+* Support Python 3.9.
+* Launch tests on GitHub Actions.
+* Support unquoting URLs that contain multi-byte unicode characters.
+* Pin Flask < 2 version.
+
+
+Version 0.16
+~~~~~~~~~~~~
+
+No changes.
+
+
 Version 0.15
 ~~~~~~~~~~~~
 
@@ -409,6 +447,7 @@ Released on 2017-06-27.
 
 * Add ``Freezer.freeze_yield()`` method to make progress reporting easier.
   (Thanks to Miro Hrončok.)
+
 
 Version 0.14
 ~~~~~~~~~~~~
@@ -420,12 +459,14 @@ Released on 2017-03-22.
 * Add shared superclass ``FrozenFlaskWarning`` for all warnings.
   (Thanks to Miro Hrončok.)
 
+
 Version 0.13
 ~~~~~~~~~~~~
 
 Released on 2016-09-30.
 
 * Add the ``FREEZER_REDIRECT_POLICY`` configuration.
+
 
 Version 0.12
 ~~~~~~~~~~~~
@@ -438,6 +479,7 @@ Released on 2015-11-05.
   (Thanks to Alex Guerra.)
 * Fix `#36 <https://github.com/Frozen-Flask/Frozen-Flask/issues/36>`_:
   Support non-default app.config['SERVER_NAME'].
+
 
 Version 0.11
 ~~~~~~~~~~~~
