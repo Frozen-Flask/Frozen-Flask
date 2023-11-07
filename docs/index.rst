@@ -16,7 +16,7 @@ Install the extension with::
 
     $ pip install Frozen-Flask
 
-or you can get the `source code from github
+or you can get the `source code from GitHub
 <https://github.com/Frozen-Flask/Frozen-Flask>`_.
 
 Context
