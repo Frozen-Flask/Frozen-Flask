@@ -52,7 +52,7 @@ path = 'flask_frozen/__init__.py'
 exclude = ['.*']
 
 [tool.hatch.build.targets.wheel]
-exclude = ['docs']
+exclude = ['docs', 'tests']
 
 [tool.hatch.envs.doc]
 features = ['doc']
