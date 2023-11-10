@@ -17,8 +17,6 @@ classifiers = [
   'License :: OSI Approved :: BSD License',
   'Operating System :: OS Independent',
   'Programming Language :: Python',
-  'Programming Language :: Python :: Implementation :: CPython',
-  'Programming Language :: Python :: Implementation :: PyPy',
   'Programming Language :: Python :: 3',
   'Programming Language :: Python :: 3 :: Only',
   'Programming Language :: Python :: 3.8',
@@ -30,6 +28,10 @@ classifiers = [
   'Topic :: Software Development :: Libraries :: Python Modules',
 ]
 dynamic = ['version']
+
+[project.optional-dependencies]
+test = ['pytest']
+doc = ['sphinx', 'flask_sphinx_themes']
 
 [project.urls]
 Homepage = 'https://github.com/Frozen-Flask/Frozen-Flask/'
@@ -47,25 +49,21 @@ exclude = ['.*']
 [tool.hatch.build.targets.wheel]
 exclude = ['docs']
 
-[tool.hatch.envs.docs]
-dependencies = ['sphinx', 'flask_sphinx_themes']
+[tool.hatch.envs.doc]
+features = ['doc']
 
-[tool.hatch.envs.docs.scripts]
+[tool.hatch.envs.doc.scripts]
 build = 'sphinx-build docs docs/_build -a -n'
 
+[tool.hatch.envs.test]
+features = ['test']
+
 [tool.hatch.envs.test.scripts]
-run = 'python -m flask_frozen.tests'
+run = 'pytest'
 
-[tool.tox]
-legacy_tox_ini = '''
-  [tox]
-  envlist = py38, py39, py310, py311, py312, pypy3, flask-2
+[[tool.hatch.envs.test.matrix]]
+python = ['3.8', '3.9', '3.10', '3.11', '3.12']
+flask-version = ['2', '3']
 
-  [testenv]
-  commands = python -m flask_frozen.tests
-
-  [testenv:flask-2]
-  deps =
-    flask==2.0.0
-    werkzeug==2.0.0
-'''
+[tool.hatch.envs.test.overrides]
+name.'-2$'.dependencies = ['flask==2.0.0', 'werkzeug==2.0.0']

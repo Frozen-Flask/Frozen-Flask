@@ -14,41 +14,25 @@
 
 __all__ = ['Freezer', 'walk_directory', 'relative_url_for']
 
-VERSION = '0.18'
-
-import datetime
-import os.path
-import mimetypes
-import warnings
 import collections
+import datetime
+import mimetypes
+import os
 import posixpath
-from fnmatch import fnmatch
-from unicodedata import normalize
-from threading import Lock
-from contextlib import contextmanager
-from posixpath import relpath as posix_relpath
-
+import warnings
 from collections import namedtuple
-try:
-    from collections.abc import Mapping  # Python 3
-except ImportError:
-    from collections import Mapping  # Python 2.7
+from collections.abc import Mapping
+from contextlib import contextmanager, suppress
+from fnmatch import fnmatch
+from pathlib import Path
+from threading import Lock
+from unicodedata import normalize
+from urllib.parse import unquote, urlsplit
 
-try:
-    from urlparse import urlsplit
-    from werkzeug.urls import url_unquote as unquote
-except ImportError:  # Python 3
-    from urllib.parse import urlsplit, unquote
+from flask import (Blueprint, Flask, redirect, request, send_from_directory,
+                   url_for)
 
-from werkzeug.exceptions import HTTPException
-from flask import (Flask, Blueprint, url_for, request, send_from_directory,
-                   redirect)
-
-try:
-    unicode
-except NameError:  # Python 3
-    unicode = str
-    basestring = str
+VERSION = '0.18'
 
 
 class FrozenFlaskWarning(Warning):
@@ -74,8 +58,9 @@ class RedirectWarning(FrozenFlaskWarning):
 Page = namedtuple('Page', 'url path')
 
 
-class Freezer(object):
-    """
+class Freezer:
+    """Flask app freezer.
+
     :param app: your application or None if you use :meth:`init_app`
     :type app: Flask instance
 
@@ -104,8 +89,7 @@ class Freezer(object):
         self.init_app(app)
 
     def init_app(self, app):
-        """
-        Allow to register an app after the Freezer initialization.
+        """Allow to register an app after the Freezer initialization.
 
         :param app: your Flask application
         """
@@ -126,8 +110,7 @@ class Freezer(object):
             app.config.setdefault('FREEZER_SKIP_EXISTING', False)
 
     def register_generator(self, function):
-        """
-        Register a function as an URL generator.
+        """Register a function as an URL generator.
 
         The function should return an iterable of URL paths or
         ``(endpoint, values)`` tuples to be used as
@@ -141,19 +124,17 @@ class Freezer(object):
 
     @property
     def root(self):
+        """Absolute path to the directory Frozen-Flask writes to.
+
+        Resolved value for the ``FREEZER_DESTINATION`` configuration_.
         """
-        Absolute path to the directory Frozen-Flask writes to,
-        ie. resolved value for the ``FREEZER_DESTINATION`` configuration_.
-        """
-        # unicode() will raise if the path is not ASCII or already unicode.
-        return os.path.join(
-            unicode(self.app.root_path),
-            unicode(self.app.config['FREEZER_DESTINATION'])
-        )
+        root = Path(self.app.root_path)
+        return root / self.app.config['FREEZER_DESTINATION']
 
     def freeze_yield(self):
-        """Like :meth:`freeze`, but yields information about pages as they are
-        being processed. Yields :func:`namedtuples <collections.namedtuple>`
+        """Like :meth:`freeze` but yields info while processing pages.
+
+        Yields :func:`namedtuples <collections.namedtuple>`
         ``(url, path)``. This can be used to display progress information,
         such as printing the information to standard output, or even more
         sophisticated, e.g. with a :func:`progressbar <click.progressbar>`::
@@ -166,19 +147,13 @@ class Freezer(object):
                 for url in urls:
                     # everything is already happening, just pass
                     pass
+
         """
         remove_extra = self.app.config['FREEZER_REMOVE_EXTRA_FILES']
-        if not os.path.isdir(self.root):
-            os.makedirs(self.root)
-        if remove_extra:
-            ignore = self.app.config['FREEZER_DESTINATION_IGNORE']
-            previous_files = set(
-                # See https://github.com/SimonSapin/Frozen-Flask/issues/5
-                normalize('NFC', os.path.join(self.root, *name.split('/')))
-                for name in walk_directory(self.root, ignore=ignore))
+        self.root.mkdir(parents=True, exist_ok=True)
         seen_urls = set()
         seen_endpoints = set()
-        built_files = set()
+        built_paths = set()
 
         for url, endpoint, last_modified in self._generate_all_urls():
             seen_endpoints.add(endpoint)
@@ -186,27 +161,29 @@ class Freezer(object):
                 # Don't build the same URL more than once
                 continue
             seen_urls.add(url)
-            new_filename = self._build_one(url, last_modified)
-            built_files.add(normalize('NFC', new_filename))
-            yield Page(url, os.path.relpath(new_filename, self.root))
+            new_path = self._build_one(url, last_modified)
+            built_paths.add(new_path)
+            yield Page(url, new_path.relative_to(self.root))
 
         self._check_endpoints(seen_endpoints)
         if remove_extra:
             # Remove files from the previous build that are not here anymore.
-            for extra_file in previous_files - built_files:
-                os.remove(extra_file)
-                parent = os.path.dirname(extra_file)
-                if not os.listdir(parent):
-                    # The directory is now empty, remove it.
-                    os.removedirs(parent)
+            ignore = self.app.config['FREEZER_DESTINATION_IGNORE']
+            previous_paths = set(
+                Path(self.root / name) for name in
+                walk_directory(self.root, ignore=ignore))
+            for extra_path in previous_paths - built_paths:
+                extra_path.unlink()
+                with suppress(OSError):
+                    extra_path.parent.rmdir()
 
     def freeze(self):
         """Clean the destination and build all URLs from generators."""
         return set(page.url for page in self.freeze_yield())
 
     def all_urls(self):
-        """
-        Run all generators and yield URLs relative to the app root.
+        """Run all generators and yield URLs relative to the app root.
+
         May be useful for testing URL generators.
 
         .. note::
@@ -214,20 +191,16 @@ class Freezer(object):
             generated from :func:`~flask.url_for` calls will not be included
             here.
         """
-        for url, _endpoint, last_modified in self._generate_all_urls():
+        for url, _, _ in self._generate_all_urls():
             yield url
 
     def _script_name(self):
-        """
-        Return the path part of FREEZER_BASE_URL, without trailing slash.
-        """
+        """Return the path part of FREEZER_BASE_URL, without trailing slash."""
         base_url = self.app.config['FREEZER_BASE_URL']
         return urlsplit(base_url or '').path.rstrip('/')
 
     def _generate_all_urls(self):
-        """
-        Run all generators and yield (url, endpoint) tuples.
-        """
+        """Run all generators and yield (url, endpoint) tuples."""
         script_name = self._script_name()
         # Charset is always set to UTF-8 since Werkzeug 2.3.0
         url_encoding = getattr(self.app.url_map, 'charset', 'utf-8')
@@ -237,7 +210,7 @@ class Freezer(object):
         with self.app.test_request_context(base_url=script_name or None):
             for generator in url_generators:
                 for generated in generator():
-                    if isinstance(generated, basestring):
+                    if isinstance(generated, str):
                         url = generated
                         endpoint = None
                         last_modified = None
@@ -250,34 +223,31 @@ class Freezer(object):
                             last_modified = None
                         else:
                             # Assume a tuple.
-                            if len(generated)==2:
+                            if len(generated) == 2:
                                 endpoint, values = generated
                                 last_modified = None
                             else:
                                 endpoint, values, last_modified = generated
                         url = url_for(endpoint, **values)
                         assert url.startswith(script_name), (
-                            'url_for returned an URL %r not starting with '
-                            'script_name %r. Bug in Werkzeug?'
-                            % (url, script_name)
+                            f'url_for returned an URL {url} not starting with '
+                            f'script_name {script_name!r}. Bug in Werkzeug?'
                         )
                         url = url[len(script_name):]
                     # flask.url_for "quotes" URLs, eg. a space becomes %20
                     url = unquote(url)
                     parsed_url = urlsplit(url)
                     if parsed_url.scheme or parsed_url.netloc:
-                        raise ValueError('External URLs not supported: ' + url)
+                        raise ValueError(f'External URLs not supported: {url}')
 
                     # Remove any query string and fragment:
                     url = parsed_url.path
-                    if not isinstance(url, unicode):
+                    if not isinstance(url, str):
                         url = url.decode(url_encoding)
                     yield url, endpoint, last_modified
 
     def _check_endpoints(self, seen_endpoints):
-        """
-        Warn if some of the app's endpoints are not in seen_endpoints.
-        """
+        """Warn if some of the app's endpoints are not in seen_endpoints."""
         get_endpoints = set(
             rule.endpoint for rule in self.app.url_map.iter_rules()
             if 'GET' in rule.methods)
@@ -288,10 +258,10 @@ class Freezer(object):
             not_generated_endpoints -= set(self._static_rules_endpoints())
 
         if not_generated_endpoints:
+            endpoints = ', '.join(str(e) for e in not_generated_endpoints)
             warnings.warn(
-                'Nothing frozen for endpoints %s. Did you forget a URL '
-                'generator?' % ', '.join(
-                    unicode(e) for e in not_generated_endpoints),
+                f'Nothing frozen for endpoints {endpoints}. '
+                'Did you forget a URL generator?',
                 MissingURLGeneratorWarning,
                 stacklevel=3)
 
@@ -303,16 +273,16 @@ class Freezer(object):
         follow_redirects = redirect_policy == 'follow'
         ignore_redirect = redirect_policy == 'ignore'
 
-        destination_path = self.urlpath_to_filepath(url)
-        filename = os.path.join(self.root, *destination_path.split('/'))
+        destination_path = normalize('NFC', self.urlpath_to_filepath(url))
+        path = self.root / destination_path
 
         skip = self.app.config['FREEZER_SKIP_EXISTING']
         if callable(skip):
-            skip = skip(url, filename)
-        if os.path.isfile(filename):
-            mtime = datetime.datetime.fromtimestamp(os.path.getmtime(filename))
-            if (last_modified is not None and mtime>=last_modified) or skip:
-                return filename
+            skip = skip(url, str(path))
+        if path.is_file():
+            mtime = datetime.datetime.fromtimestamp(path.stat().st_mtime)
+            if (last_modified is not None and mtime >= last_modified) or skip:
+                return path
 
         with conditional_context(self.url_for_logger, self.log_url_for):
             with conditional_context(patch_url_for(self.app),
@@ -327,59 +297,50 @@ class Freezer(object):
         ignore_404 = self.app.config['FREEZER_IGNORE_404_NOT_FOUND']
         if response.status_code != 200:
             if response.status_code == 404 and ignore_404:
-                warnings.warn('Ignored %r on URL %s' % (response.status, url),
+                warnings.warn(f'Ignored {response.status!r} on URL {url}',
                               NotFoundWarning,
                               stacklevel=3)
             elif response.status_code in (301, 302) and ignore_redirect:
-                warnings.warn('Ignored %r on URL %s' % (response.status, url),
+                warnings.warn(f'Ignored {response.status!r} on URL {url}',
                               RedirectWarning,
                               stacklevel=3)
             else:
-                raise ValueError('Unexpected status %r on URL %s' \
-                    % (response.status, url))
+                raise ValueError(
+                    f'Unexpected status {response.status!r} on URL {url}')
 
         if not self.app.config['FREEZER_IGNORE_MIMETYPE_WARNINGS']:
             # Most web servers guess the mime type of static files by their
             # filename.  Check that this guess is consistent with the actual
             # Content-Type header we got from the app.
-            basename = os.path.basename(filename)
-            guessed_type, guessed_encoding = mimetypes.guess_type(basename)
+            guessed_type, guessed_encoding = mimetypes.guess_type(path.name)
             if not guessed_type:
                 # Used by most server when they can not determine the type
                 guessed_type = self.app.config['FREEZER_DEFAULT_MIMETYPE']
 
             if not guessed_type == response.mimetype:
                 warnings.warn(
-                    'Filename extension of %r (type %s) does not match Content-'
-                    'Type: %s' % (basename, guessed_type, response.content_type),
+                    f'Filename extension of {path.name!r} '
+                    f'(type {guessed_type}) does not match '
+                    f'Content-Type: {response.content_type}',
                     MimetypeMismatchWarning,
                     stacklevel=3)
 
         # Create directories as needed
-        dirname = os.path.dirname(filename)
-        if not os.path.isdir(dirname):
-            os.makedirs(dirname)
+        path.parent.mkdir(parents=True, exist_ok=True)
 
         # Write the file, but only if its content has changed
         content = response.data
-        if os.path.isfile(filename):
-            with open(filename, 'rb') as fd:
-                previous_content = fd.read()
-        else:
-            previous_content = None
+        previous_content = path.read_bytes() if path.is_file() else None
         if content != previous_content:
             # Do not overwrite when content hasn't changed to help rsync
             # by keeping the modification date.
-            with open(filename, 'wb') as fd:
-                fd.write(content)
+            path.write_bytes(content)
 
         response.close()
-        return filename
+        return path
 
     def urlpath_to_filepath(self, path):
-        """
-        Convert a URL path like /admin/ to a file path like admin/index.html
-        """
+        """Convert URL path like /admin/ to file path like admin/index.html."""
         if path.endswith('/'):
             path += 'index.html'
         # Remove the initial slash that should always be there
@@ -387,8 +348,7 @@ class Freezer(object):
         return path[1:]
 
     def serve(self, **options):
-        """
-        Run an HTTP server on the result of the build.
+        """Run an HTTP server on the result of the build.
 
         :param options: passed to :meth:`flask.Flask.run`.
         """
@@ -404,20 +364,16 @@ class Freezer(object):
 
     def make_static_app(self):
         """Return a Flask application serving the build destination."""
-        root = os.path.join(
-            self.app.root_path,
-            self.app.config['FREEZER_DESTINATION']
-        )
-
         def dispatch_request():
             filename = self.urlpath_to_filepath(request.path)
 
             # Override the default mimeype from settings
-            guessed_type, guessed_encoding = mimetypes.guess_type(filename)
+            guessed_type, _ = mimetypes.guess_type(filename)
             if not guessed_type:
                 guessed_type = self.app.config['FREEZER_DEFAULT_MIMETYPE']
 
-            return send_from_directory(root, filename, mimetype=guessed_type)
+            return send_from_directory(
+                self.root, filename, mimetype=guessed_type)
 
         app = Flask(__name__)
         # Do not use the URL map
@@ -425,9 +381,7 @@ class Freezer(object):
         return app
 
     def _static_rules_endpoints(self):
-        """
-        Yield the 'static' URL rules for the app and all blueprints.
-        """
+        """Yield the 'static' URL rules for the app and all blueprints."""
         send_static_file_functions = (
             unwrap_method(Flask.send_static_file),
             unwrap_method(Blueprint.send_static_file))
@@ -445,15 +399,13 @@ class Freezer(object):
                 yield rule.endpoint
 
     def static_files_urls(self):
-        """
-        URL generator for static files for app and all registered blueprints.
-        """
+        """URL generator for static files for app and all its blueprints."""
         for endpoint in self._static_rules_endpoints():
             view = self.app.view_functions[endpoint]
             app_or_blueprint = method_self(view) or self.app
             root = app_or_blueprint.static_folder
             ignore = self.app.config['FREEZER_STATIC_IGNORE']
-            if root is None or not os.path.isdir(root):
+            if root is None or not Path(root).is_dir():
                 # No 'static' directory for this app/blueprint.
                 continue
             for filename in walk_directory(root, ignore=ignore):
@@ -467,9 +419,7 @@ class Freezer(object):
 
 
 def walk_directory(root, ignore=()):
-    """
-    Recursively walk the `root` directory and yield slash-separated paths
-    relative to the root.
+    """Walk the `root` folder and yield slash-separated paths relative to root.
 
     Used to implement the URL generator for static files.
 
@@ -480,29 +430,22 @@ def walk_directory(root, ignore=()):
         others against individual slash-separated parts.
 
     """
-    path_ignore = [n.strip('/') for n in ignore if '/' in n]
-    basename_ignore = [n for n in ignore if '/'  not in n]
-
-    def walk(directory, path_so_far):
-        for name in sorted(os.listdir(directory)):
-            if any(fnmatch(name, pattern) for pattern in basename_ignore):
-                continue
-            path = path_so_far + '/' + name if path_so_far else name
-            if any(fnmatch(path, pattern) for pattern in path_ignore):
-                continue
-            full_name = os.path.join(directory, name)
-            if os.path.isdir(full_name):
-                for file_path in walk(full_name, path):
-                    yield file_path
-            elif os.path.isfile(full_name):
-                yield path
-    return walk(root, '')
+    for dir, dirs, filenames in os.walk(root):
+        for filename in filenames:
+            path = str((Path(dir) / filename).relative_to(root))
+            if os.sep != '/':
+                path = path.replace(os.sep, '/')
+            for pattern in ignore:
+                if fnmatch(path if '/' in pattern else filename, pattern):
+                    break
+            else:
+                # See https://github.com/SimonSapin/Frozen-Flask/issues/5
+                yield normalize('NFC', path)
 
 
 @contextmanager
 def patch_url_for(app):
-    """
-    Patches ``url_for`` in Jinja globals to use :func:`relative_url_for`.
+    """Patches ``url_for`` in Jinja globals to use :func:`relative_url_for`.
 
     This is a context manager, to be used in a ``with`` statement.
     """
@@ -515,8 +458,7 @@ def patch_url_for(app):
 
 
 def relative_url_for(endpoint, **values):
-    """
-    Like :func:`~flask.url_for`, but returns relative URLs if possible.
+    """Like :func:`~flask.url_for`, but returns relative URLs if possible.
 
     Absolute URLs (with ``_external=True`` or to a different subdomain) are
     unchanged, but eg. ``/foo/bar`` becomes ``../bar``, depending on the
@@ -548,35 +490,17 @@ def relative_url_for(endpoint, **values):
     if not request_path.endswith('/'):
         request_path = posixpath.dirname(request_path)
 
-    return posix_relpath(url, request_path)
+    return posixpath.relpath(url, request_path)
 
 
 def unwrap_method(method):
     """Return the function object for the given method object."""
-    try:
-        # Python 2
-        return method.im_func
-    except AttributeError:
-        try:
-            # Python 3
-            return method.__func__
-        except AttributeError:
-            # Not a method.
-            return method
+    return getattr(method, '__func__', method)
 
 
 def method_self(method):
     """Return the instance a bound method is attached to."""
-    try:
-        # Python 2
-        return method.im_self
-    except AttributeError:
-        try:
-            # Python 3
-            return method.__self__
-        except AttributeError:
-            # Not a method.
-            return
+    return getattr(method, '__self__', None)
 
 
 @contextmanager
@@ -589,9 +513,8 @@ def conditional_context(context, condition):
         yield
 
 
-class UrlForLogger(object):
-    """
-    Log all calls to url_for() for this app made inside the with block.
+class UrlForLogger:
+    """Log all calls to url_for() for this app made inside the with block.
 
     Use this object as a context manager in a with block to enable logging.
     """
@@ -621,9 +544,10 @@ class UrlForLogger(object):
         self._lock.release()
 
     def iter_calls(self):
-        """
-        Return an iterable of (endpoint, values_dict) tuples, one for each
-        call that was made while the logger was enabled.
+        """Yield logged calls of endpoints.
+
+        Return an iterable of (endpoint, values_dict) tuples, one for each call
+        that was made while the logger was enabled.
         """
         # "Iterate" on the call deque while it is still being appended to.
         while self.logged_calls:
@@ -631,10 +555,10 @@ class UrlForLogger(object):
 
 
 def script_name_middleware(application, script_name):
-    """
-    Wrap a WSGI application in a middleware that moves ``script_name``
-    from the environ's PATH_INFO to SCRIPT_NAME if it is there, and
-    redirect to ``script_name`` otherwise.
+    """Wrap a WSGI app in a middleware to handle custom base URL.
+
+    The middleware moves ``script_name`` from the environ's PATH_INFO to
+    SCRIPT_NAME if it is there, and redirect to ``script_name`` otherwise.
     """
     def new_application(environ, start_response):
         path_info = environ['PATH_INFO']
