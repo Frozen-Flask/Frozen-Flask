@@ -401,7 +401,7 @@ Changelog
 Version 1.0.0
 ~~~~~~~~~~~~~
 
-**Not released yet.**
+Released on 2023-11-10.
 
 * Support Flask 3.
 * Drop support of Python 2 and PyPy.

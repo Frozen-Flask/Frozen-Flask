@@ -32,7 +32,7 @@ from urllib.parse import unquote, urlsplit
 from flask import (Blueprint, Flask, redirect, request, send_from_directory,
                    url_for)
 
-VERSION = '0.19'
+VERSION = '1.0.0'
 
 
 class FrozenFlaskWarning(Warning):
