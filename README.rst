@@ -1,19 +1,10 @@
 Frozen-Flask
 ============
 
-.. image:: https://img.shields.io/pypi/v/Frozen-Flask.svg?maxAge=2592000
-   :target: https://pypi.python.org/pypi/Frozen-Flask
-
 Freezes a Flask application into a set of static files. The result can be hosted
 without any server-side software other than a traditional web server.
 
 See documentation: https://pythonhosted.org/Frozen-Flask/
-
-Build Status
-------------
-
-.. image:: https://github.com/Frozen-Flask/Frozen-Flask/workflows/CI/badge.svg?branch=master
-   :target: https://github.com/Frozen-Flask/Frozen-Flask/actions
 
 Contributing
 ------------
