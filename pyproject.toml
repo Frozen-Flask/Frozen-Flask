@@ -1,0 +1,83 @@
+[build-system]
+requires = ['hatchling']
+build-backend = 'hatchling.build'
+
+[project]
+name = 'Frozen-Flask'
+description = 'Freezes a Flask application into a set of static files.'
+keywords = ['flask', 'static']
+authors = [{name = 'Simon Sapin', email = 'simon.sapin@exyr.org'}]
+requires-python = '>=3.8'
+readme = {file = 'README.rst', content-type = 'text/x-rst'}
+license = {file = 'LICENSE'}
+dependencies = ['Flask >=2.0.0']
+classifiers = [
+  'Environment :: Web Environment',
+  'Intended Audience :: Developers',
+  'License :: OSI Approved :: BSD License',
+  'Operating System :: OS Independent',
+  'Programming Language :: Python',
+  'Programming Language :: Python :: 3',
+  'Programming Language :: Python :: 3 :: Only',
+  'Programming Language :: Python :: 3.8',
+  'Programming Language :: Python :: 3.9',
+  'Programming Language :: Python :: 3.10',
+  'Programming Language :: Python :: 3.11',
+  'Programming Language :: Python :: 3.12',
+  'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
+  'Topic :: Software Development :: Libraries :: Python Modules',
+]
+dynamic = ['version']
+
+[project.optional-dependencies]
+check = ['isort', 'flake8']
+doc = ['sphinx', 'pallets_sphinx_themes']
+test = ['pytest']
+
+[project.urls]
+Homepage = 'https://github.com/Frozen-Flask/Frozen-Flask/'
+Documentation = 'https://frozen-flask.readthedocs.io/'
+Code = 'https://github.com/Frozen-Flask/Frozen-Flask/'
+Issues = 'https://github.com/Frozen-Flask/Frozen-Flask/issues'
+Changelog = 'https://frozen-flask.readthedocs.io/#changelog'
+
+[tool.isort]
+known_first_party = ['test_app']
+known_third_party = ['flask_frozen']
+
+[tool.hatch.version]
+path = 'flask_frozen/__init__.py'
+
+[tool.hatch.build]
+exclude = ['.*']
+
+[tool.hatch.build.targets.wheel]
+exclude = ['docs', 'tests']
+
+[tool.hatch.envs.doc]
+features = ['doc']
+
+[tool.hatch.envs.doc.scripts]
+build = 'sphinx-build docs docs/_build -a -n'
+
+[tool.hatch.envs.test]
+features = ['test']
+
+[tool.hatch.envs.test.scripts]
+run = 'pytest'
+
+[tool.hatch.envs.check]
+features = ['check']
+
+[tool.hatch.envs.check.scripts]
+run = [
+  'python -m flake8 docs tests flask_frozen',
+  'python -m isort docs tests flask_frozen --check --diff',
+]
+
+[[tool.hatch.envs.test.matrix]]
+python = ['3.8', '3.9', '3.10', '3.11', '3.12']
+flask-version = ['2', '3']
+
+[tool.hatch.envs.test.overrides]
+name.'-2$'.dependencies = ['flask==2.0.0', 'werkzeug==2.0.0']

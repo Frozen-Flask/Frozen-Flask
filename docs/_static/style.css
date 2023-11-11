@@ -1,0 +1,11 @@
+h1 {
+  background: url(artwork/frozen-flask.svg) left center / contain no-repeat;
+  color: transparent;
+  font-size: 0;
+  height: 10rem;
+  margin: 2rem 0 !important;
+}
+
+h1 a {
+  display: none;
+}

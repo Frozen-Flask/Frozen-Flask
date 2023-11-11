@@ -11,8 +11,8 @@
 
 from flask import Blueprint, render_template
 
-admin_blueprint = Blueprint('admin', __name__,
-    static_folder='admin_static', static_url_path='/css',
+admin_blueprint = Blueprint(
+    'admin', __name__, static_folder='admin_static', static_url_path='/css',
     template_folder='templates')
 
 
