@@ -398,6 +398,14 @@ Changelog
 ---------
 
 
+Version 1.0.1
+~~~~~~~~~~~~~
+
+Released on 2023-11-11.
+
+* Don’t install tests as top-level package.
+
+
 Version 1.0.0
 ~~~~~~~~~~~~~
 
