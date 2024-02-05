@@ -45,6 +45,20 @@ def test_walk_directory():
     assert {
         filename for filename in walk_directory(directory)
         if not filename.endswith(('.pyc', '.pyo', '.css'))} == paths
+    
+    git_dir = directory / '.git'
+    git_dir.mkdir()
+    git_file = git_dir / 'keep'
+    with git_file.open('w') as keep_file:
+        keep_file.write('keep')
+    try:
+        found = set(
+            walk_directory(directory, ('*.git', '*.pyc', '*.pyo', '*.css'))
+        )
+        assert found == paths
+    finally:
+        git_file.unlink()
+        git_dir.rmdir()
 
 
 def test_warnings_share_common_superclass():
