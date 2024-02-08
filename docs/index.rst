@@ -266,7 +266,7 @@ are accepted:
     As in ``.gitignore`` files,
     patterns apply to the whole path if they contain a slash ``/``,
     to each slash-separated part otherwise.
-    For example, this could be set to ``['*.git*']``
+    For example, this could be set to ``['.git*']``
     if the destination is a git repository.
 
     .. versionadded:: 0.10
