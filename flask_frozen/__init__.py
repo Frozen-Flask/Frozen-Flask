@@ -428,13 +428,33 @@ def walk_directory(root, ignore=()):
 
     """
     for dir, dirs, filenames in os.walk(root):
+        relative_dir = Path(dir).relative_to(root)
+        dir_path = str(relative_dir)
+
+        # Filter ignored directories
+        patterns = [
+            full_pattern for pattern in ignore for full_pattern in (
+                pattern.rstrip('/'),
+                f'{pattern}*',
+                f'*/{pattern.rstrip("/")}',
+                f'*/{pattern}*',
+            )
+        ]
+        if any(fnmatch(dir_path, pattern) for pattern in patterns):
+            continue
+
+        # Filter ignored filenames
         for filename in filenames:
-            path = str((Path(dir) / filename).relative_to(root))
+            path = str(relative_dir / filename)
             if os.sep != '/':
                 path = path.replace(os.sep, '/')
             for pattern in ignore:
-                if fnmatch(path if '/' in pattern else filename, pattern):
-                    break
+                if '/' in pattern.rstrip('/'):
+                    if fnmatch(path, f'{pattern.lstrip("/")}*'):
+                        break
+                elif not pattern.endswith('/'):
+                    if fnmatch(filename, pattern):
+                        break
             else:
                 # See https://github.com/SimonSapin/Frozen-Flask/issues/5
                 yield normalize('NFC', path)
