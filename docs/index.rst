@@ -398,6 +398,14 @@ Changelog
 ---------
 
 
+Version 1.0.2
+~~~~~~~~~~~~~
+
+Released on 2024-02-09.
+
+* Use a syntax closer to .gitignore to ignore paths in walk_directory.
+
+
 Version 1.0.1
 ~~~~~~~~~~~~~
 
