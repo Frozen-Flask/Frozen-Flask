@@ -24,6 +24,7 @@ from collections import namedtuple
 from collections.abc import Mapping
 from contextlib import contextmanager, suppress
 from fnmatch import fnmatch
+from functools import partial
 from pathlib import Path
 from threading import Lock
 from unicodedata import normalize
@@ -102,6 +103,7 @@ class Freezer:
                                   'application/octet-stream')
             app.config.setdefault('FREEZER_IGNORE_MIMETYPE_WARNINGS', False)
             app.config.setdefault('FREEZER_RELATIVE_URLS', False)
+            app.config.setdefault('FREEZER_RELATIVE_URLS_PRETTY', False)
             app.config.setdefault('FREEZER_IGNORE_404_NOT_FOUND', False)
             app.config.setdefault('FREEZER_REDIRECT_POLICY', 'follow')
             app.config.setdefault('FREEZER_SKIP_EXISTING', False)
@@ -472,14 +474,18 @@ def patch_url_for(app):
     This is a context manager, to be used in a ``with`` statement.
     """
     previous_url_for = app.jinja_env.globals['url_for']
-    app.jinja_env.globals['url_for'] = relative_url_for
+    app.jinja_env.globals["url_for"] = (
+        partial(relative_url_for, _pretty=True)
+        if app.config["FREEZER_RELATIVE_URLS_PRETTY"]
+        else relative_url_for
+    )
     try:
         yield
     finally:
         app.jinja_env.globals['url_for'] = previous_url_for
 
 
-def relative_url_for(endpoint, **values):
+def relative_url_for(endpoint, *, _pretty=False, **values):
     """Like :func:`flask.url_for`, but returns relative URLs if possible.
 
     Absolute URLs (with ``_external=True`` or to a different subdomain) are
@@ -512,7 +518,16 @@ def relative_url_for(endpoint, **values):
     if not request_path.endswith('/'):
         request_path = posixpath.dirname(request_path)
 
-    return posixpath.relpath(url, request_path)
+    relpath = posixpath.relpath(url, request_path)
+
+    if _pretty:
+        relpath, fragment_sep, fragment = relpath.partition('#')
+        relpath, query_sep, query = relpath.partition('?')
+        if relpath.endswith('/index.html'):
+            relpath = relpath[:-10]
+        relpath += query_sep + query + fragment_sep + fragment
+
+    return relpath
 
 
 def unwrap_method(method):

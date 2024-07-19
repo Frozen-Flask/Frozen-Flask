@@ -466,6 +466,20 @@ class TestRelativeUrlFor(TestFreezer):
         b'URL parsing test</a>')
 
 
+class TestRelativeUrlForPretty(TestFreezer):
+    def do_extra_config(self, app, freezer):
+        app.config['FREEZER_RELATIVE_URLS'] = True
+        app.config['FREEZER_RELATIVE_URLS_PRETTY'] = True
+
+    expected_output = TestFreezer.expected_output.copy()
+    expected_output['/admin/'] = (
+        b'Admin index\n'
+        b'<a href="../page/I%20l%C3%B8v%C3%AB%20Unicode/">'
+        b'Unicode test</a>\n'
+        b'<a href="../page/octothorp/?query_foo=bar#introduction">'
+        b'URL parsing test</a>')
+
+
 class TestStaticIgnore(TestFreezer):
     def do_extra_config(self, app, freezer):
         app.config['FREEZER_STATIC_IGNORE'] = ['*.js']
