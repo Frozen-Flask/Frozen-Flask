@@ -498,6 +498,13 @@ def relative_url_for(endpoint, *, _pretty=False, **values):
     should only be used with Frozen-Flask, not when running the application in
     :meth:`app.run() <flask.Flask.run>` or another WSGI sever.
 
+    .. versionadded:: 1.1.0
+       The above behavior can be disabled by calling this function with
+       ``_pretty=True``. In that case, if a URL would end with ``/index.html``,
+       it will only end with ``/`` (while still being relative and keeping the
+       query string and fragment). This can be enabled for the templates by the
+       ``FREEZER_RELATIVE_URLS_PRETTY`` `configuration`_.
+
     If the ``FREEZER_RELATIVE_URLS`` `configuration`_ is True, Frozen-Flask
     will automatically patch the application's Jinja environment so that
     ``url_for`` in templates is this function.
