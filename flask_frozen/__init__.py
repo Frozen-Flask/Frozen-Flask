@@ -515,24 +515,18 @@ def relative_url_for(endpoint, *, _pretty=False, **values):
     if not url.startswith('/'):
         return url
 
-    url, fragment_sep, fragment = url.partition('#')
-    url, query_sep, query = url.partition('?')
-    if url.endswith('/'):
-        url += 'index.html'
-    url += query_sep + query + fragment_sep + fragment
+    parsed_url = urlsplit(url)
+    if not _pretty and parsed_url.path.endswith('/'):
+        url = parsed_url._replace(path=f'{parsed_url.path}index.html').geturl()
 
     request_path = request.path
     if not request_path.endswith('/'):
         request_path = posixpath.dirname(request_path)
 
     relpath = posixpath.relpath(url, request_path)
-
-    if _pretty:
-        relpath, fragment_sep, fragment = relpath.partition('#')
-        relpath, query_sep, query = relpath.partition('?')
-        if relpath.endswith('/index.html'):
-            relpath = relpath[:-10]
-        relpath += query_sep + query + fragment_sep + fragment
+    if _pretty and parsed_url.path.endswith('/'):
+        if not parsed_url.query and not parsed_url.fragment:
+            relpath += '/'
 
     return relpath
 
