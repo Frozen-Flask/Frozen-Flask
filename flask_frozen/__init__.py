@@ -203,10 +203,15 @@ class Freezer:
         url_encoding = getattr(self.app.url_map, 'charset', 'utf-8')
         url_generators = list(self.url_generators)
         url_generators += [self.url_for_logger.iter_calls]
+        already_generated = set()
         # A request context is required to use url_for
         with self.app.test_request_context(base_url=script_name or None):
             for generator in url_generators:
                 for generated in generator():
+                    key = str(generated)
+                    if key in already_generated:
+                        continue
+                    already_generated.add(key)
                     if isinstance(generated, str):
                         url = generated
                         endpoint = None
