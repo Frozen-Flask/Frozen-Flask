@@ -474,11 +474,8 @@ def patch_url_for(app):
     This is a context manager, to be used in a ``with`` statement.
     """
     previous_url_for = app.jinja_env.globals['url_for']
-    app.jinja_env.globals["url_for"] = (
-        partial(relative_url_for, _pretty=True)
-        if app.config["FREEZER_RELATIVE_URLS_PRETTY"]
-        else relative_url_for
-    )
+    app.jinja_env.globals['url_for'] = partial(
+        relative_url_for, _pretty=app.config['FREEZER_RELATIVE_URLS_PRETTY'])
     try:
         yield
     finally:
