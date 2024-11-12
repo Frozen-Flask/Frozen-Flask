@@ -24,6 +24,7 @@ from collections import namedtuple
 from collections.abc import Mapping
 from contextlib import contextmanager, suppress
 from fnmatch import fnmatch
+from functools import partial
 from pathlib import Path
 from threading import Lock
 from unicodedata import normalize
@@ -102,6 +103,7 @@ class Freezer:
                                   'application/octet-stream')
             app.config.setdefault('FREEZER_IGNORE_MIMETYPE_WARNINGS', False)
             app.config.setdefault('FREEZER_RELATIVE_URLS', False)
+            app.config.setdefault('FREEZER_RELATIVE_URLS_PRETTY', False)
             app.config.setdefault('FREEZER_IGNORE_404_NOT_FOUND', False)
             app.config.setdefault('FREEZER_REDIRECT_POLICY', 'follow')
             app.config.setdefault('FREEZER_SKIP_EXISTING', False)
@@ -472,14 +474,15 @@ def patch_url_for(app):
     This is a context manager, to be used in a ``with`` statement.
     """
     previous_url_for = app.jinja_env.globals['url_for']
-    app.jinja_env.globals['url_for'] = relative_url_for
+    app.jinja_env.globals['url_for'] = partial(
+        relative_url_for, _pretty=app.config['FREEZER_RELATIVE_URLS_PRETTY'])
     try:
         yield
     finally:
         app.jinja_env.globals['url_for'] = previous_url_for
 
 
-def relative_url_for(endpoint, **values):
+def relative_url_for(endpoint, *, _pretty=False, **values):
     """Like :func:`flask.url_for`, but returns relative URLs if possible.
 
     Absolute URLs (with ``_external=True`` or to a different subdomain) are
@@ -492,6 +495,13 @@ def relative_url_for(endpoint, **values):
     should only be used with Frozen-Flask, not when running the application in
     :meth:`app.run() <flask.Flask.run>` or another WSGI sever.
 
+    .. versionadded:: 1.1.0
+       The above behavior can be disabled by calling this function with
+       ``_pretty=True``. In that case, if a URL would end with ``/index.html``,
+       it will only end with ``/`` (while still being relative and keeping the
+       query string and fragment). This can be enabled for the templates by the
+       ``FREEZER_RELATIVE_URLS_PRETTY`` `configuration`_.
+
     If the ``FREEZER_RELATIVE_URLS`` `configuration`_ is True, Frozen-Flask
     will automatically patch the application's Jinja environment so that
     ``url_for`` in templates is this function.
@@ -502,17 +512,20 @@ def relative_url_for(endpoint, **values):
     if not url.startswith('/'):
         return url
 
-    url, fragment_sep, fragment = url.partition('#')
-    url, query_sep, query = url.partition('?')
-    if url.endswith('/'):
-        url += 'index.html'
-    url += query_sep + query + fragment_sep + fragment
+    parsed_url = urlsplit(url)
+    if not _pretty and parsed_url.path.endswith('/'):
+        url = parsed_url._replace(path=f'{parsed_url.path}index.html').geturl()
 
     request_path = request.path
     if not request_path.endswith('/'):
         request_path = posixpath.dirname(request_path)
 
-    return posixpath.relpath(url, request_path)
+    relpath = posixpath.relpath(url, request_path)
+    if _pretty and parsed_url.path.endswith('/'):
+        if not parsed_url.query and not parsed_url.fragment:
+            relpath += '/'
+
+    return relpath
 
 
 def unwrap_method(method):
